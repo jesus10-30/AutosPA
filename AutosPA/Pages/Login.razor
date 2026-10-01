@@ -1,0 +1,243 @@
+﻿@page "/login"
+@layout AuthLayout
+@inject NavigationManager Nav
+
+<PageTitle>FlexiCar — Iniciar sesión</PageTitle>
+
+<div class="au-shell">
+
+    <aside class="au-brand">
+        <a class="au-logo" href=""><span class="au-logo-mark">FC</span>FlexiCar</a>
+
+        <div>
+            <h2>Tu taller de confianza, ahora a un clic</h2>
+            <p>Agenda el mantenimiento de tu vehículo, conoce el costo y el tiempo estimado antes de llegar y sigue cada servicio en línea.</p>
+
+            <ul class="au-points">
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                    Elige fecha, hora y el agente que te atenderá.
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                    Costo y tiempo estimados en tiempo real.
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                    Avisos cuando tu cita se apruebe y tu vehículo esté listo.
+                </li>
+            </ul>
+
+            <svg class="au-car" viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="110" cy="92" rx="90" ry="6" fill="#ffffff" opacity=".12" />
+                <path d="M25 78 L34 52 Q40 40 55 40 L150 40 Q165 40 172 52 L184 78 Z" fill="#1f5fa8" />
+                <path d="M55 42 L70 22 Q75 16 84 16 L128 16 Q137 16 142 22 L157 42 Z" fill="#8ecbff" opacity=".85" />
+                <rect x="72" y="22" width="24" height="18" rx="2" fill="#0f2a4a" opacity=".55" />
+                <rect x="100" y="22" width="24" height="18" rx="2" fill="#0f2a4a" opacity=".55" />
+                <circle cx="62" cy="80" r="14" fill="#0b1b2e" />
+                <circle cx="62" cy="80" r="6" fill="#cfd9e0" />
+                <circle cx="150" cy="80" r="14" fill="#0b1b2e" />
+                <circle cx="150" cy="80" r="6" fill="#cfd9e0" />
+            </svg>
+        </div>
+
+        <div class="au-foot">© 2026 FlexiCar · Proyecto académico — UMG</div>
+    </aside>
+
+    <main class="au-main">
+        <div class="au-card">
+
+            <a class="au-back" href="">← Volver al inicio</a>
+
+            <div class="au-head">
+                <h1>Iniciar sesión</h1>
+                <p>Accede a tu cuenta para agendar citas y dar seguimiento a tus servicios.</p>
+            </div>
+
+            <div class="au-roles">
+                <button type="button" class="au-role @(rol == "cliente" ? "active" : "")" @onclick='() => rol = "cliente"'>Soy cliente</button>
+                <button type="button" class="au-role @(rol == "agente" ? "active" : "")" @onclick='() => rol = "agente"'>Soy agente</button>
+            </div>
+
+            @if (error is not null)
+            {
+                <div class="au-alert">@error</div>
+            }
+
+            <form @onsubmit="Ingresar" @onsubmit:preventDefault>
+
+                <div class="au-field">
+                    <label class="au-label">Correo electrónico</label>
+                    <input type="email" class="au-input @(Err("correo") is not null ? "invalid" : "")" placeholder="nombre@@correo.com" autocomplete="email" @bind="correo" />
+                    @if (Err("correo") is not null)
+                    {
+                        <small class="au-err">@Err("correo")</small>
+                    }
+                </div>
+
+                <div class="au-field">
+                    <label class="au-label">Contraseña</label>
+                    <div class="au-input-wrap">
+                        <input type="@(verPassword ? "text" : "password")" class="au-input has-eye @(Err("password") is not null ? "invalid" : "")" placeholder="Tu contraseña" autocomplete="current-password" @bind="password" />
+                        <button type="button" class="au-eye" title="@(verPassword ? "Ocultar contraseña" : "Mostrar contraseña")" @onclick="() => verPassword = !verPassword">
+                            <svg viewBox="0 0 24 24">
+                                @if (verPassword)
+                                {
+                                    <path d="M3 3l18 18" />
+                                    <path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a12.6 12.6 0 0 1-2.6 3.3M6.6 6.7A12.3 12.3 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9.7 9.7 0 0 0 4-.9" />
+                                    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                                }
+                                else
+                                {
+                                    <path d="M2.5 12C3.5 10 7 6 12 6s8.5 4 9.5 6c-1 2-4.5 6-9.5 6s-8.5-4-9.5-6z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                }
+                            </svg>
+                        </button>
+                    </div>
+                    @if (Err("password") is not null)
+                    {
+                        <small class="au-err">@Err("password")</small>
+                    }
+                </div>
+
+                <div class="au-row">
+                    <label class="au-check"><input type="checkbox" @bind="recordarme" /> Mantener sesión iniciada</label>
+                    <button type="button" class="au-link" @onclick="AbrirRecuperar">¿Olvidaste tu contraseña?</button>
+                </div>
+
+                <button type="submit" class="au-btn" disabled="@cargando">
+                    @if (cargando)
+                    {
+                        <span class="au-spin"></span>
+                        <text>Ingresando...</text>
+                    }
+                    else
+                    {
+                        <text>Iniciar sesión</text>
+                    }
+                </button>
+            </form>
+
+            @if (rol == "cliente")
+            {
+                <div class="au-divider">¿Eres nuevo en FlexiCar?</div>
+                <a class="au-btn au-btn-plain" href="registro">Crear una cuenta</a>
+            }
+            else
+            {
+                <div class="au-note">Las cuentas de agente las crea el taller. Si aún no tienes acceso, solicítalo a la administración.</div>
+            }
+
+            <div class="au-legal">Al continuar aceptas los Términos de uso y la Política de privacidad de FlexiCar.</div>
+        </div>
+    </main>
+</div>
+
+@if (recuperar)
+{
+    <div class="au-modal-bg" @onclick="() => recuperar = false">
+        <div class="au-modal" @onclick:stopPropagation="true">
+            @if (!enviado)
+            {
+                <h3>Recuperar contraseña</h3>
+                <p>Escribe el correo de tu cuenta y te enviaremos las instrucciones para crear una contraseña nueva.</p>
+
+                <label class="au-label">Correo electrónico</label>
+                <input type="email" class="au-input @(errorRecuperar is not null ? "invalid" : "")" placeholder="nombre@@correo.com" @bind="correoRecuperar" />
+                @if (errorRecuperar is not null)
+                {
+                    <small class="au-err">@errorRecuperar</small>
+                }
+
+                <div class="au-modal-actions">
+                    <button type="button" class="au-btn au-btn-plain" @onclick="() => recuperar = false">Cancelar</button>
+                    <button type="button" class="au-btn" @onclick="EnviarRecuperacion">Enviar instrucciones</button>
+                </div>
+            }
+            else
+            {
+                <h3>Revisa tu correo</h3>
+                <p>Si existe una cuenta con <b>@correoRecuperar</b>, te enviamos las instrucciones para restablecer tu contraseña. Puede tardar unos minutos.</p>
+                <div class="au-modal-actions">
+                    <button type="button" class="au-btn" @onclick="() => recuperar = false">Entendido</button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private string rol = "cliente";          // cliente | agente
+    private string correo = "";
+    private string password = "";
+    private bool recordarme;
+    private bool verPassword;
+    private bool cargando;
+    private string? error;
+    private Dictionary<string, string> errores = new();
+
+    private bool recuperar;
+    private string correoRecuperar = "";
+    private bool enviado;
+    private string? errorRecuperar;
+
+    private string? Err(string campo) => errores.TryGetValue(campo, out var e) ? e : null;
+
+    private static bool EmailValido(string texto)
+    {
+        var e = texto.Trim();
+        var arroba = e.IndexOf('@');
+        if (0 >= arroba) return false;
+        if (e.IndexOf('@', arroba + 1) != -1) return false;
+        if (e.Contains(' ')) return false;
+        var punto = e.LastIndexOf('.');
+        return punto > arroba + 1 && punto != e.Length - 1;
+    }
+
+    private async Task Ingresar()
+    {
+        errores.Clear();
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(correo)) errores["correo"] = "Ingresa tu correo electrónico.";
+        else if (!EmailValido(correo)) errores["correo"] = "Escribe un correo válido, por ejemplo nombre@correo.com.";
+
+        if (string.IsNullOrEmpty(password)) errores["password"] = "Ingresa tu contraseña.";
+
+        if (errores.Any()) return;
+
+        cargando = true;
+        StateHasChanged();
+
+        // TODO: validar con el servicio de autenticación (AutosPAService), por ejemplo:
+        //   POST api/auth/login  { correo, password, rol, recordarme }
+        //   Si las credenciales no son correctas: error = "Correo o contraseña incorrectos.";
+        //   Si son correctas: guardar el token / la sesión y redirigir según el rol.
+        await Task.Delay(900);
+        cargando = false;
+
+        Nav.NavigateTo(rol == "agente" ? "panel-agente" : "");
+    }
+
+    private void AbrirRecuperar()
+    {
+        correoRecuperar = correo;
+        errorRecuperar = null;
+        enviado = false;
+        recuperar = true;
+    }
+
+    private void EnviarRecuperacion()
+    {
+        if (!EmailValido(correoRecuperar))
+        {
+            errorRecuperar = "Escribe un correo válido.";
+            return;
+        }
+
+        // TODO: POST api/auth/recuperar { correo } para enviar el enlace de restablecimiento
+        errorRecuperar = null;
+        enviado = true;
+    }
+}

@@ -1,5 +1,6 @@
 ﻿@page "/panel-agente"
 @implements IDisposable
+@inject NavigationManager Nav
 
 <PageTitle>FlexiCar — Panel del agente</PageTitle>
 
@@ -499,13 +500,6 @@
         color: #6b7a90;
     }
 
-    .ag-job-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 12px;
-        flex-wrap: wrap;
-    }
-
     .ag-pill {
         padding: 3px 12px;
         border-radius: 999px;
@@ -530,46 +524,6 @@
         }
 
     /* Solicitudes */
-    .ag-req {
-        margin-bottom: 12px;
-        padding: 14px 16px;
-        border: 1px solid #f3dca8;
-        border-radius: 14px;
-        background: #fffaf0;
-    }
-
-        .ag-req:last-child {
-            margin-bottom: 0;
-        }
-
-        .ag-req h4 {
-            margin: 0 0 3px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-    .ag-req-sub {
-        font-size: 12px;
-        line-height: 1.5;
-        color: #6b7a90;
-    }
-
-    .ag-req-when {
-        margin: 8px 0 12px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #7a5200;
-    }
-
-    .ag-req-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-        .ag-req-actions .ag-btn {
-            flex: 1;
-        }
 
     .ag-empty {
         padding: 22px;
@@ -578,6 +532,174 @@
         text-align: center;
         font-size: 13px;
         color: #6b7a90;
+    }
+
+    /* Notificaciones */
+    .ag-link {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a56a0;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+        .ag-link:hover {
+            text-decoration: underline;
+        }
+
+    .ag-link-btn {
+        padding: 0;
+        border: 0;
+        background: none;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        color: #1a56a0;
+        cursor: pointer;
+    }
+
+        .ag-link-btn:hover:not(:disabled) {
+            text-decoration: underline;
+        }
+
+        .ag-link-btn:disabled {
+            color: #aab4c3;
+            cursor: default;
+        }
+
+    .ag-card-head div small {
+        display: block;
+        margin-top: 3px;
+    }
+
+    .ag-kpi.link {
+        text-decoration: none;
+        transition: border-color .15s, transform .15s;
+    }
+
+        .ag-kpi.link:hover {
+            border-color: #9db8d9;
+            transform: translateY(-1px);
+        }
+
+    .ag-notif {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 12px 14px;
+        border: 1px solid #e6ebf2;
+        border-radius: 14px;
+        background: #ffffff;
+        font-family: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+        .ag-notif:hover {
+            border-color: #9db8d9;
+            box-shadow: 0 6px 16px rgba(15, 42, 74, .08);
+        }
+
+        .ag-notif.unread {
+            background: #f4f8fd;
+            border-color: #dbe7f5;
+        }
+
+    .ag-notif-ico {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 11px;
+    }
+
+        .ag-notif-ico svg {
+            width: 19px;
+            height: 19px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    .ag-notif.solicitud .ag-notif-ico {
+        background: #fdf1dc;
+        color: #9a6200;
+    }
+
+    .ag-notif.recordatorio .ag-notif-ico {
+        background: #e1ecfa;
+        color: #1a56a0;
+    }
+
+    .ag-notif.calificacion .ag-notif-ico {
+        background: #fff4d6;
+        color: #b7791f;
+    }
+
+    .ag-notif-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+        .ag-notif-body b {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+    .ag-notif.read .ag-notif-body b {
+        font-weight: 600;
+        color: #4a5a70;
+    }
+
+    .ag-notif-body small {
+        display: block;
+        font-size: 12px;
+        line-height: 1.45;
+        color: #6b7a90;
+    }
+
+    .ag-notif-body em {
+        display: inline-block;
+        margin-top: 6px;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 600;
+        color: #1a56a0;
+    }
+
+    .ag-notif-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
+        font-size: 11px;
+        color: #8492a6;
+        white-space: nowrap;
+    }
+
+    .ag-new {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #1f8a5b;
+    }
+
+    .ag-cta {
+        display: block;
+        margin-top: 14px;
+        text-align: center;
+        text-decoration: none;
     }
 
     /* Carga semanal */
@@ -825,7 +947,7 @@
 
         <div class="ag-kpis">
             <div class="ag-kpi"><b>@TrabajosDe(Hoy).Count()</b><span>Citas<br />programadas hoy</span></div>
-            <div class="ag-kpi @(solicitudes.Any() ? "alert" : "")"><b>@solicitudes.Count</b><span>Solicitudes<br />por aprobar</span></div>
+            <a class="ag-kpi link @(solicitudes.Any() ? "alert" : "")" href="agente/solicitudes"><b>@solicitudes.Count</b><span>Solicitudes<br />por responder</span></a>
             <div class="ag-kpi"><b>@finalizadosSemana</b><span>Trabajos finalizados<br />esta semana</span></div>
         </div>
     </section>
@@ -835,8 +957,11 @@
         <!-- Agenda -->
         <section class="ag-card">
             <div class="ag-card-head">
-                <h3>Agenda</h3>
-                <small>@FechaLarga(diaSel)</small>
+                <div>
+                    <h3>Agenda</h3>
+                    <small>@FechaLarga(diaSel)</small>
+                </div>
+                <a class="ag-link" href="agente/trabajos">Ver mis trabajos →</a>
             </div>
 
             <div class="ag-days">
@@ -888,26 +1013,60 @@
         <aside>
             <section class="ag-card">
                 <div class="ag-card-head">
-                    <h3>Solicitudes por aprobar</h3>
-                    <small>@solicitudes.Count nuevas</small>
+                    <div>
+                        <h3>Notificaciones</h3>
+                        <small>@(SinLeer == 0 ? "Todo al día" : $"{SinLeer} sin leer")</small>
+                    </div>
+                    <button type="button" class="ag-link-btn" disabled="@(SinLeer == 0)" @onclick="MarcarTodas">Marcar como leídas</button>
                 </div>
 
-                @foreach (var s in solicitudes.ToList())
+                @foreach (var n in notificaciones)
                 {
-                    <div class="ag-req">
-                        <h4>@s.Servicio</h4>
-                        <div class="ag-req-sub">@s.Vehiculo · @s.Cliente<br />@s.Costo · @s.Tiempo</div>
-                        <div class="ag-req-when">@FechaCorta(s.Fecha) · @Hora(s.Hora)</div>
-                        <div class="ag-req-actions">
-                            <button type="button" class="ag-btn ag-btn-green ag-btn-sm" @onclick="() => Aprobar(s)">Aprobar</button>
-                            <button type="button" class="ag-btn ag-btn-danger ag-btn-sm" @onclick="() => Rechazar(s)">Rechazar</button>
-                        </div>
-                    </div>
+                    <button type="button" class="ag-notif @n.Tipo @(n.Leida ? "read" : "unread")" @onclick="() => Abrir(n)">
+                        <span class="ag-notif-ico">
+                            <svg viewBox="0 0 24 24">
+                                @if (n.Tipo == "solicitud")
+                                {
+                                    <path d="M6 3h9l4 4v14H6z" />
+                                    <path d="M14 3v5h5M9 13h7M9 17h5" />
+                                }
+                                else if (n.Tipo == "recordatorio")
+                                {
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 7v5l3 3" />
+                                }
+                                else
+                                {
+                                    <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
+                                }
+                            </svg>
+                        </span>
+                        <span class="ag-notif-body">
+                            <b>@n.Titulo</b>
+                            <small>@n.Mensaje</small>
+                            @if (n.Tipo == "solicitud")
+                            {
+                                <em>Revisar solicitud →</em>
+                            }
+                        </span>
+                        <span class="ag-notif-meta">
+                            <span>@n.Hace</span>
+                            @if (!n.Leida)
+                            {
+                                <i class="ag-new"></i>
+                            }
+                        </span>
+                    </button>
                 }
 
-                @if (!solicitudes.Any())
+                @if (!notificaciones.Any())
                 {
-                    <div class="ag-empty">No hay solicitudes pendientes.</div>
+                    <div class="ag-empty">No tienes notificaciones.</div>
+                }
+
+                @if (solicitudes.Any())
+                {
+                    <a class="ag-btn ag-btn-solid ag-cta" href="agente/solicitudes">Ver las @solicitudes.Count solicitudes pendientes</a>
                 }
             </section>
 
@@ -1009,6 +1168,18 @@
         public int EstimadoMin { get; set; } = 60;
     }
 
+    private class Notificacion
+    {
+        public string Tipo { get; set; } = "solicitud";   // solicitud | recordatorio | calificacion
+        public string Titulo { get; set; } = "";
+        public string Mensaje { get; set; } = "";
+        public string Hace { get; set; } = "";
+        public string Destino { get; set; } = "";
+        public bool Leida { get; set; }
+    }
+
+    private List<Notificacion> notificaciones = new();
+
     private List<DateTime> dias = new();
     private List<Trabajo> trabajos = new();
     private List<Solicitud> solicitudes = new();
@@ -1026,7 +1197,7 @@
     {
         // Próximos 6 días hábiles (sin domingos)
         var d = Hoy;
-        while (dias.Count < 6)
+        while (dias.Count != 6)
         {
             if (d.DayOfWeek != DayOfWeek.Sunday) dias.Add(d);
             d = d.AddDays(1);
@@ -1049,6 +1220,21 @@
             new Solicitud { Id = 2, Fecha = dias[1], Hora = 15, Vehiculo = "Honda CR-V 2021", Cliente = "Est. Jiménez", Servicio = "Diagnóstico general", Costo = "Q100–Q200", Tiempo = "30 min", EstimadoMin = 30 },
         };
 
+        // TODO: reemplazar por las notificaciones reales del agente (AutosPAService)
+        notificaciones = solicitudes
+            .Select(x => new Notificacion
+            {
+                Tipo = "solicitud",
+                Titulo = $"Nueva solicitud: {x.Servicio}",
+                Mensaje = $"{x.Cliente} · {x.Vehiculo} · {FechaCorta(x.Fecha)}, {Hora(x.Hora)}",
+                Hace = x.Id == 1 ? "Hace 5 h" : "Hace 1 día",
+                Destino = "agente/solicitudes"
+            })
+            .ToList();
+
+        notificaciones.Add(new Notificacion { Tipo = "recordatorio", Titulo = "Recordatorio de trabajo", Mensaje = "Hoy a las 2:00 p. m.: Frenos delanteros · Mazda 3 2019 · Luis García", Hace = "Hace 1 h", Destino = "agente/trabajos" });
+        notificaciones.Add(new Notificacion { Tipo = "calificacion", Titulo = "Nueva calificación", Mensaje = "Mario Castillo te calificó con 5 estrellas.", Hace = "Hace 2 días", Destino = "agente/trabajos", Leida = true });
+
         // Refresca el avance del trabajo en curso cada 30 segundos
         timer = new System.Threading.Timer(_ => InvokeAsync(StateHasChanged), null, 30000, 30000);
     }
@@ -1057,6 +1243,8 @@
 
     // ---------- Calculados ----------
     private string PrimerNombre => nombreAgente.Split(' ')[0];
+
+    private int SinLeer => notificaciones.Count(x => !x.Leida);
 
     private string Saludo
     {
@@ -1084,7 +1272,7 @@
 
     private int Progreso(Trabajo t)
     {
-        if (t.Inicio is null || t.EstimadoMin <= 0) return 0;
+        if (t.Inicio is null || 0 >= t.EstimadoMin) return 0;
         var pct = (DateTime.Now - t.Inicio.Value).TotalMinutes / t.EstimadoMin * 100;
         return (int)Math.Clamp(pct, 3, 100);
     }
@@ -1135,36 +1323,15 @@
         await Finalizar(t);
     }
 
-    private async Task Aprobar(Solicitud s)
+    private void Abrir(Notificacion n)
     {
-        if (trabajos.Any(t => t.Fecha.Date == s.Fecha.Date && t.Hora == s.Hora && t.Estado != "Finalizada"))
-        {
-            await Aviso("Ya tienes una cita a esa hora. Rechaza la solicitud o libera el horario.");
-            return;
-        }
-
-        trabajos.Add(new Trabajo
-        {
-            Id = trabajos.Max(t => t.Id) + 1,
-            Fecha = s.Fecha,
-            Hora = s.Hora,
-            Vehiculo = s.Vehiculo,
-            Cliente = s.Cliente,
-            Servicio = s.Servicio,
-            Estado = "Confirmada",
-            EstimadoMin = s.EstimadoMin
-        });
-
-        solicitudes.Remove(s);
-        // TODO: pasar la cita a "Aprobada" en el servicio y notificar al cliente
-        await Aviso("Cita aprobada. El cliente fue notificado.");
+        n.Leida = true;
+        Nav.NavigateTo(n.Destino);
     }
 
-    private async Task Rechazar(Solicitud s)
+    private void MarcarTodas()
     {
-        solicitudes.Remove(s);
-        // TODO: notificar al cliente el rechazo
-        await Aviso("Solicitud rechazada. El cliente fue notificado.");
+        foreach (var n in notificaciones) n.Leida = true;
     }
 
     private async Task Aviso(string mensaje)
@@ -1188,7 +1355,7 @@
     private static string Hora(int h)
     {
         var h12 = h % 12 == 0 ? 12 : h % 12;
-        return $"{h12}:00 {(h < 12 ? "a. m." : "p. m.")}";
+        return $"{h12}:00 {(h > 11 ? "p. m." : "a. m.")}";
     }
 
     private static string ClaseEstado(string estado) => estado switch
