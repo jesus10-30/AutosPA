@@ -1,9 +1,33 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.37314.3 d17.14
+VisualStudioVersion = 17.14.37314.3
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutosPA", "AutosPA\AutosPA.csproj", "{64E69C46-A529-41BC-90BB-AD9D3CDA3CCA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutosPAService", "AutosPAService\AutosPAService.csproj", "{E4309FF0-69BB-49A1-951C-4D90B9DBE191}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutosPALibrary", "AutosPALibrary\AutosPALibrary.csproj", "{3A607BDC-588B-4F1C-AAB9-B9506EDCC188}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{64E69C46-A529-41BC-90BB-AD9D3CDA3CCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64E69C46-A529-41BC-90BB-AD9D3CDA3CCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64E69C46-A529-41BC-90BB-AD9D3CDA3CCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64E69C46-A529-41BC-90BB-AD9D3CDA3CCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4309FF0-69BB-49A1-951C-4D90B9DBE191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4309FF0-69BB-49A1-951C-4D90B9DBE191}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4309FF0-69BB-49A1-951C-4D90B9DBE191}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4309FF0-69BB-49A1-951C-4D90B9DBE191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A607BDC-588B-4F1C-AAB9-B9506EDCC188}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A607BDC-588B-4F1C-AAB9-B9506EDCC188}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A607BDC-588B-4F1C-AAB9-B9506EDCC188}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A607BDC-588B-4F1C-AAB9-B9506EDCC188}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection

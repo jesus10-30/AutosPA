@@ -1,0 +1,1200 @@
+﻿@page "/panel-agente"
+@implements IDisposable
+
+<PageTitle>FlexiCar — Panel del agente</PageTitle>
+
+<style>
+    .ag-page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 28px 0;
+    }
+
+    /* Encabezado */
+    .ag-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+    }
+
+    .ag-head-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .ag-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        flex-shrink: 0;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #14406f, #1f8a5b);
+        color: #ffffff;
+    }
+
+        .ag-badge svg {
+            width: 26px;
+            height: 26px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    .ag-head h1 {
+        margin: 0 0 2px;
+        font-size: clamp(24px, 3vw, 30px);
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .ag-head p {
+        margin: 0;
+        font-size: 14px;
+        color: #6b7a90;
+    }
+
+    .ag-head-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .ag-date {
+        font-size: 13px;
+        color: #6b7a90;
+        text-transform: capitalize;
+    }
+
+    .ag-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px 8px 10px;
+        border: 1px solid #dbe3ee;
+        border-radius: 999px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6b7a90;
+        cursor: pointer;
+    }
+
+    .ag-sw {
+        position: relative;
+        width: 34px;
+        height: 20px;
+        border-radius: 999px;
+        background: #cfd8e6;
+        transition: background .2s;
+    }
+
+        .ag-sw::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            transition: transform .2s;
+        }
+
+    .ag-toggle.on {
+        color: #146c43;
+        border-color: #bfe5d1;
+    }
+
+        .ag-toggle.on .ag-sw {
+            background: #1f8a5b;
+        }
+
+            .ag-toggle.on .ag-sw::after {
+                transform: translateX(14px);
+            }
+
+    /* Ahora + indicadores */
+    .ag-hero {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 20px;
+        margin-bottom: 22px;
+    }
+
+    .ag-now {
+        padding: 26px 28px;
+        border-radius: 20px;
+        color: #ffffff;
+        background: linear-gradient(135deg, #0f2a4a, #14406f 65%, #1f8a5b);
+        box-shadow: 0 10px 28px rgba(15, 42, 74, .2);
+    }
+
+    .ag-now-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #9fd4ff;
+    }
+
+    .ag-live {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #6ee7b7;
+        box-shadow: 0 0 0 4px rgba(110, 231, 183, .25);
+    }
+
+    .ag-now h2 {
+        margin: 0 0 4px;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .ag-now p {
+        margin: 0 0 16px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, .8);
+    }
+
+    .ag-progress {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .2);
+        overflow: hidden;
+    }
+
+        .ag-progress div {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #6ee7b7, #8ecbff);
+            transition: width .4s;
+        }
+
+    .ag-now-meta {
+        margin: 8px 0 18px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, .75);
+    }
+
+    .ag-now-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .ag-kpis {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .ag-kpi {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+    }
+
+        .ag-kpi b {
+            font-size: 28px;
+            line-height: 1;
+            color: #0f2a4a;
+            min-width: 36px;
+        }
+
+        .ag-kpi span {
+            font-size: 13px;
+            color: #6b7a90;
+            line-height: 1.4;
+        }
+
+        .ag-kpi.alert b {
+            color: #b86e00;
+        }
+
+    /* Botones */
+    .ag-btn {
+        display: inline-block;
+        padding: 9px 18px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .ag-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, .15);
+        }
+
+        .ag-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+    .ag-btn-light {
+        background: #ffffff;
+        color: #14406f;
+    }
+
+    .ag-btn-ghost {
+        background: rgba(255, 255, 255, .1);
+        border-color: rgba(255, 255, 255, .55);
+        color: #ffffff;
+    }
+
+    .ag-btn-solid {
+        background: #14406f;
+        color: #ffffff;
+    }
+
+    .ag-btn-green {
+        background: #1f8a5b;
+        color: #ffffff;
+    }
+
+    .ag-btn-plain {
+        background: #ffffff;
+        border-color: #c4d2e4;
+        color: #14406f;
+    }
+
+    .ag-btn-danger {
+        background: #ffffff;
+        border-color: #e3a59d;
+        color: #b42318;
+    }
+
+    .ag-btn-sm {
+        padding: 7px 14px;
+        font-size: 12px;
+    }
+
+    /* Layout principal */
+    .ag-layout {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .ag-card {
+        margin-bottom: 20px;
+        padding: 22px 24px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 18px;
+        box-shadow: 0 2px 10px rgba(15, 42, 74, .05);
+    }
+
+    .ag-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+        .ag-card-head h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f2a4a;
+        }
+
+        .ag-card-head small {
+            font-size: 12px;
+            color: #8492a6;
+        }
+
+    /* Selector de día */
+    .ag-days {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .ag-day {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        min-width: 62px;
+        padding: 8px 10px;
+        border: 1px solid #e1e9f3;
+        border-radius: 12px;
+        background: #ffffff;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+        .ag-day small {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #8492a6;
+        }
+
+        .ag-day b {
+            font-size: 17px;
+            color: #0f2a4a;
+        }
+
+        .ag-day span {
+            font-size: 10px;
+            color: #6b7a90;
+        }
+
+        .ag-day:hover {
+            border-color: #9db8d9;
+        }
+
+        .ag-day.active {
+            background: #14406f;
+            border-color: #14406f;
+        }
+
+            .ag-day.active small, .ag-day.active b, .ag-day.active span {
+                color: #ffffff;
+            }
+
+    /* Línea de tiempo */
+    .ag-row {
+        display: grid;
+        grid-template-columns: 74px 22px 1fr;
+        gap: 0 10px;
+        align-items: stretch;
+    }
+
+    .ag-time {
+        padding-top: 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7a90;
+        text-align: right;
+    }
+
+    .ag-rail {
+        position: relative;
+    }
+
+        .ag-rail::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            margin-left: -1px;
+            background: #e6ebf2;
+        }
+
+    .ag-dot {
+        position: absolute;
+        left: 50%;
+        top: 16px;
+        width: 12px;
+        height: 12px;
+        margin-left: -6px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 3px solid #c4d2e4;
+    }
+
+        .ag-dot.confirmada {
+            border-color: #1f8a5b;
+        }
+
+        .ag-dot.proceso {
+            border-color: #1a56a0;
+            background: #1a56a0;
+        }
+
+        .ag-dot.finalizada {
+            border-color: #9aa7ba;
+            background: #9aa7ba;
+        }
+
+    .ag-free {
+        margin: 6px 0;
+        padding: 12px 14px;
+        border: 1.5px dashed #dbe3ee;
+        border-radius: 12px;
+        font-size: 12px;
+        color: #9aa7ba;
+    }
+
+    .ag-lunch {
+        margin: 10px 0 10px 106px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        background: #f2f6fb;
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+    .ag-job {
+        margin: 6px 0;
+        padding: 14px 16px;
+        border: 1px solid #e6ebf2;
+        border-left-width: 4px;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+
+        .ag-job.confirmada {
+            border-left-color: #1f8a5b;
+        }
+
+        .ag-job.proceso {
+            border-left-color: #1a56a0;
+            background: #f4f8fd;
+        }
+
+        .ag-job.finalizada {
+            border-left-color: #9aa7ba;
+            background: #fafbfc;
+        }
+
+    .ag-job-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .ag-job h4 {
+        margin: 0 0 3px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .ag-job-sub {
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+    .ag-job-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+
+    .ag-pill {
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+        .ag-pill.confirmada {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .ag-pill.proceso {
+            background: #e1ecfa;
+            color: #1a56a0;
+        }
+
+        .ag-pill.finalizada {
+            background: #eceff4;
+            color: #5b6778;
+        }
+
+    /* Solicitudes */
+    .ag-req {
+        margin-bottom: 12px;
+        padding: 14px 16px;
+        border: 1px solid #f3dca8;
+        border-radius: 14px;
+        background: #fffaf0;
+    }
+
+        .ag-req:last-child {
+            margin-bottom: 0;
+        }
+
+        .ag-req h4 {
+            margin: 0 0 3px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+    .ag-req-sub {
+        font-size: 12px;
+        line-height: 1.5;
+        color: #6b7a90;
+    }
+
+    .ag-req-when {
+        margin: 8px 0 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #7a5200;
+    }
+
+    .ag-req-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+        .ag-req-actions .ag-btn {
+            flex: 1;
+        }
+
+    .ag-empty {
+        padding: 22px;
+        border: 1px dashed #c4d2e4;
+        border-radius: 14px;
+        text-align: center;
+        font-size: 13px;
+        color: #6b7a90;
+    }
+
+    /* Carga semanal */
+    .ag-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        height: 130px;
+    }
+
+    .ag-bar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        height: 100%;
+    }
+
+        .ag-bar b {
+            font-size: 12px;
+            color: #0f2a4a;
+        }
+
+        .ag-bar div {
+            width: 100%;
+            max-width: 38px;
+            min-height: 4px;
+            border-radius: 8px 8px 4px 4px;
+            background: linear-gradient(180deg, #1f5fa8, #14406f);
+        }
+
+        .ag-bar.hoy div {
+            background: linear-gradient(180deg, #1f8a5b, #146c43);
+        }
+
+        .ag-bar small {
+            font-size: 11px;
+            color: #8492a6;
+        }
+
+    /* Ventana y aviso */
+    .ag-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .ag-modal {
+        width: 100%;
+        max-width: 500px;
+        max-height: 92vh;
+        overflow-y: auto;
+        padding: 28px;
+        border-radius: 22px;
+        background: #ffffff;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+    .ag-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .ag-modal h3 {
+        margin: 0 0 4px;
+        font-size: 20px;
+        color: #0f2a4a;
+    }
+
+    .ag-close {
+        border: 0;
+        background: none;
+        font-size: 26px;
+        line-height: 1;
+        color: #9aa7ba;
+        cursor: pointer;
+    }
+
+    .ag-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+        .ag-info div {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f2f6fb;
+        }
+
+        .ag-info small {
+            display: block;
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+        .ag-info b {
+            font-size: 13px;
+            color: #0f2a4a;
+        }
+
+    .ag-label {
+        display: block;
+        margin: 0 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4a5a70;
+    }
+
+    .ag-text {
+        width: 100%;
+        min-height: 90px;
+        padding: 11px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-family: inherit;
+        font-size: 14px;
+        color: #0f172a;
+        resize: vertical;
+    }
+
+        .ag-text:focus {
+            outline: 2px solid #1f5fa8;
+            background: #ffffff;
+        }
+
+    .ag-modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .ag-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 300;
+        padding: 14px 20px;
+        border-radius: 12px;
+        background: #14406f;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+
+    @@media (max-width: 1000px) {
+        .ag-hero, .ag-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .ag-kpis {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .ag-page {
+            padding: 24px 14px 0;
+        }
+
+        .ag-kpis {
+            grid-template-columns: 1fr;
+        }
+
+        .ag-row {
+            grid-template-columns: 58px 18px 1fr;
+        }
+
+        .ag-lunch {
+            margin-left: 86px;
+        }
+    }
+</style>
+
+<div class="ag-page">
+
+    <!-- Encabezado -->
+    <header class="ag-head">
+        <div class="ag-head-left">
+            <div class="ag-badge">
+                <svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z" /></svg>
+            </div>
+            <div>
+                <h1>@Saludo, @PrimerNombre</h1>
+                <p>Agente · @especialidad · Taller FlexiCar</p>
+            </div>
+        </div>
+
+        <div class="ag-head-right">
+            <div class="ag-date">@FechaLarga(Hoy)</div>
+            <button type="button" class="ag-toggle @(disponible ? "on" : "")" @onclick="CambiarDisponibilidad">
+                <span class="ag-sw"></span>
+                @(disponible ? "Disponible para citas" : "En pausa")
+            </button>
+        </div>
+    </header>
+
+    <!-- Ahora + indicadores -->
+    <section class="ag-hero">
+        <div class="ag-now">
+            @if (actual is not null)
+            {
+                <div class="ag-now-label"><span class="ag-live"></span>Trabajo en curso</div>
+                <h2>@actual.Servicio</h2>
+                <p>@actual.Vehiculo · @actual.Cliente</p>
+                <div class="ag-progress"><div style="width:@(Progreso(actual))%"></div></div>
+                <div class="ag-now-meta">@Transcurrido(actual) · estimado @actual.EstimadoMin min</div>
+                <div class="ag-now-actions">
+                    <button type="button" class="ag-btn ag-btn-light" @onclick="() => Finalizar(actual)">Finalizar y notificar al cliente</button>
+                    <button type="button" class="ag-btn ag-btn-ghost" @onclick="() => AbrirDetalle(actual)">Ver detalle</button>
+                </div>
+            }
+            else if (siguiente is not null)
+            {
+                <div class="ag-now-label">Sin trabajo en curso</div>
+                <h2>Siguiente: @siguiente.Servicio</h2>
+                <p>@siguiente.Vehiculo · @siguiente.Cliente · @Hora(siguiente.Hora)</p>
+                <div class="ag-now-actions">
+                    <button type="button" class="ag-btn ag-btn-light" @onclick="() => Iniciar(siguiente)">Iniciar trabajo</button>
+                    <button type="button" class="ag-btn ag-btn-ghost" @onclick="() => AbrirDetalle(siguiente)">Ver detalle</button>
+                </div>
+            }
+            else
+            {
+                <div class="ag-now-label">Todo al día</div>
+                <h2>No tienes trabajos pendientes hoy</h2>
+                <p>Cuando se apruebe una nueva cita para hoy, aparecerá aquí.</p>
+            }
+        </div>
+
+        <div class="ag-kpis">
+            <div class="ag-kpi"><b>@TrabajosDe(Hoy).Count()</b><span>Citas<br />programadas hoy</span></div>
+            <div class="ag-kpi @(solicitudes.Any() ? "alert" : "")"><b>@solicitudes.Count</b><span>Solicitudes<br />por aprobar</span></div>
+            <div class="ag-kpi"><b>@finalizadosSemana</b><span>Trabajos finalizados<br />esta semana</span></div>
+        </div>
+    </section>
+
+    <div class="ag-layout">
+
+        <!-- Agenda -->
+        <section class="ag-card">
+            <div class="ag-card-head">
+                <h3>Agenda</h3>
+                <small>@FechaLarga(diaSel)</small>
+            </div>
+
+            <div class="ag-days">
+                @foreach (var d in dias)
+                {
+                    <button type="button" class="ag-day @(d == diaSel ? "active" : "")" @onclick="() => diaSel = d">
+                        <small>@(d == Hoy ? "Hoy" : DiasCortos[(int)d.DayOfWeek])</small>
+                        <b>@d.Day</b>
+                        <span>@TrabajosDe(d).Count() citas</span>
+                    </button>
+                }
+            </div>
+
+            @foreach (var h in HorasDe(diaSel))
+            {
+                var t = TrabajosDe(diaSel).FirstOrDefault(x => x.Hora == h);
+                var cls = t is null ? "" : ClaseEstado(t.Estado);
+
+                if (h == 14)
+                {
+                    <div class="ag-lunch">Almuerzo · 12:00 – 2:00 p. m.</div>
+                }
+
+                <div class="ag-row">
+                    <div class="ag-time">@Hora(h)</div>
+                    <div class="ag-rail"><span class="ag-dot @cls"></span></div>
+
+                    @if (t is null)
+                    {
+                        <div class="ag-free">Libre · disponible para nuevas citas</div>
+                    }
+                    else
+                    {
+                        <div class="ag-job @cls">
+                            <div class="ag-job-top">
+                                <div>
+                                    <h4>@t.Servicio</h4>
+                                    <div class="ag-job-sub">@t.Vehiculo · @t.Cliente · @t.EstimadoMin min aprox.</div>
+                                </div>
+                                <span class="ag-pill @cls">@t.Estado</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+
+        <!-- Columna derecha -->
+        <aside>
+            <section class="ag-card">
+                <div class="ag-card-head">
+                    <h3>Solicitudes por aprobar</h3>
+                    <small>@solicitudes.Count nuevas</small>
+                </div>
+
+                @foreach (var s in solicitudes.ToList())
+                {
+                    <div class="ag-req">
+                        <h4>@s.Servicio</h4>
+                        <div class="ag-req-sub">@s.Vehiculo · @s.Cliente<br />@s.Costo · @s.Tiempo</div>
+                        <div class="ag-req-when">@FechaCorta(s.Fecha) · @Hora(s.Hora)</div>
+                        <div class="ag-req-actions">
+                            <button type="button" class="ag-btn ag-btn-green ag-btn-sm" @onclick="() => Aprobar(s)">Aprobar</button>
+                            <button type="button" class="ag-btn ag-btn-danger ag-btn-sm" @onclick="() => Rechazar(s)">Rechazar</button>
+                        </div>
+                    </div>
+                }
+
+                @if (!solicitudes.Any())
+                {
+                    <div class="ag-empty">No hay solicitudes pendientes.</div>
+                }
+            </section>
+
+            <section class="ag-card">
+                <div class="ag-card-head">
+                    <h3>Carga de la semana</h3>
+                    <small>Citas por día</small>
+                </div>
+                <div class="ag-bars">
+                    @foreach (var d in dias)
+                    {
+                        var n = TrabajosDe(d).Count();
+                        var cap = HorasDe(d).Count();
+                        <div class="ag-bar @(d == Hoy ? "hoy" : "")">
+                            <b>@n</b>
+                            <div style="height:@(cap == 0 ? 4 : Math.Max(4, n * 100 / cap))%"></div>
+                            <small>@(d == Hoy ? "Hoy" : DiasCortos[(int)d.DayOfWeek])</small>
+                        </div>
+                    }
+                </div>
+            </section>
+        </aside>
+    </div>
+</div>
+
+@if (detalle is not null)
+{
+    <div class="ag-modal-bg" @onclick="() => detalle = null">
+        <div class="ag-modal" @onclick:stopPropagation="true">
+            <div class="ag-modal-head">
+                <div>
+                    <h3>@detalle.Servicio</h3>
+                    <span class="ag-pill @ClaseEstado(detalle.Estado)">@detalle.Estado</span>
+                </div>
+                <button type="button" class="ag-close" @onclick="() => detalle = null">×</button>
+            </div>
+
+            <div class="ag-info">
+                <div><small>Fecha</small><b>@FechaCorta(detalle.Fecha)</b></div>
+                <div><small>Hora</small><b>@Hora(detalle.Hora)</b></div>
+                <div><small>Vehículo</small><b>@detalle.Vehiculo</b></div>
+                <div><small>Cliente</small><b>@detalle.Cliente</b></div>
+                <div><small>Tiempo estimado</small><b>@detalle.EstimadoMin min</b></div>
+                <div><small>Estado</small><b>@detalle.Estado</b></div>
+            </div>
+
+            <label class="ag-label">Notas del trabajo</label>
+            <textarea class="ag-text" @bind="detalle.Notas" placeholder="Observaciones, piezas cambiadas, recomendaciones para el cliente..."></textarea>
+
+            <div class="ag-modal-actions">
+                <button type="button" class="ag-btn ag-btn-plain" @onclick="() => detalle = null">Cerrar</button>
+                @if (detalle.Estado == "Confirmada" && detalle.Fecha.Date == Hoy)
+                {
+                    <button type="button" class="ag-btn ag-btn-solid" disabled="@(actual is not null)" @onclick="() => IniciarDesdeDetalle()">Iniciar trabajo</button>
+                }
+                else if (detalle.Estado == "En proceso")
+                {
+                    <button type="button" class="ag-btn ag-btn-green" @onclick="() => FinalizarDesdeDetalle()">Finalizar y notificar</button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (toast is not null)
+{
+    <div class="ag-toast">@toast</div>
+}
+
+@code {
+    // TODO: tomar el agente desde la sesión
+    private string nombreAgente = "Carlos Ruiz";
+    private string especialidad = "Mecánica general";
+
+    private class Trabajo
+    {
+        public int Id { get; set; }
+        public DateTime Fecha { get; set; }
+        public int Hora { get; set; }
+        public string Vehiculo { get; set; } = "";
+        public string Cliente { get; set; } = "";
+        public string Servicio { get; set; } = "";
+        public string Estado { get; set; } = "Confirmada";   // Confirmada | En proceso | Finalizada
+        public int EstimadoMin { get; set; } = 60;
+        public DateTime? Inicio { get; set; }
+        public string Notas { get; set; } = "";
+    }
+
+    private class Solicitud
+    {
+        public int Id { get; set; }
+        public DateTime Fecha { get; set; }
+        public int Hora { get; set; }
+        public string Vehiculo { get; set; } = "";
+        public string Cliente { get; set; } = "";
+        public string Servicio { get; set; } = "";
+        public string Costo { get; set; } = "";
+        public string Tiempo { get; set; } = "";
+        public int EstimadoMin { get; set; } = 60;
+    }
+
+    private List<DateTime> dias = new();
+    private List<Trabajo> trabajos = new();
+    private List<Solicitud> solicitudes = new();
+
+    private DateTime diaSel;
+    private bool disponible = true;
+    private int finalizadosSemana = 8;
+    private Trabajo? detalle;
+    private string? toast;
+    private System.Threading.Timer? timer;
+
+    private static DateTime Hoy => DateTime.Today;
+
+    protected override void OnInitialized()
+    {
+        // Próximos 6 días hábiles (sin domingos)
+        var d = Hoy;
+        while (dias.Count < 6)
+        {
+            if (d.DayOfWeek != DayOfWeek.Sunday) dias.Add(d);
+            d = d.AddDays(1);
+        }
+        diaSel = Hoy;
+
+        // TODO: reemplazar por los datos reales del agente (AutosPAService)
+        trabajos = new()
+        {
+            new Trabajo { Id = 1, Fecha = dias[0], Hora = 8, Vehiculo = "Toyota Corolla 2018", Cliente = "Juan Pérez", Servicio = "Cambio de aceite y filtros", Estado = "Finalizada", EstimadoMin = 45 },
+            new Trabajo { Id = 2, Fecha = dias[0], Hora = 10, Vehiculo = "Honda Civic 2020", Cliente = "María López", Servicio = "Diagnóstico de motor", Estado = "En proceso", EstimadoMin = 60, Inicio = DateTime.Now.AddMinutes(-25) },
+            new Trabajo { Id = 3, Fecha = dias[0], Hora = 14, Vehiculo = "Mazda 3 2019", Cliente = "Luis García", Servicio = "Frenos delanteros", Estado = "Confirmada", EstimadoMin = 90 },
+            new Trabajo { Id = 4, Fecha = dias[1], Hora = 9, Vehiculo = "Kia Rio 2017", Cliente = "Ana Morales", Servicio = "Mantenimiento preventivo", Estado = "Confirmada", EstimadoMin = 60 },
+            new Trabajo { Id = 5, Fecha = dias[3], Hora = 10, Vehiculo = "Nissan Sentra 2021", Cliente = "Carlos Méndez", Servicio = "Llantas y alineación", Estado = "Confirmada", EstimadoMin = 50 },
+        };
+
+        solicitudes = new()
+        {
+            new Solicitud { Id = 1, Fecha = dias[2], Hora = 9, Vehiculo = "Toyota Hilux 2016", Cliente = "Pedro Castillo", Servicio = "Sistema de frenos", Costo = "Q200–Q450", Tiempo = "1–2 h", EstimadoMin = 90 },
+            new Solicitud { Id = 2, Fecha = dias[1], Hora = 15, Vehiculo = "Honda CR-V 2021", Cliente = "Est. Jiménez", Servicio = "Diagnóstico general", Costo = "Q100–Q200", Tiempo = "30 min", EstimadoMin = 30 },
+        };
+
+        // Refresca el avance del trabajo en curso cada 30 segundos
+        timer = new System.Threading.Timer(_ => InvokeAsync(StateHasChanged), null, 30000, 30000);
+    }
+
+    public void Dispose() => timer?.Dispose();
+
+    // ---------- Calculados ----------
+    private string PrimerNombre => nombreAgente.Split(' ')[0];
+
+    private string Saludo
+    {
+        get
+        {
+            var hora = DateTime.Now.Hour;
+            if (hora >= 19) return "Buenas noches";
+            if (hora >= 12) return "Buenas tardes";
+            return "Buenos días";
+        }
+    }
+
+    private Trabajo? actual => TrabajosDe(Hoy).FirstOrDefault(t => t.Estado == "En proceso");
+
+    private Trabajo? siguiente => TrabajosDe(Hoy).Where(t => t.Estado == "Confirmada").OrderBy(t => t.Hora).FirstOrDefault();
+
+    private IEnumerable<Trabajo> TrabajosDe(DateTime d) => trabajos.Where(t => t.Fecha.Date == d.Date).OrderBy(t => t.Hora);
+
+    private static readonly int[] HorasBase = { 8, 9, 10, 11, 14, 15, 16, 17 };
+
+    private static IEnumerable<int> HorasDe(DateTime d) =>
+        d.DayOfWeek == DayOfWeek.Sunday ? Enumerable.Empty<int>()
+        : d.DayOfWeek == DayOfWeek.Saturday ? HorasBase.Where(h => 13 > h)
+        : HorasBase;
+
+    private int Progreso(Trabajo t)
+    {
+        if (t.Inicio is null || t.EstimadoMin <= 0) return 0;
+        var pct = (DateTime.Now - t.Inicio.Value).TotalMinutes / t.EstimadoMin * 100;
+        return (int)Math.Clamp(pct, 3, 100);
+    }
+
+    private string Transcurrido(Trabajo t)
+    {
+        if (t.Inicio is null) return "Sin iniciar";
+        var min = (int)(DateTime.Now - t.Inicio.Value).TotalMinutes;
+        return $"Lleva {Math.Max(0, min)} min";
+    }
+
+    // ---------- Acciones ----------
+    private void CambiarDisponibilidad()
+    {
+        disponible = !disponible;
+        // TODO: guardar la disponibilidad para que los clientes vean si pueden elegirte
+    }
+
+    private void Iniciar(Trabajo t)
+    {
+        if (actual is not null) return;
+        t.Estado = "En proceso";
+        t.Inicio = DateTime.Now;
+    }
+
+    private async Task Finalizar(Trabajo t)
+    {
+        t.Estado = "Finalizada";
+        finalizadosSemana++;
+        // TODO: notificar al cliente que su vehículo está listo (correo, WhatsApp o notificación interna)
+        await Aviso("Trabajo finalizado. El cliente fue notificado.");
+    }
+
+    private void AbrirDetalle(Trabajo t) => detalle = t;
+
+    private void IniciarDesdeDetalle()
+    {
+        if (detalle is null) return;
+        Iniciar(detalle);
+        detalle = null;
+    }
+
+    private async Task FinalizarDesdeDetalle()
+    {
+        if (detalle is null) return;
+        var t = detalle;
+        detalle = null;
+        await Finalizar(t);
+    }
+
+    private async Task Aprobar(Solicitud s)
+    {
+        if (trabajos.Any(t => t.Fecha.Date == s.Fecha.Date && t.Hora == s.Hora && t.Estado != "Finalizada"))
+        {
+            await Aviso("Ya tienes una cita a esa hora. Rechaza la solicitud o libera el horario.");
+            return;
+        }
+
+        trabajos.Add(new Trabajo
+        {
+            Id = trabajos.Max(t => t.Id) + 1,
+            Fecha = s.Fecha,
+            Hora = s.Hora,
+            Vehiculo = s.Vehiculo,
+            Cliente = s.Cliente,
+            Servicio = s.Servicio,
+            Estado = "Confirmada",
+            EstimadoMin = s.EstimadoMin
+        });
+
+        solicitudes.Remove(s);
+        // TODO: pasar la cita a "Aprobada" en el servicio y notificar al cliente
+        await Aviso("Cita aprobada. El cliente fue notificado.");
+    }
+
+    private async Task Rechazar(Solicitud s)
+    {
+        solicitudes.Remove(s);
+        // TODO: notificar al cliente el rechazo
+        await Aviso("Solicitud rechazada. El cliente fue notificado.");
+    }
+
+    private async Task Aviso(string mensaje)
+    {
+        toast = mensaje;
+        StateHasChanged();
+        await Task.Delay(2600);
+        toast = null;
+    }
+
+    // ---------- Formatos ----------
+    private static readonly string[] DiasCortos = { "Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb" };
+    private static readonly string[] DiasLargos = { "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado" };
+    private static readonly string[] MesesCortos = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+    private static readonly string[] MesesLargos = { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" };
+
+    private static string FechaLarga(DateTime f) => $"{DiasLargos[(int)f.DayOfWeek]} {f.Day} de {MesesLargos[f.Month - 1]} de {f.Year}";
+
+    private static string FechaCorta(DateTime f) => $"{DiasCortos[(int)f.DayOfWeek]} {f.Day} {MesesCortos[f.Month - 1]}";
+
+    private static string Hora(int h)
+    {
+        var h12 = h % 12 == 0 ? 12 : h % 12;
+        return $"{h12}:00 {(h < 12 ? "a. m." : "p. m.")}";
+    }
+
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        "En proceso" => "proceso",
+        "Finalizada" => "finalizada",
+        _ => "confirmada"
+    };
+}

@@ -1,0 +1,142 @@
+﻿@page "/agente/perfil"
+@using Radzen
+@using Radzen.Blazor
+
+<PageTitle>FlexiCar — Mi perfil</PageTitle>
+
+<style>
+    .ag-header {
+        text-align: center;
+        margin: 1rem 0 2rem;
+    }
+
+        .ag-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 0.4rem;
+        }
+
+        .ag-header p {
+            color: #667085;
+            margin: 0;
+        }
+
+    .perfil-wrap {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .perfil-top {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .perfil-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: #eeedfe;
+        color: #3c3489;
+        font-weight: 700;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .campo {
+        margin-bottom: 1.1rem;
+    }
+
+        .campo label {
+            display: block;
+            font-size: 0.82rem;
+            color: #475467;
+            margin-bottom: 0.35rem;
+            font-weight: 500;
+        }
+
+        .campo input, .campo select {
+            width: 100%;
+            border: 1px solid #e4e7ec;
+            border-radius: 10px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+            color: #101828;
+        }
+
+    .acciones {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.6rem;
+        margin-top: 1.5rem;
+    }
+</style>
+
+<div class="ag-header">
+    <h1>Mi perfil</h1>
+    <p>Mantén tus datos y especialidad actualizados.</p>
+</div>
+
+<div class="perfil-wrap">
+    <div class="perfil-top">
+        <div class="perfil-avatar">@Iniciales</div>
+        <div>
+            <strong>@Nombre</strong>
+            <p style="margin:0; color:#667085; font-size:0.85rem;">@Especialidad · @Anios años de experiencia</p>
+        </div>
+    </div>
+
+    <div class="campo">
+        <label>Nombre completo</label>
+        <input @bind="Nombre" />
+    </div>
+    <div class="campo">
+        <label>Especialidad</label>
+        <select @bind="Especialidad">
+            <option>Mecánica general</option>
+            <option>Diagnóstico electrónico</option>
+            <option>Frenos y suspensión</option>
+            <option>Aire acondicionado</option>
+        </select>
+    </div>
+    <div class="campo">
+        <label>Teléfono</label>
+        <input @bind="Telefono" />
+    </div>
+    <div class="campo">
+        <label>Correo</label>
+        <input @bind="Correo" />
+    </div>
+    <div class="campo">
+        <label>Años de experiencia</label>
+        <input type="number" @bind="Anios" />
+    </div>
+
+    <div class="acciones">
+        <RadzenButton Text="Cambiar contraseña" ButtonStyle="ButtonStyle.Light" />
+        <RadzenButton Text="Guardar cambios" ButtonStyle="ButtonStyle.Primary" Click="@Guardar" />
+    </div>
+
+    @if (guardado)
+    {
+        <p style="color:#085041; margin-top:1rem; text-align:center;">Cambios guardados correctamente.</p>
+    }
+</div>
+
+@code {
+    private string Nombre = "Carlos Ruiz";
+    private string Especialidad = "Mecánica general";
+    private string Telefono = "+502 5555 9876";
+    private string Correo = "carlos.ruiz@flexicar.com";
+    private int Anios = 8;
+    private bool guardado = false;
+
+    private string Iniciales => string.Join("", Nombre.Split(' ').Where(p => p.Length > 0).Select(p => p[0])).ToUpper();
+
+    private void Guardar() => guardado = true; 
+} 
+
+

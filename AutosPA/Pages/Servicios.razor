@@ -1,0 +1,525 @@
+﻿@page "/servicios"
+
+<PageTitle>FlexiCar — Servicios</PageTitle>
+
+<style>
+    .sv-head {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 56px 24px 12px;
+        text-align: center;
+    }
+
+    .sv-eyebrow {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #1f8a5b;
+        margin-bottom: 10px;
+    }
+
+    .sv-head h1 {
+        margin: 0 0 14px;
+        font-size: clamp(38px, 5vw, 58px);
+        line-height: 1.1;
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .sv-head p {
+        max-width: 520px;
+        margin: 0 auto;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #6b7a90;
+    }
+
+    .sv-filters {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        max-width: 1100px;
+        margin: 28px auto 28px;
+        padding: 0 24px;
+    }
+
+    .sv-chip {
+        padding: 8px 18px;
+        border-radius: 999px;
+        border: 1px solid #dbe3ee;
+        background: #ffffff;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a5a70;
+        cursor: pointer;
+        user-select: none;
+        transition: background .2s, color .2s;
+    }
+
+        .sv-chip:hover {
+            background: #eef3fa;
+        }
+
+        .sv-chip.active {
+            background: #14406f;
+            border-color: #14406f;
+            color: #ffffff;
+        }
+
+    .sv-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 24px;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+
+    .sv-card {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 18px;
+        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .sv-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(15, 42, 74, .12);
+        }
+
+    /* Imagen del servicio: si existe img/servicios/archivo.jpg se ve la foto, si no queda el degradado con icono */
+    .sv-thumb {
+        position: relative;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+        .sv-thumb.blue {
+            background: linear-gradient(135deg, #14406f, #1f5fa8);
+        }
+
+        .sv-thumb.green {
+            background: linear-gradient(135deg, #145c3f, #1f8a5b);
+        }
+
+        .sv-thumb.mix {
+            background: linear-gradient(135deg, #14406f, #1f8a5b);
+        }
+
+    .sv-icon {
+        width: 52px;
+        height: 52px;
+        fill: none;
+        stroke: #ffffff;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: .95;
+    }
+
+    .sv-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .sv-price {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .95);
+        color: #145c3f;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .sv-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 20px 22px 22px;
+    }
+
+        .sv-body h3 {
+            margin: 0 0 8px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .sv-body p {
+            margin: 0 0 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #6b7a90;
+            flex: 1;
+        }
+
+    .sv-time {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-top: 14px;
+        border-top: 1px solid #eef1f6;
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+        .sv-time svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+        }
+
+    .sv-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .sv-btn {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .sv-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, .15);
+        }
+
+    .sv-btn-outline {
+        flex: 1;
+        background: #ffffff;
+        border-color: #14406f;
+        color: #14406f;
+    }
+
+    .sv-btn-solid {
+        flex: 1;
+        background: #14406f;
+        color: #ffffff;
+    }
+
+    .sv-btn-light {
+        background: #ffffff;
+        color: #14406f;
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    .sv-btn-ghost {
+        background: rgba(255, 255, 255, .1);
+        border-color: rgba(255, 255, 255, .6);
+        color: #ffffff;
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    /* Ayuda / contacto */
+    .sv-cta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+        max-width: 1052px;
+        margin: 48px auto 0;
+        padding: 32px 36px;
+        border-radius: 20px;
+        color: #ffffff;
+        background: linear-gradient(135deg, #0f2a4a, #14406f 60%, #1f8a5b);
+    }
+
+        .sv-cta h2 {
+            margin: 0 0 8px;
+            font-size: 22px;
+            color: #ffffff;
+        }
+
+        .sv-cta p {
+            margin: 0;
+            max-width: 520px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, .85);
+        }
+
+    .sv-cta-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    /* Ver más */
+    .sv-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .sv-modal {
+        width: 100%;
+        max-width: 460px;
+        overflow: hidden;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+        .sv-modal .sv-thumb {
+            height: 110px;
+        }
+
+    .sv-modal-body {
+        padding: 24px 28px 28px;
+    }
+
+        .sv-modal-body h3 {
+            margin: 0 0 8px;
+            font-size: 20px;
+            color: #0f172a;
+        }
+
+        .sv-modal-body p {
+            margin: 0 0 14px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #6b7a90;
+        }
+
+        .sv-modal-body ul {
+            margin: 0 0 16px;
+            padding-left: 18px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #334155;
+        }
+
+    .sv-facts {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .sv-fact {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #f2f6fb;
+    }
+
+        .sv-fact small {
+            display: block;
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+        .sv-fact b {
+            font-size: 15px;
+            color: #0f2a4a;
+        }
+
+    @@media (max-width: 800px) {
+        .sv-head {
+            padding: 40px 16px 8px;
+        }
+
+        .sv-filters, .sv-grid {
+            padding: 0 16px;
+        }
+
+        .sv-cta {
+            margin: 40px 16px 0;
+            padding: 24px;
+        }
+    }
+</style>
+
+<section class="sv-head">
+    <div class="sv-eyebrow">Catálogo del taller</div>
+    <h1>Servicios</h1>
+    <p>Precios y tiempos estimados, para que sepas qué esperar antes de agendar tu cita.</p>
+</section>
+
+<div class="sv-filters">
+    @foreach (var categoria in categorias)
+    {
+        <span class="sv-chip @(categoria == categoriaSeleccionada ? "active" : "")"
+              @onclick="@(() => categoriaSeleccionada = categoria)">
+            @categoria
+        </span>
+    }
+</div>
+
+<div class="sv-grid">
+    @foreach (var servicio in ServiciosFiltrados)
+    {
+        <article class="sv-card">
+            <div class="sv-thumb @servicio.Color">
+                <svg class="sv-icon" viewBox="0 0 24 24">
+                    @switch (servicio.Icono)
+                    {
+                        case "wrench":
+                            <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z" />
+                            break;
+                        case "scan":
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M21 21l-4.3-4.3" />
+                            break;
+                        case "gear":
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" />
+                            break;
+                        case "brake":
+                            <circle cx="12" cy="12" r="9" />
+                            <circle cx="12" cy="12" r="4" />
+                            <circle cx="12" cy="12" r="1" />
+                            break;
+                        case "battery":
+                            <rect x="2" y="7" width="18" height="10" rx="2" />
+                            <path d="M22 11v2M6 10v4M10 10v4" />
+                            break;
+                        default:
+                            <circle cx="12" cy="12" r="9" />
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 3v6M12 15v6M3 12h6M15 12h6" />
+                            break;
+                    }
+                </svg>
+                <img class="sv-img" src="img/servicios/@servicio.Imagen" alt="" onerror="this.style.display='none'" />
+                <span class="sv-price">@servicio.RangoPrecio</span>
+            </div>
+
+            <div class="sv-body">
+                <h3>@servicio.Nombre</h3>
+                <p>@servicio.Descripcion</p>
+
+                <div class="sv-time">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                    Tiempo estimado: @servicio.TiempoEstimado
+                </div>
+
+                <div class="sv-actions">
+                    <button type="button" class="sv-btn sv-btn-outline" @onclick="() => VerServicio(servicio)">Ver más</button>
+                    <a class="sv-btn sv-btn-solid" href="citas/nueva?servicio=@servicio.Id">Agendar →</a>
+                </div>
+            </div>
+        </article>
+    }
+</div>
+
+<section class="sv-cta">
+    <div>
+        <h2>¿No sabes cuál servicio necesita tu vehículo?</h2>
+        <p>Contáctanos y te ayudamos a encontrarlo. También puedes agendar un diagnóstico general y nuestro equipo te dice exactamente qué le hace falta.</p>
+    </div>
+    <div class="sv-cta-actions">
+        <a class="sv-btn sv-btn-light" href="citas/nueva?servicio=2">Agendar diagnóstico</a>
+        <a class="sv-btn sv-btn-ghost" href="tel:+50200000000">Contáctanos</a>
+    </div>
+</section>
+
+@if (servicioSeleccionado is not null)
+{
+    <div class="sv-modal-bg" @onclick="CerrarServicio">
+        <div class="sv-modal" @onclick:stopPropagation="true">
+            <div class="sv-thumb @servicioSeleccionado.Color"></div>
+            <div class="sv-modal-body">
+                <h3>@servicioSeleccionado.Nombre</h3>
+                <p>@servicioSeleccionado.Descripcion</p>
+
+                <ul>
+                    @foreach (var item in servicioSeleccionado.Incluye)
+                    {
+                        <li>@item</li>
+                    }
+                </ul>
+
+                <div class="sv-facts">
+                    <div class="sv-fact"><small>Costo aproximado</small><b>@servicioSeleccionado.RangoPrecio</b></div>
+                    <div class="sv-fact"><small>Tiempo estimado</small><b>@servicioSeleccionado.TiempoEstimado</b></div>
+                </div>
+
+                <div class="sv-actions">
+                    <button type="button" class="sv-btn sv-btn-outline" @onclick="CerrarServicio">Cerrar</button>
+                    <a class="sv-btn sv-btn-solid" href="citas/nueva?servicio=@servicioSeleccionado.Id">Agendar este servicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<string> categorias = new() { "Todos", "Mantenimiento", "Diagnóstico", "Reparación", "Componentes" };
+    private string categoriaSeleccionada = "Todos";
+
+    private class ServicioDto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+        public string RangoPrecio { get; set; } = "";
+        public string TiempoEstimado { get; set; } = "";
+        public string Categoria { get; set; } = "";
+        public string Color { get; set; } = "blue";      // blue | green | mix
+        public string Icono { get; set; } = "wrench";    // wrench | scan | gear | brake | battery | tire
+        public string Imagen { get; set; } = "";         // archivo dentro de wwwroot/img/servicios/
+        public List<string> Incluye { get; set; } = new();
+    }
+
+    private List<ServicioDto> servicios = new()
+    {
+        new ServicioDto { Id = 1, Nombre = "Mantenimiento preventivo", Descripcion = "Revisión de fluidos, frenos, filtros y niveles generales para que tu vehículo no te dé sorpresas.", RangoPrecio = "Q150–Q300", TiempoEstimado = "45–60 min", Categoria = "Mantenimiento", Color = "blue", Icono = "wrench", Imagen = "mantenimiento.jpg",
+            Incluye = new() { "Revisión de fluidos y niveles", "Inspección de frenos y filtros", "Chequeo de batería y luces", "Informe del estado general" } },
+        new ServicioDto { Id = 2, Nombre = "Diagnóstico general", Descripcion = "Escaneo computarizado para identificar la falla exacta antes de cotizar cualquier reparación.", RangoPrecio = "Q100–Q200", TiempoEstimado = "30 min", Categoria = "Diagnóstico", Color = "green", Icono = "scan", Imagen = "diagnostico.jpg",
+            Incluye = new() { "Escaneo computarizado", "Lectura de códigos de falla", "Reporte con la falla exacta", "Cotización antes de reparar" } },
+        new ServicioDto { Id = 3, Nombre = "Reemplazo de componentes", Descripcion = "Piezas originales instaladas por agentes certificados, con garantía sobre la mano de obra.", RangoPrecio = "Desde Q80", TiempoEstimado = "Según pieza", Categoria = "Componentes", Color = "mix", Icono = "gear", Imagen = "componentes.jpg",
+            Incluye = new() { "Piezas originales", "Instalación por agentes certificados", "Garantía sobre la mano de obra", "Prueba final del vehículo" } },
+        new ServicioDto { Id = 4, Nombre = "Sistema de frenos", Descripcion = "Revisión y cambio de pastillas, discos y líquido de frenos para una frenada segura.", RangoPrecio = "Q200–Q450", TiempoEstimado = "1–2 horas", Categoria = "Reparación", Color = "blue", Icono = "brake", Imagen = "frenos.jpg",
+            Incluye = new() { "Cambio de pastillas y discos", "Cambio de líquido de frenos", "Prueba de frenada" } },
+        new ServicioDto { Id = 5, Nombre = "Batería y sistema eléctrico", Descripcion = "Prueba de carga de batería, alternador y arranque, más revisión de fusibles y cableado.", RangoPrecio = "Q120–Q250", TiempoEstimado = "40 min", Categoria = "Reparación", Color = "green", Icono = "battery", Imagen = "bateria.jpg",
+            Incluye = new() { "Prueba de carga de batería", "Revisión de alternador y arranque", "Revisión de fusibles y cableado" } },
+        new ServicioDto { Id = 6, Nombre = "Llantas y alineación", Descripcion = "Rotación, balanceo y alineación para un desgaste parejo y mejor manejo en carretera.", RangoPrecio = "Q60–Q180", TiempoEstimado = "50 min", Categoria = "Mantenimiento", Color = "mix", Icono = "tire", Imagen = "llantas.jpg",
+            Incluye = new() { "Rotación de llantas", "Balanceo", "Alineación" } },
+    };
+
+    private IEnumerable<ServicioDto> ServiciosFiltrados =>
+        categoriaSeleccionada == "Todos"
+            ? servicios
+            : servicios.Where(s => s.Categoria == categoriaSeleccionada);
+
+    private ServicioDto? servicioSeleccionado;
+
+    private void VerServicio(ServicioDto servicio) => servicioSeleccionado = servicio;
+
+    private void CerrarServicio() => servicioSeleccionado = null;
+}

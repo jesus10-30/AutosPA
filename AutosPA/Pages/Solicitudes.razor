@@ -1,0 +1,881 @@
+﻿@page "/agente/solicitudes"
+
+<PageTitle>FlexiCar — Solicitudes</PageTitle>
+
+<style>
+    .sl-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 36px 28px 0;
+    }
+
+    .sl-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .sl-eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #1f8a5b;
+        margin-bottom: 8px;
+    }
+
+    .sl-head h1 {
+        margin: 0 0 6px;
+        font-size: clamp(30px, 4vw, 40px);
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .sl-head p {
+        margin: 0;
+        max-width: 560px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #6b7a90;
+    }
+
+    .sl-count {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        border-radius: 14px;
+        background: #fff7e6;
+        border: 1px solid #f3dca8;
+        color: #7a5200;
+        font-size: 13px;
+    }
+
+        .sl-count b {
+            font-size: 26px;
+            line-height: 1;
+            color: #b86e00;
+        }
+
+        .sl-count.zero {
+            background: #e3f5ec;
+            border-color: #bfe5d1;
+            color: #146c43;
+        }
+
+            .sl-count.zero b {
+                color: #146c43;
+            }
+
+    /* Filtros */
+    .sl-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .sl-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sl-tab {
+        padding: 8px 16px;
+        border: 1px solid #dbe3ee;
+        border-radius: 999px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a5a70;
+        cursor: pointer;
+    }
+
+        .sl-tab:hover {
+            background: #eef3fa;
+        }
+
+        .sl-tab.active {
+            background: #14406f;
+            border-color: #14406f;
+            color: #ffffff;
+        }
+
+        .sl-tab span {
+            margin-left: 6px;
+            opacity: .8;
+        }
+
+    .sl-search {
+        width: 270px;
+        padding: 10px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        color: #0f172a;
+    }
+
+        .sl-search:focus {
+            outline: 2px solid #1f5fa8;
+        }
+
+    /* Tarjeta */
+    .sl-card {
+        display: grid;
+        grid-template-columns: 78px 1fr auto;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 16px;
+        padding: 20px 22px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-left-width: 4px;
+        border-radius: 18px;
+        box-shadow: 0 2px 10px rgba(15, 42, 74, .05);
+    }
+
+        .sl-card.pend {
+            border-left-color: #e0a100;
+        }
+
+        .sl-card.acep {
+            border-left-color: #1f8a5b;
+        }
+
+        .sl-card.rech {
+            border-left-color: #b42318;
+            background: #fcfcfd;
+        }
+
+    .sl-date {
+        padding: 10px 0;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #eef4fb, #e3edf8);
+        text-align: center;
+    }
+
+        .sl-date small {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #6b7a90;
+        }
+
+        .sl-date b {
+            display: block;
+            font-size: 28px;
+            line-height: 1.1;
+            color: #14406f;
+        }
+
+        .sl-date span {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6b7a90;
+        }
+
+    .sl-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+        .sl-top h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f2a4a;
+        }
+
+    .sl-status {
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+        .sl-status.pend {
+            background: #fdf1dc;
+            color: #9a6200;
+        }
+
+        .sl-status.acep {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .sl-status.rech {
+            background: #fdecea;
+            color: #b42318;
+        }
+
+    .sl-when {
+        margin-left: auto;
+        font-size: 13px;
+        font-weight: 600;
+        color: #14406f;
+    }
+
+    .sl-client {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .sl-av {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #14406f, #1f8a5b);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .sl-client b {
+        display: block;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+    .sl-client small {
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+    .sl-ago {
+        margin-left: auto;
+        font-size: 12px;
+        color: #8492a6;
+        white-space: nowrap;
+    }
+
+    .sl-facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sl-fact {
+        padding: 5px 12px;
+        border-radius: 8px;
+        background: #f2f6fb;
+        font-size: 12px;
+        color: #4a5a70;
+    }
+
+        .sl-fact b {
+            color: #0f2a4a;
+        }
+
+    .sl-doc {
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+        .sl-doc.verde {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .sl-doc.ambar {
+            background: #fdf1dc;
+            color: #9a6200;
+        }
+
+        .sl-doc.rojo {
+            background: #fdecea;
+            color: #b42318;
+        }
+
+        .sl-doc.neutro {
+            background: #eceff4;
+            color: #5b6778;
+        }
+
+    .sl-note {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-size: 13px;
+        font-style: italic;
+        line-height: 1.5;
+        color: #4a5a70;
+    }
+
+    .sl-warn {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #fdecea;
+        font-size: 12px;
+        font-weight: 600;
+        color: #b42318;
+    }
+
+    .sl-motivo {
+        margin-top: 12px;
+        font-size: 12px;
+        color: #8a4a44;
+    }
+
+    /* Acciones */
+    .sl-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 130px;
+    }
+
+    .sl-btn {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .sl-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, .15);
+        }
+
+        .sl-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+    .sl-btn-green {
+        background: #1f8a5b;
+        color: #ffffff;
+    }
+
+    .sl-btn-danger {
+        background: #ffffff;
+        border-color: #e3a59d;
+        color: #b42318;
+    }
+
+    .sl-btn-plain {
+        background: #ffffff;
+        border-color: #c4d2e4;
+        color: #14406f;
+    }
+
+    .sl-btn-solid {
+        background: #14406f;
+        color: #ffffff;
+    }
+
+    .sl-empty {
+        padding: 48px 20px;
+        border: 1px dashed #c4d2e4;
+        border-radius: 18px;
+        text-align: center;
+        font-size: 14px;
+        color: #6b7a90;
+        background: #ffffff;
+    }
+
+    /* Ventana */
+    .sl-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .sl-modal {
+        width: 100%;
+        max-width: 460px;
+        padding: 28px;
+        border-radius: 22px;
+        background: #ffffff;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+        .sl-modal h3 {
+            margin: 0 0 6px;
+            font-size: 20px;
+            color: #0f2a4a;
+        }
+
+        .sl-modal > p {
+            margin: 0 0 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #6b7a90;
+        }
+
+    .sl-label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4a5a70;
+    }
+
+    .sl-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-family: inherit;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+        .sl-input:focus {
+            outline: 2px solid #1f5fa8;
+            background: #ffffff;
+        }
+
+    textarea.sl-input {
+        min-height: 80px;
+        resize: vertical;
+    }
+
+    .sl-modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .sl-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 300;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        background: #14406f;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+
+        .sl-toast button {
+            padding: 0;
+            border: 0;
+            background: none;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            color: #8ecbff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+    @@media (max-width: 800px) {
+        .sl-page {
+            padding: 28px 14px 0;
+        }
+
+        .sl-search {
+            width: 100%;
+        }
+
+        .sl-card {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .sl-actions {
+            grid-column: 1 / -1;
+            flex-direction: row;
+        }
+
+            .sl-actions .sl-btn {
+                flex: 1;
+            }
+    }
+</style>
+
+<div class="sl-page">
+
+    <header class="sl-head">
+        <div>
+            <div class="sl-eyebrow">Panel del agente</div>
+            <h1>Solicitudes</h1>
+            <p>Revisa las citas que los clientes pidieron contigo. Al aceptar, pasan a tu agenda y el cliente recibe un aviso.</p>
+        </div>
+        <div class="sl-count @(Cuenta("Pendiente") == 0 ? "zero" : "")">
+            <b>@Cuenta("Pendiente")</b>
+            <span>@(Cuenta("Pendiente") == 0 ? "Todo al día" : "por responder")</span>
+        </div>
+    </header>
+
+    <div class="sl-toolbar">
+        <div class="sl-tabs">
+            <button type="button" class="sl-tab @(filtro == "Pendiente" ? "active" : "")" @onclick='() => filtro = "Pendiente"'>Pendientes<span>@Cuenta("Pendiente")</span></button>
+            <button type="button" class="sl-tab @(filtro == "Aceptada" ? "active" : "")" @onclick='() => filtro = "Aceptada"'>Aceptadas<span>@Cuenta("Aceptada")</span></button>
+            <button type="button" class="sl-tab @(filtro == "Rechazada" ? "active" : "")" @onclick='() => filtro = "Rechazada"'>Rechazadas<span>@Cuenta("Rechazada")</span></button>
+            <button type="button" class="sl-tab @(filtro == "Todas" ? "active" : "")" @onclick='() => filtro = "Todas"'>Todas<span>@solicitudes.Count</span></button>
+        </div>
+        <input class="sl-search" placeholder="Buscar cliente, placa o servicio" @bind="busqueda" @bind:event="oninput" />
+    </div>
+
+    @foreach (var s in Filtradas.ToList())
+    {
+        var choque = s.Estado == "Pendiente" ? Choque(s) : null;
+        var clase = ClaseEstado(s.Estado);
+
+        <article class="sl-card @clase">
+            <div class="sl-date">
+                <small>@DiasCortos[(int)s.Fecha.DayOfWeek]</small>
+                <b>@s.Fecha.Day</b>
+                <span>@Meses[s.Fecha.Month - 1]</span>
+            </div>
+
+            <div class="sl-main">
+                <div class="sl-top">
+                    <h3>@s.Servicio</h3>
+                    <span class="sl-status @clase">@s.Estado</span>
+                    <span class="sl-when">@Cuando(s.Fecha) · @FormatoHora(s.Hora)</span>
+                </div>
+
+                <div class="sl-client">
+                    <span class="sl-av">@Iniciales(s.Cliente)</span>
+                    <div>
+                        <b>@s.Cliente</b>
+                        <small>@s.Vehiculo · Placa @s.Placa</small>
+                    </div>
+                    <span class="sl-ago">@Hace(s.HaceMin)</span>
+                </div>
+
+                <div class="sl-facts">
+                    <span class="sl-fact">Costo: <b>@s.Costo</b></span>
+                    <span class="sl-fact">Tiempo: <b>@s.Tiempo</b></span>
+                    @foreach (var d in s.Docs)
+                    {
+                        <span class="sl-doc @d.Clase">@d.Texto</span>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(s.Notas))
+                {
+                    <div class="sl-note">“@s.Notas”</div>
+                }
+
+                @if (choque is not null)
+                {
+                    <div class="sl-warn">Choque de horario: ya tienes @choque a esa hora.</div>
+                }
+
+                @if (s.Estado == "Rechazada" && !string.IsNullOrWhiteSpace(s.Motivo))
+                {
+                    <div class="sl-motivo">Motivo enviado al cliente: @s.Motivo</div>
+                }
+            </div>
+
+            <div class="sl-actions">
+                @if (s.Estado == "Pendiente")
+                {
+                    <button type="button" class="sl-btn sl-btn-green" disabled="@(choque is not null)" title="@(choque is not null ? "Resuelve el choque de horario antes de aceptar" : "")" @onclick="() => Aceptar(s)">Aceptar</button>
+                    <button type="button" class="sl-btn sl-btn-danger" @onclick="() => AbrirRechazo(s, choque is not null)">Rechazar</button>
+                }
+                else if (s.Estado == "Aceptada")
+                {
+                    <a class="sl-btn sl-btn-plain" href="panel-agente">Ver en agenda</a>
+                }
+            </div>
+        </article>
+    }
+
+    @if (!Filtradas.Any())
+    {
+        <div class="sl-empty">
+            @(filtro == "Pendiente" ? "No tienes solicitudes pendientes. Te avisaremos cuando llegue una nueva." : "No hay solicitudes en esta sección.")
+        </div>
+    }
+</div>
+
+@if (rechazando is not null)
+{
+    <div class="sl-modal-bg" @onclick="() => rechazando = null">
+        <div class="sl-modal" @onclick:stopPropagation="true">
+            <h3>Rechazar solicitud</h3>
+            <p>@rechazando.Cliente · @rechazando.Servicio · @Cuando(rechazando.Fecha), @FormatoHora(rechazando.Hora). El cliente recibirá un aviso para reprogramar.</p>
+
+            <label class="sl-label">Motivo</label>
+            <select class="sl-input" @bind="motivo">
+                @foreach (var m in motivos)
+                {
+                    <option value="@m">@m</option>
+                }
+            </select>
+
+            <label class="sl-label">Mensaje para el cliente (opcional)</label>
+            <textarea class="sl-input" @bind="comentario" placeholder="Por ejemplo: puedo atenderte el viernes a las 9:00 a. m."></textarea>
+
+            <div class="sl-modal-actions">
+                <button type="button" class="sl-btn sl-btn-plain" @onclick="() => rechazando = null">Cancelar</button>
+                <button type="button" class="sl-btn sl-btn-danger" @onclick="ConfirmarRechazo">Rechazar solicitud</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (toast is not null)
+{
+    <div class="sl-toast">
+        <span>@toast</span>
+        @if (ultima is not null)
+        {
+            <button type="button" @onclick="Deshacer">Deshacer</button>
+        }
+    </div>
+}
+
+@code {
+    private record Doc(string Texto, string Clase);
+
+    private record Ocupado(DateTime Fecha, int Hora, string Detalle);
+
+    private class Solicitud
+    {
+        public int Id { get; set; }
+        public string Cliente { get; set; } = "";
+        public string Vehiculo { get; set; } = "";
+        public string Placa { get; set; } = "";
+        public string Servicio { get; set; } = "";
+        public DateTime Fecha { get; set; }
+        public int Hora { get; set; }
+        public string Costo { get; set; } = "";
+        public string Tiempo { get; set; } = "";
+        public string Notas { get; set; } = "";
+        public int HaceMin { get; set; }
+        public List<Doc> Docs { get; set; } = new();
+        public string Estado { get; set; } = "Pendiente";  
+        public string Motivo { get; set; } = "";
+    }
+
+    private List<Solicitud> solicitudes = new();
+    private List<Ocupado> agenda = new();
+
+    private List<string> motivos = new()
+    {
+        "Horario no disponible",
+        "No cuento con el repuesto o la herramienta",
+        "Servicio fuera de mi especialidad",
+        "Otro"
+    };
+
+    private string filtro = "Pendiente";
+    private string busqueda = "";
+
+    private Solicitud? rechazando;
+    private string motivo = "Horario no disponible";
+    private string comentario = "";
+
+    private Solicitud? ultima;
+    private string? toast;
+    private int toastId;
+
+    private static DateTime Hoy => DateTime.Today;
+
+    protected override void OnInitialized()
+    {
+   
+        agenda = new()
+        {
+            new Ocupado(Hoy, 8, "Toyota Corolla · Juan Pérez"),
+            new Ocupado(Hoy, 10, "Honda Civic · María López"),
+            new Ocupado(Hoy.AddDays(1), 9, "Kia Rio · Ana Morales"),
+            new Ocupado(Hoy.AddDays(2), 9, "Nissan Sentra · Carlos Méndez"),
+        };
+
+        solicitudes = new()
+        {
+            new Solicitud
+            {
+                Id = 1, Cliente = "Esteban Jiménez", Vehiculo = "Toyota Corolla 2019", Placa = "P 428 DKL", Servicio = "Mantenimiento preventivo",
+                Fecha = Hoy, Hora = 11, Costo = "Q150–Q300", Tiempo = "45–60 min", HaceMin = 120,
+                Notas = "Quiero que revisen también el aire acondicionado.",
+                Docs = new() { new Doc("Seguro vigente", "verde"), new Doc("Inspección vence en 19 d", "ambar") }
+            },
+            new Solicitud
+            {
+                Id = 2, Cliente = "Est. Jiménez", Vehiculo = "Honda CR-V 2021", Placa = "P 019 CTM", Servicio = "Diagnóstico general",
+                Fecha = Hoy.AddDays(4), Hora = 14, Costo = "Q100–Q200", Tiempo = "30 min", HaceMin = 1500,
+                Notas = "Se enciende la luz del motor desde hace unos días.",
+                Docs = new() { new Doc("Seguro vencido", "rojo"), new Doc("Inspección vigente", "verde") }
+            },
+            new Solicitud
+            {
+                Id = 3, Cliente = "Pedro Castillo", Vehiculo = "Toyota Hilux 2016", Placa = "P 311 BQR", Servicio = "Sistema de frenos",
+                Fecha = Hoy.AddDays(2), Hora = 9, Costo = "Q200–Q450", Tiempo = "1–2 h", HaceMin = 300,
+                Notas = "Hace ruido al frenar y el pedal baja demasiado.",
+                Docs = new() { new Doc("Seguro vigente", "verde"), new Doc("Inspección sin cargar", "neutro") }
+            },
+            new Solicitud
+            {
+                Id = 4, Cliente = "Ana Morales", Vehiculo = "Kia Rio 2017", Placa = "P 622 HLT", Servicio = "Llantas y alineación",
+                Fecha = Hoy.AddDays(1), Hora = 15, Costo = "Q60–Q180", Tiempo = "50 min", HaceMin = 30,
+                Docs = new() { new Doc("Seguro vigente", "verde"), new Doc("Inspección vigente", "verde") }
+            },
+            new Solicitud
+            {
+                Id = 5, Cliente = "Luis García", Vehiculo = "Mazda 3 2019", Placa = "P 987 XYZ", Servicio = "Frenos delanteros",
+                Fecha = Hoy, Hora = 14, Costo = "Q200–Q450", Tiempo = "1–2 h", HaceMin = 2900, Estado = "Aceptada",
+                Docs = new() { new Doc("Seguro vigente", "verde") }
+            },
+            new Solicitud
+            {
+                Id = 6, Cliente = "Sofía Ramírez", Vehiculo = "Hyundai Accent 2018", Placa = "P 205 TRD", Servicio = "Reemplazo de componentes",
+                Fecha = Hoy.AddDays(3), Hora = 10, Costo = "Desde Q80", Tiempo = "Según pieza", HaceMin = 4300, Estado = "Rechazada",
+                Motivo = "No cuento con el repuesto o la herramienta",
+                Docs = new() { new Doc("Seguro vigente", "verde") }
+            },
+        };
+    }
+
+    // ---------- Calculados ----------
+    private int Cuenta(string estado) => solicitudes.Count(x => x.Estado == estado);
+
+    private IEnumerable<Solicitud> Filtradas =>
+        solicitudes
+            .Where(x => filtro == "Todas" || x.Estado == filtro)
+            .Where(x => string.IsNullOrWhiteSpace(busqueda)
+                        || $"{x.Cliente} {x.Vehiculo} {x.Placa} {x.Servicio}".Contains(busqueda.Trim(), StringComparison.OrdinalIgnoreCase))
+            .OrderBy(x => x.Fecha)
+            .ThenBy(x => x.Hora);
+
+    // Devuelve con qué cita choca el horario solicitado (o null si está libre)
+    private string? Choque(Solicitud s)
+    {
+        var fija = agenda.FirstOrDefault(a => a.Fecha.Date == s.Fecha.Date && a.Hora == s.Hora);
+        if (fija is not null) return fija.Detalle;
+
+        var otra = solicitudes.FirstOrDefault(x => x.Id != s.Id && x.Estado == "Aceptada" && x.Fecha.Date == s.Fecha.Date && x.Hora == s.Hora);
+        return otra is null ? null : $"{otra.Vehiculo} · {otra.Cliente}";
+    }
+
+    // ---------- Acciones ----------
+    private async Task Aceptar(Solicitud s)
+    {
+        if (Choque(s) is not null) return;
+
+        s.Estado = "Aceptada";
+        s.Motivo = "";
+        ultima = s;
+        //guardar en el servicio, pasar la cita a "Aprobada" y notificar al cliente
+        await Aviso($"Aceptaste la cita de {s.Cliente}. Ya aparece en tu agenda.");
+    }
+
+    private void AbrirRechazo(Solicitud s, bool porChoque)
+    {
+        rechazando = s;
+        motivo = porChoque ? "Horario no disponible" : motivos[0];
+        comentario = "";
+    }
+
+    private async Task ConfirmarRechazo()
+    {
+        if (rechazando is null) return;
+
+        var s = rechazando;
+        s.Estado = "Rechazada";
+        s.Motivo = string.IsNullOrWhiteSpace(comentario) ? motivo : $"{motivo}. {comentario.Trim()}";
+        rechazando = null;
+        ultima = s;
+        //enviar el motivo al cliente para que reprograme
+        await Aviso($"Rechazaste la cita de {s.Cliente}. Se le notificó para reprogramar.");
+    }
+
+    private void Deshacer()
+    {
+        if (ultima is null) return;
+
+        ultima.Estado = "Pendiente";
+        ultima.Motivo = "";
+        ultima = null;
+        toast = null;
+    }
+
+    private async Task Aviso(string mensaje)
+    {
+        var id = ++toastId;
+        toast = mensaje;
+        StateHasChanged();
+        await Task.Delay(6000);
+        if (id == toastId)
+        {
+            toast = null;
+            ultima = null;
+        }
+    }
+
+    // ---------- Formatos ----------
+    private static readonly string[] DiasCortos = { "Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb" };
+    private static readonly string[] Meses = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+
+    private static string FormatoHora(int h)
+    {
+        var h12 = h % 12 == 0 ? 12 : h % 12;
+        return $"{h12}:00 {(h > 11 ? "p. m." : "a. m.")}";
+    }
+
+    private static string Cuando(DateTime f)
+    {
+        var n = (f.Date - Hoy).Days;
+        if (n == 0) return "Hoy";
+        if (n == 1) return "Mañana";
+        if (n > 1) return $"En {n} días";
+        return "Fecha pasada";
+    }
+
+    private static string Hace(int minutos)
+    {
+        if (minutos >= 1440) return $"Hace {minutos / 1440} d";
+        if (minutos >= 60) return $"Hace {minutos / 60} h";
+        return $"Hace {minutos} min";
+    }
+
+    private static string Iniciales(string nombre) =>
+        string.Concat(nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpper(p[0])));
+
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        "Aceptada" => "acep",
+        "Rechazada" => "rech",
+        _ => "pend"
+    };
+}

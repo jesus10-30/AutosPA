@@ -1,0 +1,1067 @@
+﻿@page "/agente/trabajos"
+@implements IDisposable
+@using System.Globalization
+
+<PageTitle>FlexiCar — Mis trabajos</PageTitle>
+
+<style>
+    .mt-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 36px 28px 0;
+    }
+
+    .mt-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .mt-eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #1f8a5b;
+        margin-bottom: 8px;
+    }
+
+    .mt-head h1 {
+        margin: 0 0 6px;
+        font-size: clamp(30px, 4vw, 40px);
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .mt-head p {
+        margin: 0;
+        max-width: 560px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #6b7a90;
+    }
+
+    .mt-rating {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+        .mt-rating b {
+            font-size: 26px;
+            line-height: 1;
+            color: #0f2a4a;
+        }
+
+        .mt-rating .stars {
+            color: #f59e0b;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+    /* Filtros */
+    .mt-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .mt-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .mt-tab {
+        padding: 8px 16px;
+        border: 1px solid #dbe3ee;
+        border-radius: 999px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a5a70;
+        cursor: pointer;
+    }
+
+        .mt-tab:hover {
+            background: #eef3fa;
+        }
+
+        .mt-tab.active {
+            background: #14406f;
+            border-color: #14406f;
+            color: #ffffff;
+        }
+
+        .mt-tab span {
+            margin-left: 6px;
+            opacity: .8;
+        }
+
+    .mt-search {
+        width: 270px;
+        padding: 10px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        color: #0f172a;
+    }
+
+        .mt-search:focus {
+            outline: 2px solid #1f5fa8;
+        }
+
+    .mt-views {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 18px;
+    }
+
+    .mt-view {
+        padding: 6px 14px;
+        border: 1px solid #e1e9f3;
+        border-radius: 8px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7a90;
+        cursor: pointer;
+    }
+
+        .mt-view.active {
+            background: #e6effa;
+            border-color: #e6effa;
+            color: #1a56a0;
+        }
+
+    /* Tarjeta */
+    .mt-card {
+        display: grid;
+        grid-template-columns: 78px 1fr auto;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 16px;
+        padding: 20px 22px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-left-width: 4px;
+        border-radius: 18px;
+        box-shadow: 0 2px 10px rgba(15, 42, 74, .05);
+    }
+
+        .mt-card.porhacer {
+            border-left-color: #1f8a5b;
+        }
+
+        .mt-card.proceso {
+            border-left-color: #1a56a0;
+            background: #f8fbfe;
+        }
+
+        .mt-card.finalizado {
+            border-left-color: #9aa7ba;
+        }
+
+    .mt-date {
+        padding: 10px 0;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #eef4fb, #e3edf8);
+        text-align: center;
+    }
+
+        .mt-date small {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #6b7a90;
+        }
+
+        .mt-date b {
+            display: block;
+            font-size: 28px;
+            line-height: 1.1;
+            color: #14406f;
+        }
+
+        .mt-date span {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6b7a90;
+        }
+
+    .mt-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+        .mt-top h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f2a4a;
+        }
+
+    .mt-status {
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+        .mt-status.porhacer {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .mt-status.proceso {
+            background: #e1ecfa;
+            color: #1a56a0;
+        }
+
+        .mt-status.finalizado {
+            background: #eceff4;
+            color: #5b6778;
+        }
+
+    .mt-when {
+        margin-left: auto;
+        font-size: 13px;
+        font-weight: 600;
+        color: #14406f;
+    }
+
+    .mt-client {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .mt-av {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #14406f, #1f8a5b);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .mt-client b {
+        display: block;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+    .mt-client small {
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+    .mt-facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .mt-fact {
+        padding: 5px 12px;
+        border-radius: 8px;
+        background: #f2f6fb;
+        font-size: 12px;
+        color: #4a5a70;
+    }
+
+        .mt-fact b {
+            color: #0f2a4a;
+        }
+
+    /* Avance */
+    .mt-progress-wrap {
+        margin-bottom: 12px;
+    }
+
+    .mt-progress {
+        height: 8px;
+        border-radius: 999px;
+        background: #dfe9f5;
+        overflow: hidden;
+    }
+
+        .mt-progress div {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #1f8a5b, #1f5fa8);
+            transition: width .4s;
+        }
+
+        .mt-progress.over div {
+            background: linear-gradient(90deg, #e0a100, #d97706);
+        }
+
+    .mt-progress-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+        .mt-progress-meta .over {
+            color: #b86e00;
+            font-weight: 600;
+        }
+
+    /* Calificación */
+    .mt-review {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #fffaf0;
+        border: 1px solid #f5e3b8;
+    }
+
+        .mt-review .stars {
+            color: #f59e0b;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .mt-review p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            font-style: italic;
+            line-height: 1.5;
+            color: #4a5a70;
+        }
+
+        .mt-review.empty {
+            background: #f7f9fc;
+            border-color: #e6ebf2;
+            font-size: 12px;
+            color: #8492a6;
+        }
+
+    .mt-note {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #4a5a70;
+    }
+
+    /* Acciones */
+    .mt-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 140px;
+    }
+
+    .mt-hint {
+        font-size: 12px;
+        color: #8492a6;
+        text-align: center;
+    }
+
+    .mt-btn {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .mt-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, .15);
+        }
+
+        .mt-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+    .mt-btn-solid {
+        background: #14406f;
+        color: #ffffff;
+    }
+
+    .mt-btn-green {
+        background: #1f8a5b;
+        color: #ffffff;
+    }
+
+    .mt-btn-plain {
+        background: #ffffff;
+        border-color: #c4d2e4;
+        color: #14406f;
+    }
+
+    /* Vista por día */
+    .mt-day {
+        margin-bottom: 22px;
+    }
+
+    .mt-day-title {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e6ebf2;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #344054;
+    }
+
+        .mt-day-title span {
+            font-weight: 500;
+            text-transform: none;
+            color: #8492a6;
+        }
+
+    .mt-row {
+        display: grid;
+        grid-template-columns: 90px 1fr auto;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 14px 18px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 14px;
+    }
+
+    .mt-row-time {
+        font-size: 13px;
+        font-weight: 700;
+        color: #14406f;
+    }
+
+    .mt-row h4 {
+        margin: 0 0 2px;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+    .mt-row small {
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+    .mt-empty {
+        padding: 48px 20px;
+        border: 1px dashed #c4d2e4;
+        border-radius: 18px;
+        text-align: center;
+        font-size: 14px;
+        color: #6b7a90;
+        background: #ffffff;
+    }
+
+    /* Ventanas */
+    .mt-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .mt-modal {
+        width: 100%;
+        max-width: 480px;
+        max-height: 92vh;
+        overflow-y: auto;
+        padding: 28px;
+        border-radius: 22px;
+        background: #ffffff;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+        .mt-modal h3 {
+            margin: 0 0 6px;
+            font-size: 20px;
+            color: #0f2a4a;
+        }
+
+        .mt-modal > p {
+            margin: 0 0 14px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #6b7a90;
+        }
+
+    .mt-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+        .mt-info div {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f2f6fb;
+        }
+
+        .mt-info small {
+            display: block;
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+        .mt-info b {
+            font-size: 13px;
+            color: #0f2a4a;
+        }
+
+    .mt-label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4a5a70;
+    }
+
+    .mt-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-family: inherit;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+        .mt-input:focus {
+            outline: 2px solid #1f5fa8;
+            background: #ffffff;
+        }
+
+    textarea.mt-input {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .mt-modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .mt-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 300;
+        padding: 14px 20px;
+        border-radius: 12px;
+        background: #14406f;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+
+    @@media (max-width: 800px) {
+        .mt-page {
+            padding: 28px 14px 0;
+        }
+
+        .mt-search {
+            width: 100%;
+        }
+
+        .mt-card {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .mt-actions {
+            grid-column: 1 / -1;
+            flex-direction: row;
+        }
+
+            .mt-actions .mt-btn {
+                flex: 1;
+            }
+
+        .mt-row {
+            grid-template-columns: 1fr auto;
+        }
+
+        .mt-row-time {
+            grid-column: 1 / -1;
+        }
+    }
+</style>
+
+<div class="mt-page">
+
+    <header class="mt-head">
+        <div>
+            <div class="mt-eyebrow">Panel del agente</div>
+            <h1>Mis trabajos</h1>
+            <p>Da seguimiento a lo que tienes por hacer, lo que está en proceso y lo que ya finalizaste.</p>
+        </div>
+
+        @if (PromedioTexto is not null)
+        {
+            <div class="mt-rating">
+                <b>@PromedioTexto</b>
+                <div>
+                    <div class="stars">★★★★★</div>
+                    <span>Calificación promedio de tus clientes</span>
+                </div>
+            </div>
+        }
+    </header>
+
+    <div class="mt-toolbar">
+        <div class="mt-tabs">
+            <button type="button" class="mt-tab @(tab == "porhacer" ? "active" : "")" @onclick='() => tab = "porhacer"'>Por hacer<span>@Cuenta("porhacer")</span></button>
+            <button type="button" class="mt-tab @(tab == "proceso" ? "active" : "")" @onclick='() => tab = "proceso"'>En proceso<span>@Cuenta("proceso")</span></button>
+            <button type="button" class="mt-tab @(tab == "finalizado" ? "active" : "")" @onclick='() => tab = "finalizado"'>Finalizados<span>@Cuenta("finalizado")</span></button>
+        </div>
+        <input class="mt-search" placeholder="Buscar cliente, placa o servicio" @bind="busqueda" @bind:event="oninput" />
+    </div>
+
+    @if (tab != "finalizado")
+    {
+        <div class="mt-views">
+            <button type="button" class="mt-view @(vista == "lista" ? "active" : "")" @onclick='() => vista = "lista"'>Lista</button>
+            <button type="button" class="mt-view @(vista == "dia" ? "active" : "")" @onclick='() => vista = "dia"'>Por día</button>
+        </div>
+    }
+
+    @if (!Filtrados.Any())
+    {
+        <div class="mt-empty">
+            @(tab == "porhacer" ? "No tienes trabajos por hacer. Cuando aceptes una solicitud aparecerá aquí." : tab == "proceso" ? "No tienes ningún trabajo en proceso." : "Aún no has finalizado trabajos.")
+        </div>
+    }
+    else if (PorDia)
+    {
+        @foreach (var g in Filtrados.GroupBy(x => x.Fecha.Date).OrderBy(k => k.Key))
+        {
+            <div class="mt-day">
+                <div class="mt-day-title">@FechaLarga(g.Key) <span>@g.Count() trabajos</span></div>
+                @foreach (var t in g)
+                {
+                    <div class="mt-row">
+                        <div class="mt-row-time">@FormatoHora(t.Hora)</div>
+                        <div>
+                            <h4>@t.Servicio</h4>
+                            <small>@t.Cliente · @t.Vehiculo · Placa @t.Placa</small>
+                        </div>
+                        <span class="mt-status @t.Estado">@Etiqueta(t.Estado)</span>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        @foreach (var t in Filtrados.ToList())
+        {
+            <article class="mt-card @t.Estado">
+                <div class="mt-date">
+                    <small>@DiasCortos[(int)t.Fecha.DayOfWeek]</small>
+                    <b>@t.Fecha.Day</b>
+                    <span>@Meses[t.Fecha.Month - 1]</span>
+                </div>
+
+                <div class="mt-main">
+                    <div class="mt-top">
+                        <h3>@t.Servicio</h3>
+                        <span class="mt-status @t.Estado">@Etiqueta(t.Estado)</span>
+                        <span class="mt-when">@Cuando(t.Fecha) · @FormatoHora(t.Hora)</span>
+                    </div>
+
+                    <div class="mt-client">
+                        <span class="mt-av">@Iniciales(t.Cliente)</span>
+                        <div>
+                            <b>@t.Cliente</b>
+                            <small>@t.Vehiculo · Placa @t.Placa</small>
+                        </div>
+                    </div>
+
+                    @if (t.Estado == "proceso")
+                    {
+                        <div class="mt-progress-wrap">
+                            <div class="mt-progress @(Excedido(t) ? "over" : "")"><div style="width:@(Progreso(t))%"></div></div>
+                            <div class="mt-progress-meta">
+                                <span>@Transcurrido(t) · estimado @t.EstimadoMin min</span>
+                                @if (Excedido(t))
+                                {
+                                    <span class="over">Excede el tiempo estimado</span>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="mt-facts">
+                        @if (t.Estado == "finalizado")
+                        {
+                            <span class="mt-fact">Costo final: <b>@Quetzales(t.CostoFinal)</b></span>
+                            <span class="mt-fact">Duración: <b>@t.DuracionMin min</b></span>
+                        }
+                        else
+                        {
+                            <span class="mt-fact">Costo estimado: <b>@t.CostoEstimado</b></span>
+                            <span class="mt-fact">Tiempo estimado: <b>@t.EstimadoMin min</b></span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(t.Notas))
+                    {
+                        <div class="mt-note"><b>Notas:</b> @t.Notas</div>
+                    }
+
+                    @if (t.Estado == "finalizado")
+                    {
+                        @if (t.Calificacion > 0)
+                        {
+                            <div class="mt-review">
+                                <div class="stars">@Estrellas(t.Calificacion)</div>
+                                @if (!string.IsNullOrWhiteSpace(t.Comentario))
+                                {
+                                    <p>“@t.Comentario”</p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mt-review empty">El cliente aún no ha calificado este trabajo.</div>
+                        }
+                    }
+                </div>
+
+                <div class="mt-actions">
+                    @if (t.Estado == "porhacer")
+                    {
+                        @if (PuedeIniciar(t))
+                        {
+                            <button type="button" class="mt-btn mt-btn-green" disabled="@(actual is not null)" title="@(actual is not null ? "Primero finaliza el trabajo en curso" : "")" @onclick="() => Iniciar(t)">Iniciar trabajo</button>
+                        }
+                        else
+                        {
+                            <div class="mt-hint">Programado para @Cuando(t.Fecha).ToLower()</div>
+                        }
+                    }
+                    else if (t.Estado == "proceso")
+                    {
+                        <button type="button" class="mt-btn mt-btn-solid" @onclick="() => AbrirFinalizar(t)">Finalizar trabajo</button>
+                    }
+                    <button type="button" class="mt-btn mt-btn-plain" @onclick="() => detalle = t">Ver detalle</button>
+                </div>
+            </article>
+        }
+    }
+</div>
+
+@if (detalle is not null)
+{
+    <div class="mt-modal-bg" @onclick="() => detalle = null">
+        <div class="mt-modal" @onclick:stopPropagation="true">
+            <h3>@detalle.Servicio</h3>
+            <p>Datos del trabajo y notas para el seguimiento.</p>
+
+            <div class="mt-info">
+                <div><small>Cliente</small><b>@detalle.Cliente</b></div>
+                <div><small>Vehículo</small><b>@detalle.Vehiculo</b></div>
+                <div><small>Placa</small><b>@detalle.Placa</b></div>
+                <div><small>Estado</small><b>@Etiqueta(detalle.Estado)</b></div>
+                <div><small>Fecha</small><b>@FechaLarga(detalle.Fecha)</b></div>
+                <div><small>Hora</small><b>@FormatoHora(detalle.Hora)</b></div>
+            </div>
+
+            <label class="mt-label">Notas del trabajo</label>
+            <textarea class="mt-input" @bind="detalle.Notas" placeholder="Observaciones, piezas cambiadas, recomendaciones para el cliente..."></textarea>
+
+            <div class="mt-modal-actions">
+                <button type="button" class="mt-btn mt-btn-plain" @onclick="() => detalle = null">Cerrar</button>
+                @if (detalle.Estado == "porhacer" && PuedeIniciar(detalle))
+                {
+                    <button type="button" class="mt-btn mt-btn-green" disabled="@(actual is not null)" @onclick="() => Iniciar(detalle)">Iniciar trabajo</button>
+                }
+                else if (detalle.Estado == "proceso")
+                {
+                    <button type="button" class="mt-btn mt-btn-solid" @onclick="() => AbrirFinalizar(detalle)">Finalizar trabajo</button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (finalizando is not null)
+{
+    <div class="mt-modal-bg" @onclick="() => finalizando = null">
+        <div class="mt-modal" @onclick:stopPropagation="true">
+            <h3>Finalizar trabajo</h3>
+            <p>Confirma el costo final. Al finalizar, el cliente recibe un aviso para recoger su vehículo.</p>
+
+            <div class="mt-info">
+                <div><small>Cliente</small><b>@finalizando.Cliente</b></div>
+                <div><small>Vehículo</small><b>@finalizando.Vehiculo</b></div>
+                <div><small>Tiempo real</small><b>@Transcurrido(finalizando)</b></div>
+                <div><small>Costo estimado</small><b>@finalizando.CostoEstimado</b></div>
+            </div>
+
+            <label class="mt-label">Costo final (Q)</label>
+            <input type="number" step="0.01" class="mt-input" @bind="finCosto" />
+
+            <label class="mt-label">Resumen para el cliente (opcional)</label>
+            <textarea class="mt-input" @bind="finNotas" placeholder="Qué se hizo y recomendaciones a futuro."></textarea>
+
+            <div class="mt-modal-actions">
+                <button type="button" class="mt-btn mt-btn-plain" @onclick="() => finalizando = null">Cancelar</button>
+                <button type="button" class="mt-btn mt-btn-green" @onclick="ConfirmarFinalizar">Finalizar y notificar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (toast is not null)
+{
+    <div class="mt-toast">@toast</div>
+}
+
+@code {
+    private class Trabajo
+    {
+        public int Id { get; set; }
+        public string Cliente { get; set; } = "";
+        public string Vehiculo { get; set; } = "";
+        public string Placa { get; set; } = "";
+        public string Servicio { get; set; } = "";
+        public DateTime Fecha { get; set; }
+        public TimeOnly Hora { get; set; }
+        public string Estado { get; set; } = "porhacer";   // porhacer | proceso | finalizado
+        public string CostoEstimado { get; set; } = "";
+        public decimal CostoSugerido { get; set; }
+        public int EstimadoMin { get; set; } = 60;
+        public DateTime? Inicio { get; set; }
+        public int DuracionMin { get; set; }
+        public decimal CostoFinal { get; set; }
+        public string Notas { get; set; } = "";
+        public string? Comentario { get; set; }
+        public int Calificacion { get; set; }
+    }
+
+    private List<Trabajo> trabajos = new();
+
+    private string tab = "porhacer";
+    private string vista = "lista";
+    private string busqueda = "";
+
+    private Trabajo? detalle;
+    private Trabajo? finalizando;
+    private decimal finCosto;
+    private string finNotas = "";
+    private string? toast;
+    private int toastId;
+    private System.Threading.Timer? timer;
+
+    private static DateTime Hoy => DateTime.Today;
+
+    protected override void OnInitialized()
+    {
+        // TODO: reemplazar por los trabajos reales del agente (AutosPAService)
+        trabajos = new()
+        {
+            new Trabajo { Id = 1, Cliente = "Laura Jiménez", Vehiculo = "Mazda 3 2022", Placa = "P 987 XYZ", Servicio = "Diagnóstico general", Fecha = Hoy, Hora = new TimeOnly(13, 0), Estado = "proceso", CostoEstimado = "Q100–Q200", CostoSugerido = 150, EstimadoMin = 60, Inicio = DateTime.Now.AddMinutes(-35) },
+            new Trabajo { Id = 2, Cliente = "Juan Pérez", Vehiculo = "Toyota Corolla 2018", Placa = "P 640 MKD", Servicio = "Cambio de aceite y filtros", Fecha = Hoy, Hora = new TimeOnly(15, 0), CostoEstimado = "Q150–Q300", CostoSugerido = 220, EstimadoMin = 45 },
+            new Trabajo { Id = 3, Cliente = "Esteban Jiménez", Vehiculo = "Toyota Corolla 2019", Placa = "P 428 DKL", Servicio = "Mantenimiento preventivo", Fecha = Hoy.AddDays(1), Hora = new TimeOnly(9, 0), CostoEstimado = "Q150–Q300", CostoSugerido = 240, EstimadoMin = 60, Notas = "Pidió revisar también el aire acondicionado." },
+            new Trabajo { Id = 4, Cliente = "Ana Morales", Vehiculo = "Kia Rio 2017", Placa = "P 622 HLT", Servicio = "Llantas y alineación", Fecha = Hoy.AddDays(1), Hora = new TimeOnly(15, 0), CostoEstimado = "Q60–Q180", CostoSugerido = 120, EstimadoMin = 50 },
+            new Trabajo { Id = 5, Cliente = "Pedro Castillo", Vehiculo = "Toyota Hilux 2016", Placa = "P 311 BQR", Servicio = "Sistema de frenos", Fecha = Hoy.AddDays(2), Hora = new TimeOnly(9, 0), CostoEstimado = "Q200–Q450", CostoSugerido = 350, EstimadoMin = 90 },
+            new Trabajo { Id = 6, Cliente = "Mario Castillo", Vehiculo = "Hyundai Tucson 2020", Placa = "P 221 LLT", Servicio = "Reemplazo de frenos", Fecha = Hoy.AddDays(-1), Hora = new TimeOnly(9, 0), Estado = "finalizado", CostoEstimado = "Q200–Q450", EstimadoMin = 90, DuracionMin = 95, CostoFinal = 380, Comentario = "Excelente atención, muy rápido y explicó todo bien.", Calificacion = 5 },
+            new Trabajo { Id = 7, Cliente = "Ana Castañeda", Vehiculo = "Kia Rio 2018", Placa = "P 553 ABH", Servicio = "Cambio de aceite", Fecha = Hoy.AddDays(-3), Hora = new TimeOnly(11, 0), Estado = "finalizado", CostoEstimado = "Q150–Q300", EstimadoMin = 40, DuracionMin = 55, CostoFinal = 185, Comentario = "Buen trabajo, pero tardó un poco más de lo esperado.", Calificacion = 4 },
+            new Trabajo { Id = 8, Cliente = "Luis García", Vehiculo = "Mazda 3 2019", Placa = "P 987 XYZ", Servicio = "Frenos delanteros", Fecha = Hoy.AddDays(-5), Hora = new TimeOnly(14, 0), Estado = "finalizado", CostoEstimado = "Q200–Q450", EstimadoMin = 90, DuracionMin = 80, CostoFinal = 310 },
+        };
+
+        // Refresca el avance del trabajo en curso cada 30 segundos
+        timer = new System.Threading.Timer(_ => InvokeAsync(StateHasChanged), null, 30000, 30000);
+    }
+
+    public void Dispose() => timer?.Dispose();
+
+    // ---------- Calculados ----------
+    private bool PorDia => vista == "dia" && tab != "finalizado";
+
+    private Trabajo? actual => trabajos.FirstOrDefault(x => x.Estado == "proceso");
+
+    private int Cuenta(string estado) => trabajos.Count(x => x.Estado == estado);
+
+    private IEnumerable<Trabajo> Filtrados
+    {
+        get
+        {
+            var q = trabajos
+                .Where(x => x.Estado == tab)
+                .Where(x => string.IsNullOrWhiteSpace(busqueda)
+                            || $"{x.Cliente} {x.Vehiculo} {x.Placa} {x.Servicio}".Contains(busqueda.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            return tab == "finalizado"
+                ? q.OrderByDescending(x => x.Fecha).ThenByDescending(x => x.Hora)
+                : q.OrderBy(x => x.Fecha).ThenBy(x => x.Hora);
+        }
+    }
+
+    private string? PromedioTexto
+    {
+        get
+        {
+            var notas = trabajos.Where(x => x.Estado == "finalizado" && x.Calificacion > 0).Select(x => x.Calificacion).ToList();
+            return notas.Any() ? notas.Average().ToString("0.0", CultureInfo.InvariantCulture) : null;
+        }
+    }
+
+    private bool PuedeIniciar(Trabajo t) => Hoy >= t.Fecha.Date;
+
+    private bool Excedido(Trabajo t) => t.Inicio is not null && (DateTime.Now - t.Inicio.Value).TotalMinutes > t.EstimadoMin;
+
+    private int Progreso(Trabajo t)
+    {
+        if (t.Inicio is null || t.EstimadoMin == 0) return 0;
+        var pct = (DateTime.Now - t.Inicio.Value).TotalMinutes / t.EstimadoMin * 100;
+        return (int)Math.Clamp(pct, 3, 100);
+    }
+
+    private string Transcurrido(Trabajo t)
+    {
+        if (t.Inicio is null) return "Sin iniciar";
+        var min = (int)(DateTime.Now - t.Inicio.Value).TotalMinutes;
+        return $"{Math.Max(0, min)} min";
+    }
+
+    // ---------- Acciones ----------
+    private async Task Iniciar(Trabajo t)
+    {
+        if (actual is not null) return;
+
+        t.Estado = "proceso";
+        t.Inicio = DateTime.Now;
+        detalle = null;
+        tab = "proceso";
+        // TODO: guardar el cambio de estado en el servicio
+        await Aviso($"Iniciaste el servicio de {t.Cliente}.");
+    }
+
+    private void AbrirFinalizar(Trabajo t)
+    {
+        detalle = null;
+        finalizando = t;
+        finCosto = t.CostoSugerido;
+        finNotas = "";
+    }
+
+    private async Task ConfirmarFinalizar()
+    {
+        if (finalizando is null) return;
+
+        var t = finalizando;
+        var inicio = t.Inicio ?? DateTime.Now;
+
+        t.Estado = "finalizado";
+        t.DuracionMin = Math.Max(1, (int)(DateTime.Now - inicio).TotalMinutes);
+        t.CostoFinal = finCosto;
+        if (!string.IsNullOrWhiteSpace(finNotas)) t.Notas = finNotas.Trim();
+
+        finalizando = null;
+        tab = "finalizado";
+        // TODO: guardar en el servicio y notificar al cliente que su vehículo está listo
+        await Aviso($"Se notificó a {t.Cliente}: su {t.Servicio.ToLower()} ya está listo.");
+    }
+
+    private async Task Aviso(string mensaje)
+    {
+        var id = ++toastId;
+        toast = mensaje;
+        StateHasChanged();
+        await Task.Delay(3500);
+        if (id == toastId) toast = null;
+    }
+
+    // ---------- Formatos ----------
+    private static readonly string[] DiasCortos = { "Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb" };
+    private static readonly string[] DiasLargos = { "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado" };
+    private static readonly string[] Meses = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+    private static readonly string[] MesesLargos = { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" };
+
+    private static string FechaLarga(DateTime f) => $"{DiasLargos[(int)f.DayOfWeek]} {f.Day} de {MesesLargos[f.Month - 1]}";
+
+    private static string FormatoHora(TimeOnly h)
+    {
+        var h12 = h.Hour % 12 == 0 ? 12 : h.Hour % 12;
+        return $"{h12}:{h.Minute:00} {(h.Hour > 11 ? "p. m." : "a. m.")}";
+    }
+
+    private static string Cuando(DateTime f)
+    {
+        var n = (f.Date - Hoy).Days;
+        if (n == 0) return "Hoy";
+        if (n == 1) return "Mañana";
+        if (n == -1) return "Ayer";
+        if (n > 1) return $"En {n} días";
+        return $"Hace {-n} días";
+    }
+
+    private static string Etiqueta(string estado) => estado switch
+    {
+        "porhacer" => "Por hacer",
+        "proceso" => "En proceso",
+        "finalizado" => "Finalizado",
+        _ => estado
+    };
+
+    private static string Estrellas(int n) => new string('★', n) + new string('☆', 5 - n);
+
+    private static string Quetzales(decimal monto) => "Q" + monto.ToString("N2", CultureInfo.InvariantCulture);
+
+    private static string Iniciales(string nombre) =>
+        string.Concat(nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpper(p[0])));
+}

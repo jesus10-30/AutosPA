@@ -1,0 +1,1390 @@
+﻿@page "/citas"
+@page "/citas/nueva"
+@using System.Globalization
+
+<PageTitle>FlexiCar — Citas</PageTitle>
+
+<style>
+    .ct-page {
+        max-width: 1150px;
+        margin: 0 auto;
+        padding: 40px 28px 0;
+    }
+
+    .ct-head {
+        margin-bottom: 26px;
+    }
+
+    .ct-eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #1f8a5b;
+        margin-bottom: 8px;
+    }
+
+    .ct-head h1 {
+        margin: 0 0 8px;
+        font-size: clamp(32px, 4vw, 44px);
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .ct-head p {
+        margin: 0;
+        max-width: 620px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #6b7a90;
+    }
+
+    /* Aviso de inicio de sesión */
+    .ct-gate {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        padding: 16px 20px;
+        border-radius: 14px;
+        background: #fff7e6;
+        border: 1px solid #f3dca8;
+        color: #7a5200;
+        font-size: 14px;
+    }
+
+        .ct-gate a {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            background: #14406f;
+            color: #ffffff;
+            margin-left: 8px;
+        }
+
+    .ct-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
+    }
+
+    .ct-card {
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 4px 16px rgba(15, 42, 74, .06);
+    }
+
+    .ct-card-title {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .ct-step {
+        padding: 22px 0 6px;
+        border-top: 1px solid #eef1f6;
+        margin-top: 18px;
+    }
+
+    .ct-step-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+        .ct-step-head h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f2a4a;
+        }
+
+    .ct-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #14406f;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .ct-label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4a5a70;
+    }
+
+    .ct-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-family: inherit;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+        .ct-input:focus {
+            outline: 2px solid #1f5fa8;
+            outline-offset: 0;
+            background: #ffffff;
+        }
+
+    .ct-hint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+        .ct-hint.warn {
+            color: #9a6200;
+        }
+
+    .ct-lock {
+        padding: 16px;
+        border-radius: 12px;
+        background: #f2f6fb;
+        border: 1px dashed #c4d2e4;
+        font-size: 13px;
+        color: #4a5a70;
+    }
+
+    .ct-link {
+        margin-top: 10px;
+        padding: 0;
+        border: 0;
+        background: none;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a56a0;
+        cursor: pointer;
+    }
+
+        .ct-link:hover {
+            text-decoration: underline;
+        }
+
+    .ct-newveh {
+        margin-top: 12px;
+        padding: 16px;
+        border-radius: 14px;
+        background: #f2f6fb;
+        border: 1px solid #e1e9f3;
+    }
+
+    .ct-grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .ct-newveh .ct-label {
+        margin-top: 0;
+    }
+
+    .ct-btn-sm {
+        margin-top: 14px;
+        padding: 9px 18px;
+        border: 0;
+        border-radius: 9px;
+        background: #14406f;
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Documentos */
+    .ct-drop {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 18px;
+        border: 1.5px dashed #b7c7dc;
+        border-radius: 14px;
+        background: #fbfcfe;
+        text-align: center;
+        font-size: 13px;
+        color: #4a5a70;
+        cursor: pointer;
+        transition: background .2s, border-color .2s;
+    }
+
+        .ct-drop:hover {
+            background: #f2f6fb;
+            border-color: #1f5fa8;
+        }
+
+        .ct-drop svg {
+            width: 26px;
+            height: 26px;
+            fill: none;
+            stroke: #1a56a0;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .ct-drop b {
+            color: #14406f;
+        }
+
+        .ct-drop small {
+            color: #8492a6;
+            font-size: 11px;
+        }
+
+    .ct-file {
+        display: none;
+    }
+
+    .ct-files {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .ct-file-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: #f2f6fb;
+        font-size: 12px;
+        color: #334155;
+    }
+
+        .ct-file-row small {
+            color: #8492a6;
+            margin-left: 8px;
+        }
+
+        .ct-file-row button {
+            border: 0;
+            background: none;
+            color: #b42318;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+    /* Servicios */
+    .ct-services {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .ct-service {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 14px;
+        border: 1.5px solid #e1e9f3;
+        border-radius: 12px;
+        background: #ffffff;
+        text-align: left;
+        font-family: inherit;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+
+        .ct-service:hover {
+            border-color: #9db8d9;
+        }
+
+        .ct-service.sel {
+            border-color: #14406f;
+            background: #eef4fb;
+        }
+
+    .ct-service-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f2a4a;
+    }
+
+    .ct-service-meta {
+        font-size: 11px;
+        color: #6b7a90;
+    }
+
+    /* Agentes */
+    .ct-agents {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 4px;
+    }
+
+    .ct-agent {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1.5px solid #e1e9f3;
+        border-radius: 12px;
+        background: #ffffff;
+        text-align: left;
+        font-family: inherit;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+
+        .ct-agent:hover:not(:disabled) {
+            border-color: #9db8d9;
+        }
+
+        .ct-agent.sel {
+            border-color: #14406f;
+            background: #eef4fb;
+        }
+
+        .ct-agent:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    .ct-avatar {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #14406f, #1f8a5b);
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .ct-ag-name {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f2a4a;
+    }
+
+    .ct-ag-role {
+        display: block;
+        font-size: 11px;
+        color: #6b7a90;
+    }
+
+    .ct-ag-free {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #146c43;
+    }
+
+        .ct-ag-free.none {
+            color: #b42318;
+        }
+
+    .ct-tag-esp {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: #e3f5ec;
+        color: #146c43;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    /* Horarios */
+    .ct-slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    .ct-slot {
+        padding: 9px 14px;
+        border: 1.5px solid #dbe3ee;
+        border-radius: 10px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f2a4a;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+
+        .ct-slot:hover:not(:disabled) {
+            border-color: #14406f;
+        }
+
+        .ct-slot.sel {
+            background: #14406f;
+            border-color: #14406f;
+            color: #ffffff;
+        }
+
+        .ct-slot:disabled {
+            background: #f2f4f8;
+            color: #aab4c3;
+            text-decoration: line-through;
+            cursor: not-allowed;
+        }
+
+    /* Estimación */
+    .ct-est {
+        margin-top: 24px;
+        padding: 20px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #eef4fb, #f1f9f5);
+        border: 1px solid #dbe7f3;
+    }
+
+    .ct-est-title {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #1a56a0;
+        margin-bottom: 12px;
+    }
+
+    .ct-est-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+        .ct-est-grid small {
+            display: block;
+            font-size: 12px;
+            color: #6b7a90;
+        }
+
+        .ct-est-grid b {
+            font-size: 22px;
+            color: #0f2a4a;
+        }
+
+    .ct-est-note {
+        margin-top: 10px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #4a5a70;
+    }
+
+    .ct-error {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #fdecea;
+        color: #b42318;
+        font-size: 13px;
+    }
+
+    .ct-confirm {
+        width: 100%;
+        margin-top: 18px;
+        padding: 15px;
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #14406f, #1f5fa8);
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .ct-confirm:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(20, 64, 111, .3);
+        }
+
+        .ct-confirm:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    /* Lista de citas */
+    .ct-side {
+        position: sticky;
+        top: 92px;
+    }
+
+    .ct-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .ct-tab {
+        padding: 8px 16px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6b7a90;
+        cursor: pointer;
+    }
+
+        .ct-tab.active {
+            background: #14406f;
+            color: #ffffff;
+        }
+
+        .ct-tab span {
+            margin-left: 6px;
+            opacity: .8;
+        }
+
+    .ct-cita {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 12px;
+        padding: 16px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+    }
+
+    .ct-date {
+        flex-shrink: 0;
+        width: 52px;
+        padding: 8px 0;
+        border-radius: 12px;
+        background: #eef4fb;
+        text-align: center;
+    }
+
+        .ct-date b {
+            display: block;
+            font-size: 20px;
+            line-height: 1.1;
+            color: #14406f;
+        }
+
+        .ct-date span {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #6b7a90;
+        }
+
+    .ct-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+        .ct-info h4 {
+            margin: 0 0 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+    .ct-sub {
+        font-size: 12px;
+        line-height: 1.5;
+        color: #6b7a90;
+    }
+
+    .ct-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .ct-status {
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+        .ct-status.aprobada {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .ct-status.espera {
+            background: #fdf1dc;
+            color: #9a6200;
+        }
+
+        .ct-status.finalizada {
+            background: #eceff4;
+            color: #5b6778;
+        }
+
+        .ct-status.cancelada {
+            background: #fdecea;
+            color: #b42318;
+        }
+
+    .ct-cancel {
+        border: 0;
+        background: none;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        color: #b42318;
+        cursor: pointer;
+    }
+
+        .ct-cancel:hover {
+            text-decoration: underline;
+        }
+
+    .ct-empty {
+        padding: 28px;
+        border: 1px dashed #c4d2e4;
+        border-radius: 16px;
+        text-align: center;
+        font-size: 13px;
+        color: #6b7a90;
+    }
+
+    .ct-note {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: #f2f6fb;
+        font-size: 12px;
+        line-height: 1.6;
+        color: #4a5a70;
+    }
+
+    /* Confirmación */
+    .ct-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .ct-modal {
+        width: 100%;
+        max-width: 440px;
+        padding: 32px 30px 28px;
+        border-radius: 22px;
+        background: #ffffff;
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+    .ct-check {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 62px;
+        height: 62px;
+        margin-bottom: 14px;
+        border-radius: 50%;
+        background: #e3f5ec;
+    }
+
+        .ct-check svg {
+            width: 30px;
+            height: 30px;
+            fill: none;
+            stroke: #146c43;
+            stroke-width: 2.4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    .ct-modal h3 {
+        margin: 0 0 6px;
+        font-size: 21px;
+        color: #0f2a4a;
+    }
+
+    .ct-modal > p {
+        margin: 0 0 18px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #6b7a90;
+    }
+
+    .ct-resumen {
+        margin-bottom: 20px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: #f2f6fb;
+        text-align: left;
+    }
+
+        .ct-resumen div {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 4px 0;
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .ct-resumen span {
+            color: #6b7a90;
+        }
+
+        .ct-resumen b {
+            text-align: right;
+            color: #0f2a4a;
+        }
+
+    @@media (max-width: 1000px) {
+        .ct-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .ct-side {
+            position: static;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .ct-page {
+            padding: 28px 14px 0;
+        }
+
+        .ct-card {
+            padding: 20px;
+        }
+
+        .ct-services, .ct-agents, .ct-grid2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="ct-page">
+
+    <header class="ct-head">
+        <div class="ct-eyebrow">Agenda tu mantenimiento</div>
+        <h1>Citas</h1>
+        <p>Elige tu vehículo, el servicio, el agente y el horario. Calculamos el costo y el tiempo estimado en tiempo real.</p>
+    </header>
+
+    @if (!sesionIniciada)
+    {
+        <div class="ct-gate">
+            <span>Para agendar una cita debes iniciar sesión: así puedes registrar tu vehículo y ver más detalles.</span>
+            <span>
+                <a href="login">Iniciar sesión</a>
+                <a href="registro">Regístrate</a>
+            </span>
+        </div>
+    }
+
+    <div class="ct-layout">
+
+        <!-- ================= FORMULARIO ================= -->
+        <section class="ct-card">
+            <h2 class="ct-card-title">Nueva cita</h2>
+
+            <!-- 1. Vehículo y conductor -->
+            <div class="ct-step" style="border-top:0; margin-top:10px;">
+                <div class="ct-step-head"><span class="ct-num">1</span><h3>Vehículo y conductor</h3></div>
+
+                @if (!sesionIniciada)
+                {
+                    <div class="ct-lock">Inicia sesión para registrar tu vehículo, cargar sus documentos y ver más detalles.</div>
+                }
+                else
+                {
+                    <label class="ct-label">Vehículo</label>
+                    <select class="ct-input" @bind="vehiculoId">
+                        @foreach (var v in vehiculos)
+                        {
+                            <option value="@v.Id">@v.Etiqueta</option>
+                        }
+                    </select>
+
+                    @if (VehiculoActual is not null)
+                    {
+                        <div class="ct-hint">Conductor: @VehiculoActual.Conductor · Licencia: @VehiculoActual.Licencia</div>
+                    }
+
+                    <button type="button" class="ct-link" @onclick="() => mostrarNuevoVehiculo = !mostrarNuevoVehiculo">
+                        @(mostrarNuevoVehiculo ? "Cancelar registro" : "+ Registrar otro vehículo")
+                    </button>
+
+                    @if (mostrarNuevoVehiculo)
+                    {
+                        <div class="ct-newveh">
+                            <div class="ct-grid2">
+                                <div><label class="ct-label">Marca</label><input class="ct-input" @bind="nvMarca" placeholder="Toyota" /></div>
+                                <div><label class="ct-label">Modelo</label><input class="ct-input" @bind="nvModelo" placeholder="Corolla" /></div>
+                                <div><label class="ct-label">Año</label><input class="ct-input" @bind="nvAnio" placeholder="2020" /></div>
+                                <div><label class="ct-label">Placa</label><input class="ct-input" @bind="nvPlaca" placeholder="P 000 ABC" /></div>
+                                <div><label class="ct-label">Conductor</label><input class="ct-input" @bind="nvConductor" placeholder="Nombre completo" /></div>
+                                <div><label class="ct-label">Licencia</label><input class="ct-input" @bind="nvLicencia" placeholder="No. de licencia" /></div>
+                            </div>
+                            @if (errorVehiculo is not null)
+                            {
+                                <div class="ct-hint warn">@errorVehiculo</div>
+                            }
+                            <button type="button" class="ct-btn-sm" @onclick="GuardarVehiculo">Guardar vehículo</button>
+                        </div>
+                    }
+
+                    <label class="ct-label">Documentos del vehículo</label>
+                    <label class="ct-drop">
+                        <InputFile OnChange="OnArchivos" multiple accept=".pdf,.jpg,.jpeg,.png" class="ct-file" />
+                        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg>
+                        <span><b>Cargar documentos</b> — seguro, inspección o tarjeta de circulación</span>
+                        <small>PDF, JPG o PNG · máx. 5 MB por archivo</small>
+                    </label>
+
+                    @if (errorArchivo is not null)
+                    {
+                        <div class="ct-hint warn">@errorArchivo</div>
+                    }
+
+                    @if (archivos.Any())
+                    {
+                        <div class="ct-files">
+                            @foreach (var a in archivos)
+                            {
+                                <div class="ct-file-row">
+                                    <span>@a.Nombre<small>@a.Tamano</small></span>
+                                    <button type="button" @onclick="() => archivos.Remove(a)">Quitar</button>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- 2. Servicio -->
+            <div class="ct-step">
+                <div class="ct-step-head"><span class="ct-num">2</span><h3>Tipo de mantenimiento</h3></div>
+                <div class="ct-services">
+                    @foreach (var s in servicios)
+                    {
+                        <button type="button" class="ct-service @(s.Id == servicioId ? "sel" : "")" @onclick="() => servicioId = s.Id">
+                            <span class="ct-service-name">@s.Nombre</span>
+                            <span class="ct-service-meta">@TextoCosto(s.CostoMin, s.CostoMax, 1.0) · @TextoTiempo(s.TiempoMin, s.TiempoMax, 1.0)</span>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- 3. Fecha, agente y hora -->
+            <div class="ct-step">
+                <div class="ct-step-head"><span class="ct-num">3</span><h3>Fecha, agente y hora</h3></div>
+
+                <label class="ct-label" style="margin-top:0;">Fecha</label>
+                <input type="date" class="ct-input" min="@HoyIso" value="@FechaIso" @onchange="OnFecha" />
+
+                <label class="ct-label">Agente (según disponibilidad ese día)</label>
+                <div class="ct-agents">
+                    <button type="button" class="ct-agent @(agenteSel is null ? "sel" : "")" @onclick="() => SeleccionarAgente(null)">
+                        <span class="ct-avatar">★</span>
+                        <span>
+                            <span class="ct-ag-name">Cualquiera disponible</span>
+                            <span class="ct-ag-role">Asignamos al mejor agente libre</span>
+                        </span>
+                    </button>
+
+                    @foreach (var a in agentes)
+                    {
+                        var libres = HorariosLibres(a);
+                        <button type="button" class="ct-agent @(agenteSel == a ? "sel" : "")" disabled="@(libres == 0)" @onclick="() => SeleccionarAgente(a)">
+                            <span class="ct-avatar">@a.Iniciales</span>
+                            <span>
+                                <span class="ct-ag-name">@a.Nombre @if (EsEspecialista(a)) {
+                                <span class="ct-tag-esp">Especialista</span>
+                            }
+</span>
+                            <span class="ct-ag-role">@a.Especialidad</span>
+                            <span class="ct-ag-free @(libres == 0 ? "none" : "")">@(libres == 0 ? "Sin horarios ese día" : $"{libres} horarios libres")</span>
+                        </span>
+                    </button>
+                                        }
+                </div>
+
+                <label class="ct-label">Hora</label>
+                @if (fecha.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    <div class="ct-hint warn">El taller no atiende los domingos. Elige otra fecha.</div>
+                }
+                else
+                {
+                    <div class="ct-slots">
+                        @foreach (var h in HorasTaller(fecha))
+                        {
+                            var libre = HoraDisponible(h);
+                            <button type="button" class="ct-slot @(hora == h ? "sel" : "")" disabled="@(!libre)" @onclick="() => hora = h">@FormatoHora(h)</button>
+                        }
+                    </div>
+                    <div class="ct-hint">Los horarios tachados ya están ocupados o el agente no atiende en ese momento.</div>
+                }
+            </div>
+
+            <!-- Estimación en tiempo real -->
+            @{
+                var est = Estimacion;
+            }
+            <div class="ct-est">
+                <div class="ct-est-title">Estimación en tiempo real</div>
+                <div class="ct-est-grid">
+                    <div><small>Tiempo estimado</small><b>@est.Tiempo</b></div>
+                    <div><small>Costo estimado</small><b>@est.Costo</b></div>
+                </div>
+                <div class="ct-est-note">@est.Recomendacion</div>
+                <div class="ct-est-note">@NotaAgente()</div>
+            </div>
+
+            @if (error is not null)
+            {
+                <div class="ct-error">@error</div>
+            }
+
+            <button type="button" class="ct-confirm" disabled="@(!sesionIniciada)" @onclick="ConfirmarCita">Confirmar cita</button>
+        </section>
+
+        <!-- ================= LISTA DE CITAS ================= -->
+        <aside class="ct-side">
+            <div class="ct-tabs">
+                <button type="button" class="ct-tab @(mostrarProximas ? "active" : "")" @onclick="() => mostrarProximas = true">Próximas<span>@Proximas.Count()</span></button>
+                <button type="button" class="ct-tab @(!mostrarProximas ? "active" : "")" @onclick="() => mostrarProximas = false">Historial<span>@Historial.Count()</span></button>
+            </div>
+
+            @foreach (var c in CitasVisibles)
+            {
+                <div class="ct-cita">
+                    <div class="ct-date"><b>@c.Fecha.Day</b><span>@Mes(c.Fecha)</span></div>
+                    <div class="ct-info">
+                        <h4>@c.Servicio</h4>
+                        <div class="ct-sub">@c.Vehiculo</div>
+                        <div class="ct-sub">@FormatoHora(c.Hora) · Agente: @c.Agente</div>
+                        <div class="ct-sub">@c.Costo · @c.Tiempo</div>
+                    </div>
+                    <div class="ct-right">
+                        <span class="ct-status @ClaseEstado(c.Estado)">@c.Estado</span>
+                        @if (c.Estado == "En espera")
+                        {
+                            <button type="button" class="ct-cancel" @onclick="() => Cancelar(c)">Cancelar</button>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!CitasVisibles.Any())
+            {
+                <div class="ct-empty">No tienes citas @(mostrarProximas ? "próximas" : "en el historial") todavía.</div>
+            }
+
+            <div class="ct-note">
+                <b>¿Cómo funciona?</b><br />
+                Al confirmar, la cita queda <b>En espera</b> y notificamos al agente. Cuando la apruebe pasará a <b>Aprobada</b>, y te avisaremos de nuevo al finalizar el trabajo.
+            </div>
+        </aside>
+    </div>
+</div>
+
+@if (confirmada is not null)
+{
+    <div class="ct-modal-bg" @onclick="() => confirmada = null">
+        <div class="ct-modal" @onclick:stopPropagation="true">
+            <div class="ct-check">
+                <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            </div>
+            <h3>¡Cita registrada!</h3>
+            <p>Tu solicitud fue aprobada para agendarse y ya aparece en tu lista como <b>En espera</b>. El agente fue notificado y la confirmará a la brevedad.</p>
+
+            <div class="ct-resumen">
+                <div><span>Servicio</span><b>@confirmada.Servicio</b></div>
+                <div><span>Vehículo</span><b>@confirmada.Vehiculo</b></div>
+                <div><span>Fecha</span><b>@FechaLarga(confirmada.Fecha)</b></div>
+                <div><span>Hora</span><b>@FormatoHora(confirmada.Hora)</b></div>
+                <div><span>Agente</span><b>@confirmada.Agente</b></div>
+                <div><span>Costo aprox.</span><b>@confirmada.Costo</b></div>
+                <div><span>Tiempo aprox.</span><b>@confirmada.Tiempo</b></div>
+            </div>
+
+            <button type="button" class="ct-confirm" style="margin-top:0;" @onclick="() => confirmada = null">Entendido</button>
+        </div>
+    </div>
+}
+
+@code {
+    // Cambia a false para ver cómo se bloquea el registro de vehículo cuando no hay sesión.
+    // TODO: conectar con el inicio de sesión real.
+    private bool sesionIniciada = true;
+
+    [SupplyParameterFromQuery(Name = "servicio")]
+    public int? ServicioQuery { get; set; }
+
+    // ---------- Modelos ----------
+    private record Servicio(int Id, string Nombre, string Categoria, int CostoMin, int? CostoMax, int? TiempoMin, int? TiempoMax);
+
+    private record Agente(string Nombre, string Iniciales, string Especialidad, string[] Categorias, double Tarifa, DayOfWeek[] DiasLibres, int[] HorasBloqueadas);
+
+    private record Estim(string Costo, string Tiempo, string Recomendacion);
+
+    private record ArchivoDto(string Nombre, string Tamano);
+
+    private class VehiculoDto
+    {
+        public int Id { get; set; }
+        public string Marca { get; set; } = "";
+        public string Modelo { get; set; } = "";
+        public string Anio { get; set; } = "";
+        public string Placa { get; set; } = "";
+        public string Conductor { get; set; } = "";
+        public string Licencia { get; set; } = "";
+        public string Etiqueta => $"{Marca} {Modelo} — {Placa}";
+    }
+
+    private class CitaDto
+    {
+        public DateTime Fecha { get; set; }
+        public TimeOnly Hora { get; set; }
+        public string Vehiculo { get; set; } = "";
+        public string Servicio { get; set; } = "";
+        public string Agente { get; set; } = "";
+        public string Estado { get; set; } = "";   // En espera | Aprobada | Finalizada | Cancelada
+        public string Costo { get; set; } = "";
+        public string Tiempo { get; set; } = "";
+    }
+
+    // ---------- Datos de ejemplo (TODO: reemplazar por el servicio real) ----------
+    private List<Servicio> servicios = new()
+    {
+        new(1, "Mantenimiento preventivo", "Mantenimiento", 150, 300, 45, 60),
+        new(2, "Diagnóstico general", "Diagnóstico", 100, 200, 30, 30),
+        new(3, "Reemplazo de componentes", "Componentes", 80, null, null, null),
+        new(4, "Sistema de frenos", "Reparación", 200, 450, 60, 120),
+        new(5, "Batería y sistema eléctrico", "Reparación", 120, 250, 40, 40),
+        new(6, "Llantas y alineación", "Mantenimiento", 60, 180, 50, 50),
+    };
+
+    private List<Agente> agentes = new()
+    {
+        new("Carlos Ruiz", "CR", "Mecánica general", new[] { "Mantenimiento", "Componentes" }, 1.00, Array.Empty<DayOfWeek>(), Array.Empty<int>()),
+        new("Ana López", "AL", "Diagnóstico electrónico", new[] { "Diagnóstico" }, 1.10, Array.Empty<DayOfWeek>(), new[] { 8 }),
+        new("Mario Gómez", "MG", "Frenos y suspensión", new[] { "Reparación" }, 1.15, new[] { DayOfWeek.Wednesday }, new[] { 14, 15 }),
+        new("Diana Pérez", "DP", "Aire acondicionado", new[] { "Componentes" }, 1.05, new[] { DayOfWeek.Friday }, Array.Empty<int>()),
+    };
+
+    private List<VehiculoDto> vehiculos = new()
+    {
+        new VehiculoDto { Id = 1, Marca = "Toyota", Modelo = "Corolla", Anio = "2019", Placa = "P 428 DKL", Conductor = "Est. Jiménez", Licencia = "L-100234" },
+        new VehiculoDto { Id = 2, Marca = "Honda", Modelo = "CR-V", Anio = "2021", Placa = "P 019 CTM", Conductor = "Est. Jiménez", Licencia = "L-100234" },
+    };
+
+    private List<CitaDto> citas = new()
+    {
+        new CitaDto { Fecha = new DateTime(2026, 10, 2), Hora = new TimeOnly(10, 0), Vehiculo = "Toyota Corolla — P 428 DKL", Servicio = "Mantenimiento preventivo", Agente = "Carlos Ruiz", Estado = "Aprobada", Costo = "Q150–Q300", Tiempo = "40–50 min" },
+        new CitaDto { Fecha = new DateTime(2026, 10, 6), Hora = new TimeOnly(14, 0), Vehiculo = "Honda CR-V — P 019 CTM", Servicio = "Diagnóstico general", Agente = "Ana López", Estado = "En espera", Costo = "Q110–Q220", Tiempo = "25–30 min" },
+        new CitaDto { Fecha = new DateTime(2026, 9, 2), Hora = new TimeOnly(9, 0), Vehiculo = "Toyota Corolla — P 428 DKL", Servicio = "Batería y sistema eléctrico", Agente = "Carlos Ruiz", Estado = "Finalizada", Costo = "Q120–Q250", Tiempo = "40 min" },
+    };
+
+    // ---------- Estado del formulario ----------
+    private int vehiculoId;
+    private int servicioId = 1;
+    private DateTime fecha = DateTime.Today.AddDays(1);
+    private Agente? agenteSel;
+    private TimeOnly? hora;
+    private string? error;
+    private CitaDto? confirmada;
+    private bool mostrarProximas = true;
+
+    private bool mostrarNuevoVehiculo;
+    private string nvMarca = "", nvModelo = "", nvAnio = "", nvPlaca = "", nvConductor = "", nvLicencia = "";
+    private string? errorVehiculo;
+
+    private List<ArchivoDto> archivos = new();
+    private string? errorArchivo;
+
+    protected override void OnInitialized()
+    {
+        vehiculoId = vehiculos.First().Id;
+        if (fecha.DayOfWeek == DayOfWeek.Sunday) fecha = fecha.AddDays(1);
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Viene de Servicios: /citas/nueva?servicio=2
+        if (ServicioQuery is int id && servicios.Any(s => s.Id == id))
+        {
+            servicioId = id;
+        }
+    }
+
+    // ---------- Propiedades calculadas ----------
+    private VehiculoDto? VehiculoActual => vehiculos.FirstOrDefault(v => v.Id == vehiculoId);
+
+    private Servicio ServicioActual => servicios.First(s => s.Id == servicioId);
+
+    private string HoyIso => DateTime.Today.ToString("yyyy-MM-dd");
+
+    private string FechaIso => fecha.ToString("yyyy-MM-dd");
+
+    private Estim Estimacion => Calcular(ServicioActual, agenteSel);
+
+    private IEnumerable<CitaDto> Proximas => citas.Where(c => c.Estado == "Aprobada" || c.Estado == "En espera").OrderBy(c => c.Fecha).ThenBy(c => c.Hora);
+
+    private IEnumerable<CitaDto> Historial => citas.Where(c => c.Estado == "Finalizada" || c.Estado == "Cancelada").OrderByDescending(c => c.Fecha);
+
+    private IEnumerable<CitaDto> CitasVisibles => mostrarProximas ? Proximas : Historial;
+
+    // ---------- Disponibilidad ----------
+    private static readonly int[] HorasBase = { 8, 9, 10, 11, 14, 15, 16, 17 };
+
+    private IEnumerable<TimeOnly> HorasTaller(DateTime f)
+    {
+        if (f.DayOfWeek == DayOfWeek.Sunday) return Enumerable.Empty<TimeOnly>();
+        var horas = f.DayOfWeek == DayOfWeek.Saturday ? HorasBase.Where(h => h < 13) : HorasBase;
+        return horas.Select(h => new TimeOnly(h, 0));
+    }
+
+    private bool AgenteLibreEn(Agente a, DateTime f, TimeOnly h) =>
+        !a.DiasLibres.Contains(f.DayOfWeek)
+        && !a.HorasBloqueadas.Contains(h.Hour)
+        && !citas.Any(c => c.Agente == a.Nombre && c.Fecha.Date == f.Date && c.Hora == h
+                           && (c.Estado == "Aprobada" || c.Estado == "En espera"));
+
+    private int HorariosLibres(Agente a) => HorasTaller(fecha).Count(h => AgenteLibreEn(a, fecha, h));
+
+    private bool HoraDisponible(TimeOnly h) =>
+        agenteSel is not null
+            ? AgenteLibreEn(agenteSel, fecha, h)
+            : agentes.Any(a => AgenteLibreEn(a, fecha, h));
+
+    private bool EsEspecialista(Agente a) => a.Categorias.Contains(ServicioActual.Categoria);
+
+    // ---------- Acciones ----------
+    private void OnFecha(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var d))
+        {
+            fecha = d.Date;
+            if (hora is not null && !HoraDisponible(hora.Value)) hora = null;
+            if (agenteSel is not null && HorariosLibres(agenteSel) == 0) agenteSel = null;
+        }
+    }
+
+    private void SeleccionarAgente(Agente? a)
+    {
+        agenteSel = a;
+        if (hora is not null && !HoraDisponible(hora.Value)) hora = null;
+    }
+
+    private void GuardarVehiculo()
+    {
+        if (string.IsNullOrWhiteSpace(nvMarca) || string.IsNullOrWhiteSpace(nvModelo) || string.IsNullOrWhiteSpace(nvPlaca))
+        {
+            errorVehiculo = "Marca, modelo y placa son obligatorios.";
+            return;
+        }
+
+        var nuevo = new VehiculoDto
+        {
+            Id = vehiculos.Max(v => v.Id) + 1,
+            Marca = nvMarca.Trim(),
+            Modelo = nvModelo.Trim(),
+            Anio = nvAnio.Trim(),
+            Placa = nvPlaca.Trim().ToUpper(),
+            Conductor = string.IsNullOrWhiteSpace(nvConductor) ? "Sin registrar" : nvConductor.Trim(),
+            Licencia = string.IsNullOrWhiteSpace(nvLicencia) ? "—" : nvLicencia.Trim()
+        };
+
+        vehiculos.Add(nuevo);
+        vehiculoId = nuevo.Id;
+        nvMarca = nvModelo = nvAnio = nvPlaca = nvConductor = nvLicencia = "";
+        errorVehiculo = null;
+        mostrarNuevoVehiculo = false;
+    }
+
+    private void OnArchivos(InputFileChangeEventArgs e)
+    {
+        errorArchivo = null;
+        foreach (var f in e.GetMultipleFiles(10))
+        {
+            if (f.Size > 5 * 1024 * 1024)
+            {
+                errorArchivo = $"\"{f.Name}\" supera los 5 MB.";
+                continue;
+            }
+            // TODO: enviar el archivo al servidor (AutosPAService) cuando exista el endpoint de documentos
+            archivos.Add(new ArchivoDto(f.Name, FormatoTamano(f.Size)));
+        }
+    }
+
+    private void ConfirmarCita()
+    {
+        error = null;
+
+        if (!sesionIniciada) { error = "Inicia sesión para agendar tu cita."; return; }
+
+        var vehiculo = VehiculoActual;
+        if (vehiculo is null) { error = "Selecciona o registra un vehículo."; return; }
+
+        if (fecha.DayOfWeek == DayOfWeek.Sunday) { error = "El taller no atiende los domingos."; return; }
+
+        if (hora is null) { error = "Elige un horario disponible."; return; }
+
+        var h = hora.Value;
+        var agente = agenteSel ?? agentes
+            .Where(a => AgenteLibreEn(a, fecha, h))
+            .OrderByDescending(a => EsEspecialista(a))
+            .FirstOrDefault();
+
+        if (agente is null || !AgenteLibreEn(agente, fecha, h))
+        {
+            error = "Ese horario ya no está disponible. Elige otro.";
+            hora = null;
+            return;
+        }
+
+        var servicio = ServicioActual;
+        var est = Calcular(servicio, agente);
+
+        var nueva = new CitaDto
+        {
+            Fecha = fecha,
+            Hora = h,
+            Vehiculo = vehiculo.Etiqueta,
+            Servicio = servicio.Nombre,
+            Agente = agente.Nombre,
+            Estado = "En espera",
+            Costo = est.Costo,
+            Tiempo = est.Tiempo
+        };
+
+        // TODO: guardar en el servicio y notificar al agente (correo, WhatsApp o notificación interna)
+        citas.Add(nueva);
+        confirmada = nueva;
+        mostrarProximas = true;
+        hora = null;
+        archivos.Clear();
+    }
+
+    private void Cancelar(CitaDto c) => c.Estado = "Cancelada";
+
+    // ---------- Cálculo de costo y tiempo ----------
+    private Estim Calcular(Servicio s, Agente? a)
+    {
+        var factorCosto = a?.Tarifa ?? 1.0;
+        var factorTiempo = (a is not null && a.Categorias.Contains(s.Categoria)) ? 0.85 : 1.0;
+
+        var costo = TextoCosto(s.CostoMin, s.CostoMax, factorCosto);
+        var tiempo = TextoTiempo(s.TiempoMin, s.TiempoMax, factorTiempo);
+
+        string recomendacion;
+        if (s.TiempoMax is null)
+        {
+            recomendacion = "El tiempo depende de la pieza. Te confirmamos al recibir tu vehículo.";
+        }
+        else if (Redondear5(s.TiempoMax.Value * factorTiempo) <= 60)
+        {
+            recomendacion = "Es un trabajo corto: puedes esperar tu vehículo en el taller.";
+        }
+        else
+        {
+            recomendacion = "Te recomendamos dejar tu vehículo y recogerlo después.";
+        }
+
+        return new Estim(costo, tiempo, recomendacion);
+    }
+
+    private string NotaAgente()
+    {
+        if (agenteSel is null) return "El valor se ajusta al elegir un agente.";
+        var esp = EsEspecialista(agenteSel) ? " · especialista en este servicio (más rápido)" : "";
+        return $"Calculado para {agenteSel.Nombre}{esp}.";
+    }
+
+    private static int Redondear5(double x) => (int)(Math.Round(x / 5.0, MidpointRounding.AwayFromZero) * 5);
+
+    private static string TextoCosto(int min, int? max, double factor)
+    {
+        var a = Redondear5(min * factor);
+        if (max is null) return $"Desde Q{a}";
+        var b = Redondear5(max.Value * factor);
+        return a == b ? $"Q{a}" : $"Q{a}–Q{b}";
+    }
+
+    private static string FormatoMin(int m)
+    {
+        if (m < 60) return $"{m} min";
+        return m % 60 == 0 ? $"{m / 60} h" : $"{m / 60} h {m % 60} min";
+    }
+
+    private static string TextoTiempo(int? min, int? max, double factor)
+    {
+        if (min is null || max is null) return "Según la pieza";
+        var a = Redondear5(min.Value * factor);
+        var b = Redondear5(max.Value * factor);
+        if (a == b) return FormatoMin(a);
+        if (b < 60) return $"{a}–{b} min";
+        return $"{FormatoMin(a)} – {FormatoMin(b)}";
+    }
+
+    // ---------- Formatos ----------
+    private static readonly string[] MesesCortos = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+    private static readonly string[] MesesLargos = { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" };
+    private static readonly string[] DiasSemana = { "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado" };
+
+    private static string Mes(DateTime f) => MesesCortos[f.Month - 1];
+
+    private static string FechaLarga(DateTime f) => $"{DiasSemana[(int)f.DayOfWeek]} {f.Day} de {MesesLargos[f.Month - 1]}";
+
+    private static string FormatoHora(TimeOnly h)
+    {
+        var h12 = h.Hour % 12 == 0 ? 12 : h.Hour % 12;
+        return $"{h12}:{h.Minute:00} {(h.Hour < 12 ? "a. m." : "p. m.")}";
+    }
+
+    private static string FormatoTamano(long bytes) =>
+        bytes >= 1024 * 1024 ? $"{bytes / 1024.0 / 1024.0:0.0} MB" : $"{Math.Max(1, bytes / 1024)} KB";
+
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        "Aprobada" => "aprobada",
+        "En espera" => "espera",
+        "Cancelada" => "cancelada",
+        _ => "finalizada"
+    };
+}

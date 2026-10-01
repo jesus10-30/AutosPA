@@ -1,39 +1,149 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">AutosPA</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿<style>
+    .fc-sidebar {
+        width: 230px;
+        flex-shrink: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 14px;
+        color: #e7e9f7;
+        background: linear-gradient(180deg, #14406f 0%, #1a2f63 45%, #3a2470 100%);
+    }
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+    .fc-menu-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, .55);
+        padding: 0 10px;
+        margin-bottom: 10px;
+    }
+
+    .fc-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .fc-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        color: rgba(255, 255, 255, .8);
+        text-decoration: none;
+        font-size: 14px;
+        position: relative;
+    }
+
+        .fc-menu-item i {
+            font-size: 16px;
+            width: 18px;
+            text-align: center;
+        }
+
+        .fc-menu-item:hover {
+            background: rgba(255, 255, 255, .08);
+            color: #ffffff;
+        }
+
+        .fc-menu-item.active {
+            background: rgba(255, 255, 255, .16);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+    .fc-menu-chevron {
+        margin-left: auto;
+        font-size: 12px;
+        opacity: .6;
+    }
+
+    .fc-menu-badge {
+        margin-left: auto;
+        background: #1f8a5b;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+    }
+
+    @@media (max-width: 800px) {
+        .fc-sidebar {
+            width: 100%;
+            min-height: auto;
+            flex-direction: row;
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        .fc-menu {
+            flex-direction: row;
+        }
+
+        .fc-menu-label {
+            display: none;
+        }
+    }
+</style>
+
+<div class="fc-sidebar">
+    <div class="fc-menu-label">MENÚ</div>
+
+    <nav class="fc-menu">
+        <NavLink class="fc-menu-item" href="" Match="NavLinkMatch.All">
+            <i class="bi bi-house-door-fill"></i> Inicio
+        </NavLink>
+
+        <NavLink class="fc-menu-item" href="servicios">
+            <i class="bi bi-tools"></i> Servicios
+            <i class="bi bi-chevron-down fc-menu-chevron"></i>
+        </NavLink>
+
+        <NavLink class="fc-menu-item" href="citas">
+            <i class="bi bi-calendar-event"></i> Citas
+        </NavLink>
+
+        <NavLink class="fc-menu-item" href="mis-vehiculos">
+            <i class="bi bi-car-front-fill"></i> Mis vehículos
+        </NavLink>
+
+        <NavLink class="fc-menu-item" href="notificaciones">
+            <i class="bi bi-bell-fill"></i> Notificaciones
+            @if (NotificacionesSinLeer > 0)
+            {
+                <span class="fc-menu-badge">@NotificacionesSinLeer</span>
+            }
+        </NavLink>
+
+        <NavLink class="fc-menu-item" href="cuenta">
+            <i class="bi bi-person-circle"></i> Cuenta
+        </NavLink>
+
+        <NavLink class="fc-menu-item" href="panel-agente">
+            <i class="bi bi-speedometer2"></i> Panel agente
+        </NavLink>
+        <NavLink class="fc-menu-item" href="agente/solicitudes">
+            <i class="bi bi-inbox"></i> Solicitudes
+        </NavLink>
+        <NavLink class="fc-menu-item" href="agente/trabajos">
+            <i class="bi bi-wrench-adjustable"></i> Mis trabajos
+        </NavLink>
+    
+        <NavLink class="fc-menu-item" href="agente/perfil">
+            <i class="bi bi-person-gear"></i> Mi perfil
+        </NavLink>
+       
     </nav>
 </div>
 
 @code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+    private int NotificacionesSinLeer = 2;
 }
