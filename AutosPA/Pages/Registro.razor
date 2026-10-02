@@ -1,0 +1,683 @@
+﻿@page "/registro"
+@layout AuthLayout
+@inject NavigationManager Nav
+
+<PageTitle>FlexiCar — Crear cuenta</PageTitle>
+
+<style>
+    .au-steps {
+        list-style: none;
+        margin: 34px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .au-step {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, .6);
+    }
+
+        .au-step b {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border: 2px solid rgba(255, 255, 255, .35);
+            border-radius: 50%;
+            font-size: 13px;
+        }
+
+        .au-step small {
+            display: block;
+            font-size: 12px;
+            font-weight: 400;
+            opacity: .8;
+        }
+
+        .au-step.active {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+            .au-step.active b {
+                background: #ffffff;
+                border-color: #ffffff;
+                color: #14406f;
+            }
+
+        .au-step.done {
+            color: rgba(255, 255, 255, .9);
+        }
+
+            .au-step.done b {
+                background: #6ee7b7;
+                border-color: #6ee7b7;
+                color: #0f2a4a;
+            }
+
+    .au-progress {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7a90;
+    }
+
+    .au-bar {
+        height: 5px;
+        margin-bottom: 22px;
+        border-radius: 999px;
+        background: #e1e7f0;
+        overflow: hidden;
+    }
+
+        .au-bar div {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #14406f, #1f8a5b);
+            transition: width .3s;
+        }
+
+    .au-strength {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+        .au-strength i {
+            flex: 1;
+            height: 5px;
+            border-radius: 999px;
+            background: #e1e7f0;
+        }
+
+            .au-strength i.s1 {
+                background: #e0605a;
+            }
+
+            .au-strength i.s2 {
+                background: #e0a100;
+            }
+
+            .au-strength i.s3 {
+                background: #6bbf8e;
+            }
+
+            .au-strength i.s4 {
+                background: #1f8a5b;
+            }
+
+    .au-strength-label {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+    .au-reqs {
+        list-style: none;
+        margin: 12px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 12px;
+        color: #8492a6;
+    }
+
+        .au-reqs li::before {
+            content: "○";
+            margin-right: 8px;
+        }
+
+        .au-reqs li.ok {
+            color: #146c43;
+        }
+
+            .au-reqs li.ok::before {
+                content: "●";
+            }
+
+    .au-sub {
+        margin: 22px 0 14px;
+        padding-top: 18px;
+        border-top: 1px solid #e6ebf2;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #1a56a0;
+    }
+
+    .au-nav {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+        .au-nav .au-btn {
+            flex: 1;
+        }
+
+        .au-nav .au-btn-plain {
+            flex: 0 0 38%;
+        }
+
+    .au-done {
+        text-align: center;
+    }
+
+    .au-done-ico {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 72px;
+        height: 72px;
+        margin-bottom: 18px;
+        border-radius: 50%;
+        background: #e3f5ec;
+    }
+
+        .au-done-ico svg {
+            width: 34px;
+            height: 34px;
+            fill: none;
+            stroke: #146c43;
+            stroke-width: 2.4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    .au-done h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        color: #0f2a4a;
+    }
+
+    .au-done p {
+        margin: 0 0 24px;
+        font-size: 14px;
+        line-height: 1.65;
+        color: #6b7a90;
+    }
+
+    .au-summary {
+        margin-bottom: 24px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: #f2f6fb;
+        text-align: left;
+    }
+
+        .au-summary div {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 5px 0;
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .au-summary span {
+            color: #6b7a90;
+        }
+
+        .au-summary b {
+            text-align: right;
+            color: #0f2a4a;
+        }
+</style>
+
+<div class="au-shell">
+
+    <aside class="au-brand">
+        <a class="au-logo" href=""><span class="au-logo-mark">FC</span>FlexiCar</a>
+
+        <div>
+            <h2>Crea tu cuenta en minutos</h2>
+            <p>Con tu cuenta puedes registrar tus vehículos, agendar citas con el agente que prefieras y seguir cada servicio.</p>
+
+            <ol class="au-steps">
+                @for (var i = 0; i != Pasos.Length; i++)
+                {
+                    var n = i + 1;
+                    <li class="au-step @(paso == n && !creada ? "active" : "") @(paso > n || creada ? "done" : "")">
+                        <b>@(paso > n || creada ? "✓" : n.ToString())</b>
+                        <span>@Pasos[i]<small>@Detalles[i]</small></span>
+                    </li>
+                }
+            </ol>
+        </div>
+
+        <div class="au-foot">© 2026 FlexiCar · Proyecto académico — UMG</div>
+    </aside>
+
+    <main class="au-main">
+        <div class="au-card wide">
+
+            @if (creada)
+            {
+                <div class="au-done">
+                    <div class="au-done-ico"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></div>
+                    <h1>¡Cuenta creada, @PrimerNombre!</h1>
+                    <p>@MensajeFinal</p>
+
+                    <div class="au-summary">
+                        <div><span>Nombre</span><b>@nombres.Trim() @apellidos.Trim()</b></div>
+                        <div><span>Correo</span><b>@correo.Trim()</b></div>
+                        <div><span>Teléfono</span><b>+502 @SoloDigitos(telefono)</b></div>
+                        @if (!omitirVehiculo)
+                        {
+                            <div><span>Vehículo</span><b>@marca.Trim() @modelo.Trim() · @placa.Trim().ToUpper()</b></div>
+                        }
+                    </div>
+
+                    <a class="au-btn" href="login">Iniciar sesión</a>
+                </div>
+            }
+            else
+            {
+                <a class="au-back" href="login">← Ya tengo una cuenta</a>
+
+                <div class="au-progress"><span>Paso @paso de 3</span><span>@Pasos[paso - 1]</span></div>
+                <div class="au-bar"><div style="width:@(paso * 100 / 3)%"></div></div>
+
+                <div class="au-head">
+                    <h1>@Titulos[paso - 1]</h1>
+                    <p>@Subtitulos[paso - 1]</p>
+                </div>
+
+                <form @onsubmit="Avanzar" @onsubmit:preventDefault>
+
+                    @if (paso == 1)
+                    {
+                        <div class="au-grid2">
+                            <div class="au-field">
+                                <label class="au-label">Nombres</label>
+                                <input class="au-input @(Err("nombres") is not null ? "invalid" : "")" placeholder="Esteban" autocomplete="given-name" @bind="nombres" />
+                                @if (Err("nombres") is not null)
+                                {
+                                    <small class="au-err">@Err("nombres")</small>
+                                }
+                            </div>
+                            <div class="au-field">
+                                <label class="au-label">Apellidos</label>
+                                <input class="au-input @(Err("apellidos") is not null ? "invalid" : "")" placeholder="Jiménez" autocomplete="family-name" @bind="apellidos" />
+                                @if (Err("apellidos") is not null)
+                                {
+                                    <small class="au-err">@Err("apellidos")</small>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="au-field">
+                            <label class="au-label">Correo electrónico</label>
+                            <input type="email" class="au-input @(Err("correo") is not null ? "invalid" : "")" placeholder="nombre@@correo.com" autocomplete="email" @bind="correo" />
+                            @if (Err("correo") is not null)
+                            {
+                                <small class="au-err">@Err("correo")</small>
+                            }
+                        </div>
+
+                        <div class="au-grid2">
+                            <div class="au-field">
+                                <label class="au-label">Teléfono</label>
+                                <div class="au-phone">
+                                    <span>+502</span>
+                                    <input class="au-input @(Err("telefono") is not null ? "invalid" : "")" placeholder="5555 1234" inputmode="numeric" autocomplete="tel-national" @bind="telefono" />
+                                </div>
+                                @if (Err("telefono") is not null)
+                                {
+                                    <small class="au-err">@Err("telefono")</small>
+                                }
+                            </div>
+                            <div class="au-field">
+                                <label class="au-label">NIT <small>(opcional)</small></label>
+                                <input class="au-input" placeholder="CF" @bind="nit" />
+                            </div>
+                        </div>
+                    }
+                    else if (paso == 2)
+                    {
+                        <div class="au-field">
+                            <label class="au-label">Contraseña</label>
+                            <div class="au-input-wrap">
+                                <input type="@(verPassword ? "text" : "password")" class="au-input has-eye @(Err("pass") is not null ? "invalid" : "")" placeholder="Crea una contraseña" autocomplete="new-password" @bind="pass" @bind:event="oninput" />
+                                <button type="button" class="au-eye" title="@(verPassword ? "Ocultar contraseña" : "Mostrar contraseña")" @onclick="() => verPassword = !verPassword">
+                                    <svg viewBox="0 0 24 24">
+                                        @if (verPassword)
+                                        {
+                                            <path d="M3 3l18 18" />
+                                            <path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a12.6 12.6 0 0 1-2.6 3.3M6.6 6.7A12.3 12.3 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9.7 9.7 0 0 0 4-.9" />
+                                            <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                                        }
+                                        else
+                                        {
+                                            <path d="M2.5 12C3.5 10 7 6 12 6s8.5 4 9.5 6c-1 2-4.5 6-9.5 6s-8.5-4-9.5-6z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        }
+                                    </svg>
+                                </button>
+                            </div>
+                            @if (Err("pass") is not null)
+                            {
+                                <small class="au-err">@Err("pass")</small>
+                            }
+
+                            <div class="au-strength">
+                                @for (var b = 1; b != 5; b++)
+                                {
+                                    <i class="@(Fuerza >= b ? "s" + Fuerza : "")"></i>
+                                }
+                            </div>
+                            <div class="au-strength-label">Seguridad: <b>@EtiquetaFuerza</b></div>
+
+                            <ul class="au-reqs">
+                                <li class="@(pass.Length >= 8 ? "ok" : "")">8 caracteres o más</li>
+                                <li class="@(pass.Any(char.IsUpper) && pass.Any(char.IsLower) ? "ok" : "")">Mayúsculas y minúsculas</li>
+                                <li class="@(pass.Any(char.IsDigit) ? "ok" : "")">Al menos un número</li>
+                            </ul>
+                        </div>
+
+                        <div class="au-field">
+                            <label class="au-label">Confirmar contraseña</label>
+                            <input type="@(verPassword ? "text" : "password")" class="au-input @(Err("pass2") is not null ? "invalid" : "")" placeholder="Repite la contraseña" autocomplete="new-password" @bind="pass2" />
+                            @if (Err("pass2") is not null)
+                            {
+                                <small class="au-err">@Err("pass2")</small>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <label class="au-check" style="margin-bottom:14px;">
+                            <input type="checkbox" @bind="omitirVehiculo" />
+                            <span>Registraré mi vehículo más tarde desde “Mis vehículos”.</span>
+                        </label>
+
+                        @if (!omitirVehiculo)
+                        {
+                            <div class="au-grid2">
+                                <div class="au-field">
+                                    <label class="au-label">Marca</label>
+                                    <input class="au-input @(Err("marca") is not null ? "invalid" : "")" placeholder="Toyota" @bind="marca" />
+                                    @if (Err("marca") is not null)
+                                    {
+                                        <small class="au-err">@Err("marca")</small>
+                                    }
+                                </div>
+                                <div class="au-field">
+                                    <label class="au-label">Modelo</label>
+                                    <input class="au-input @(Err("modelo") is not null ? "invalid" : "")" placeholder="Corolla" @bind="modelo" />
+                                    @if (Err("modelo") is not null)
+                                    {
+                                        <small class="au-err">@Err("modelo")</small>
+                                    }
+                                </div>
+                                <div class="au-field">
+                                    <label class="au-label">Año <small>(opcional)</small></label>
+                                    <input class="au-input @(Err("anio") is not null ? "invalid" : "")" placeholder="2020" inputmode="numeric" @bind="anio" />
+                                    @if (Err("anio") is not null)
+                                    {
+                                        <small class="au-err">@Err("anio")</small>
+                                    }
+                                </div>
+                                <div class="au-field">
+                                    <label class="au-label">Placa</label>
+                                    <input class="au-input @(Err("placa") is not null ? "invalid" : "")" placeholder="P 000 ABC" @bind="placa" />
+                                    @if (Err("placa") is not null)
+                                    {
+                                        <small class="au-err">@Err("placa")</small>
+                                    }
+                                </div>
+                                <div class="au-field">
+                                    <label class="au-label">Tipo</label>
+                                    <select class="au-input" @bind="tipo">
+                                        @foreach (var t in tipos)
+                                        {
+                                            <option value="@t">@t</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="au-field">
+                                    <label class="au-label">Color</label>
+                                    <select class="au-input" @bind="color">
+                                        @foreach (var c in colores)
+                                        {
+                                            <option value="@c">@c</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="au-sub">Conductor habitual</div>
+
+                            <label class="au-check" style="margin-bottom:14px;">
+                                <input type="checkbox" @bind="esConductor" />
+                                <span>Yo soy el conductor de este vehículo.</span>
+                            </label>
+
+                            @if (!esConductor)
+                            {
+                                <div class="au-grid2">
+                                    <div class="au-field">
+                                        <label class="au-label">Nombre del conductor</label>
+                                        <input class="au-input @(Err("conductor") is not null ? "invalid" : "")" placeholder="Nombre completo" @bind="conductorNombre" />
+                                        @if (Err("conductor") is not null)
+                                        {
+                                            <small class="au-err">@Err("conductor")</small>
+                                        }
+                                    </div>
+                                    <div class="au-field">
+                                        <label class="au-label">No. de licencia</label>
+                                        <input class="au-input @(Err("licencia") is not null ? "invalid" : "")" placeholder="L-000000" @bind="conductorLicencia" />
+                                        @if (Err("licencia") is not null)
+                                        {
+                                            <small class="au-err">@Err("licencia")</small>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        <label class="au-check" style="margin-top:6px;">
+                            <input type="checkbox" @bind="acepto" />
+                            <span>Acepto los <a class="au-link" href="#">Términos de uso</a> y la <a class="au-link" href="#">Política de privacidad</a>.</span>
+                        </label>
+                        @if (Err("acepto") is not null)
+                        {
+                            <small class="au-err">@Err("acepto")</small>
+                        }
+                    }
+
+                    <div class="au-nav" style="margin-top:22px;">
+                        @if (paso != 1)
+                        {
+                            <button type="button" class="au-btn au-btn-plain" @onclick="Atras">Atrás</button>
+                        }
+                        <button type="submit" class="au-btn" disabled="@cargando">
+                            @if (cargando)
+                            {
+                                <span class="au-spin"></span>
+                                <text>Creando cuenta...</text>
+                            }
+                            else
+                            {
+                                <text>@(paso == 3 ? "Crear cuenta" : "Continuar")</text>
+                            }
+                        </button>
+                    </div>
+                </form>
+            }
+        </div>
+    </main>
+</div>
+
+@code {
+    /*
+     * Datos que recoge este formulario (para diseñar la base de datos):
+     *   Usuario  : Nombres, Apellidos, Correo (único), Telefono, Nit, PasswordHash, Rol = "Cliente", FechaRegistro
+     *   Vehiculo : UsuarioId, Marca, Modelo, Anio, Placa (única), Tipo, Color
+     *   Conductor: VehiculoId, Nombre, Licencia (si el cliente no es el conductor)
+     * La contraseña nunca se guarda en texto plano: el servidor guarda solo el hash.
+     */
+
+    private static readonly string[] Pasos = { "Datos personales", "Seguridad", "Tu vehículo" };
+    private static readonly string[] Detalles = { "Nombre y contacto", "Contraseña de acceso", "Vehículo y conductor" };
+    private static readonly string[] Titulos = { "Cuéntanos quién eres", "Protege tu cuenta", "Registra tu vehículo" };
+    private static readonly string[] Subtitulos =
+    {
+        "Usaremos estos datos para confirmar tus citas y avisarte cuando tu vehículo esté listo.",
+        "Crea una contraseña segura que solo tú conozcas.",
+        "Es opcional: puedes registrarlo ahora o más tarde, junto con el conductor habitual."
+    };
+
+    private int paso = 1;
+    private bool creada;
+    private bool cargando;
+    private bool verPassword;
+    private Dictionary<string, string> errores = new();
+
+    // Paso 1
+    private string nombres = "", apellidos = "", correo = "", telefono = "", nit = "";
+
+    // Paso 2
+    private string pass = "", pass2 = "";
+
+    // Paso 3
+    private bool omitirVehiculo;
+    private string marca = "", modelo = "", anio = "", placa = "";
+    private string tipo = "Sedán", color = "Blanco";
+    private bool esConductor = true;
+    private string conductorNombre = "", conductorLicencia = "";
+    private bool acepto;
+
+    private List<string> tipos = new() { "Sedán", "Hatchback", "SUV", "Pickup", "Camión ligero", "Moto" };
+    private List<string> colores = new() { "Blanco", "Negro", "Gris", "Plata", "Azul", "Rojo", "Verde" };
+
+    private string PrimerNombre => nombres.Trim().Split(' ')[0];
+
+    private string MensajeFinal => omitirVehiculo
+        ? "Ya puedes iniciar sesión para agendar tu primera cita. Registra tu vehículo cuando quieras desde “Mis vehículos”."
+        : "Ya puedes iniciar sesión para agendar tu primera cita con tu vehículo registrado.";
+
+    private string? Err(string campo) => errores.TryGetValue(campo, out var e) ? e : null;
+
+    private static string SoloDigitos(string texto) => new string(texto.Where(char.IsDigit).ToArray());
+
+    private static bool EmailValido(string texto)
+    {
+        var e = texto.Trim();
+        var arroba = e.IndexOf('@');
+        if (0 >= arroba) return false;
+        if (e.IndexOf('@', arroba + 1) != -1) return false;
+        if (e.Contains(' ')) return false;
+        var punto = e.LastIndexOf('.');
+        return punto > arroba + 1 && punto != e.Length - 1;
+    }
+
+    private int Fuerza
+    {
+        get
+        {
+            var puntos = 0;
+            if (pass.Length >= 8) puntos++;
+            if (pass.Any(char.IsUpper) && pass.Any(char.IsLower)) puntos++;
+            if (pass.Any(char.IsDigit)) puntos++;
+            if (pass.Any(c => !char.IsLetterOrDigit(c))) puntos++;
+            return puntos;
+        }
+    }
+
+    private string EtiquetaFuerza => Fuerza switch
+    {
+        0 => "—",
+        1 => "Débil",
+        2 => "Media",
+        3 => "Buena",
+        _ => "Fuerte"
+    };
+
+    private bool ValidarPaso(int p)
+    {
+        errores.Clear();
+
+        if (p == 1)
+        {
+            if (!(nombres.Trim().Length > 1)) errores["nombres"] = "Escribe tus nombres.";
+            if (!(apellidos.Trim().Length > 1)) errores["apellidos"] = "Escribe tus apellidos.";
+
+            if (string.IsNullOrWhiteSpace(correo)) errores["correo"] = "Ingresa tu correo electrónico.";
+            else if (!EmailValido(correo)) errores["correo"] = "Escribe un correo válido, por ejemplo nombre@correo.com.";
+            // TODO: confirmar con el servidor que el correo no esté registrado
+
+            if (SoloDigitos(telefono).Length != 8) errores["telefono"] = "Ingresa un teléfono de 8 dígitos.";
+        }
+        else if (p == 2)
+        {
+            if (!(pass.Length > 7)) errores["pass"] = "Usa al menos 8 caracteres.";
+            else if (!pass.Any(char.IsDigit) || !pass.Any(char.IsUpper) || !pass.Any(char.IsLower)) errores["pass"] = "Combina mayúsculas, minúsculas y al menos un número.";
+
+            if (pass2 != pass) errores["pass2"] = "Las contraseñas no coinciden.";
+        }
+        else
+        {
+            if (!omitirVehiculo)
+            {
+                if (string.IsNullOrWhiteSpace(marca)) errores["marca"] = "Indica la marca.";
+                if (string.IsNullOrWhiteSpace(modelo)) errores["modelo"] = "Indica el modelo.";
+                if (string.IsNullOrWhiteSpace(placa)) errores["placa"] = "Indica la placa.";
+                // TODO: confirmar con el servidor que la placa no esté registrada
+
+                if (!string.IsNullOrWhiteSpace(anio))
+                {
+                    if (!int.TryParse(anio.Trim(), out var a) || 1980 > a || a > DateTime.Today.Year + 1) errores["anio"] = "Escribe un año válido.";
+                }
+
+                if (!esConductor)
+                {
+                    if (string.IsNullOrWhiteSpace(conductorNombre)) errores["conductor"] = "Indica el nombre del conductor.";
+                    if (string.IsNullOrWhiteSpace(conductorLicencia)) errores["licencia"] = "Indica el número de licencia.";
+                }
+            }
+
+            if (!acepto) errores["acepto"] = "Debes aceptar los términos para crear tu cuenta.";
+        }
+
+        return !errores.Any();
+    }
+
+    private async Task Avanzar()
+    {
+        if (!ValidarPaso(paso)) return;
+
+        if (paso != 3)
+        {
+            paso++;
+            return;
+        }
+
+        cargando = true;
+        StateHasChanged();
+
+
+        await Task.Delay(1200);
+
+        cargando = false;
+        creada = true;
+    }
+
+    private void Atras()
+    {
+        errores.Clear();
+        if (paso != 1) paso--;
+    }
+}

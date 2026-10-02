@@ -1,0 +1,458 @@
+﻿@page "/"
+@page "/inicio"
+
+<PageTitle>FlexiCar — Inicio</PageTitle>
+
+<style>
+    .fx-btn {
+        display: inline-block;
+        padding: 12px 26px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .fx-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+        }
+
+    .fx-btn-light {
+        background: #ffffff;
+        color: #14406f;
+    }
+
+    .fx-btn-ghost {
+        background: rgba(255, 255, 255, .08);
+        border-color: rgba(255, 255, 255, .6);
+        color: #ffffff;
+    }
+
+    .fx-btn-solid {
+        background: #14406f;
+        color: #ffffff;
+    }
+
+    .fx-btn-outline {
+        background: #ffffff;
+        border-color: #14406f;
+        color: #14406f;
+    }
+
+    .fx-btn-sm {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+
+    /* Hero con fondo de carro: pon una foto en wwwroot/img/hero-car.jpg (si no existe, queda el degradado) */
+    .fx-hero {
+        text-align: center;
+        color: #ffffff;
+        padding: 96px 24px 104px;
+        background: linear-gradient(180deg, rgba(10, 30, 60, .55), rgba(10, 30, 60, .88)), url('img/hero-car.jpg') center / cover no-repeat, linear-gradient(135deg, #0f2a4a, #14406f 60%, #1f8a5b);
+    }
+
+    .fx-eyebrow {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #9fd4ff;
+        margin-bottom: 18px;
+    }
+
+    .fx-hero h1 {
+        max-width: 900px;
+        margin: 0 auto 22px;
+        font-size: clamp(40px, 6vw, 72px);
+        line-height: 1.08;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .fx-accent {
+        background: linear-gradient(90deg, #8ecbff, #6ee7b7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .fx-hero p {
+        max-width: 560px;
+        margin: 0 auto 32px;
+        font-size: 17px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, .85);
+    }
+
+    .fx-hero-cta {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .fx-section {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 56px 24px 0;
+    }
+
+    .fx-head {
+        margin-bottom: 22px;
+    }
+
+        .fx-head h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f2a4a;
+        }
+
+        .fx-head span {
+            display: block;
+            margin-top: 4px;
+            font-size: 14px;
+            color: #6b7a90;
+        }
+
+    .fx-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 24px;
+    }
+
+    /* Servicios */
+    .fx-card {
+        background: linear-gradient(180deg, #f4f8fd, #ffffff);
+        border: 1px solid #e6ebf2;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+    }
+
+        .fx-card svg {
+            display: block;
+            width: 100%;
+            max-height: 110px;
+            margin-bottom: 16px;
+        }
+
+        .fx-card h3 {
+            margin: 0 0 6px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .fx-card p {
+            margin: 0 0 14px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #6b7a90;
+        }
+
+    .fx-pill {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid #dbe3ee;
+        background: #ffffff;
+        font-size: 11px;
+        font-weight: 500;
+        color: #0f2a4a;
+    }
+
+    /* Equipo / agentes */
+    .fx-agent {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 18px;
+        padding: 26px 18px;
+        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+    }
+
+    .fx-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #14406f, #1f8a5b);
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .fx-agent h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #0f172a;
+    }
+
+    .fx-role {
+        font-size: 13px;
+        color: #6b7a90;
+    }
+
+    .fx-status {
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        margin: 4px 0 10px;
+    }
+
+        .fx-status.on {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .fx-status.off {
+            background: #fdf1dc;
+            color: #9a6200;
+        }
+
+    /* Ventana "Ver más" */
+    .fx-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .fx-modal {
+        width: 100%;
+        max-width: 420px;
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 30px 28px;
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+        .fx-modal .fx-avatar {
+            margin: 0 auto 10px;
+            width: 80px;
+            height: 80px;
+            font-size: 24px;
+        }
+
+        .fx-modal h3 {
+            margin: 0 0 2px;
+            font-size: 20px;
+            color: #0f172a;
+        }
+
+        .fx-modal p {
+            margin: 14px 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #6b7a90;
+        }
+
+    .fx-modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Marcas */
+    .fx-brands {
+        text-align: center;
+    }
+
+    .fx-brands-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .1em;
+        color: #6b7a90;
+        margin-bottom: 16px;
+    }
+
+    .fx-brands-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 22px;
+    }
+
+    .fx-brand-chip {
+        padding: 9px 22px;
+        border-radius: 10px;
+        border: 1px solid #e6ebf2;
+        background: #ffffff;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f2a4a;
+    }
+
+    @@media (max-width: 800px) {
+        .fx-hero {
+            padding: 64px 16px 72px;
+        }
+
+        .fx-section {
+            padding: 40px 16px 0;
+        }
+    }
+</style>
+
+<section class="fx-hero">
+    <div class="fx-eyebrow">Taller FlexiCar</div>
+    <h1>Agenda el <span class="fx-accent">mantenimiento</span> de tu vehículo en minutos</h1>
+    <p>Elige fecha, hora y agente. Nosotros calculamos el costo y el tiempo estimado por ti.</p>
+    <div class="fx-hero-cta">
+        <a class="fx-btn fx-btn-light" href="citas/nueva">Agendar una cita</a>
+        <a class="fx-btn fx-btn-ghost" href="mis-vehiculos">Ver mis vehículos</a>
+    </div>
+</section>
+
+<section class="fx-section">
+    <div class="fx-grid">
+
+        <div class="fx-card">
+            <svg viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="110" cy="92" rx="90" ry="6" fill="#e5edf5" />
+                <path d="M25 78 L34 52 Q40 40 55 40 L150 40 Q165 40 172 52 L184 78 Z" fill="#1f5fa8" />
+                <path d="M55 42 L70 22 Q75 16 84 16 L128 16 Q137 16 142 22 L157 42 Z" fill="#123d70" />
+                <rect x="72" y="22" width="24" height="18" rx="2" fill="#e6eef8" />
+                <rect x="100" y="22" width="24" height="18" rx="2" fill="#e6eef8" />
+                <circle cx="62" cy="80" r="14" fill="#101a24" />
+                <circle cx="62" cy="80" r="6" fill="#cfd9e0" />
+                <circle cx="150" cy="80" r="14" fill="#101a24" />
+                <circle cx="150" cy="80" r="6" fill="#cfd9e0" />
+            </svg>
+            <h3>Mantenimiento preventivo</h3>
+            <p>Revisión general para que tu vehículo esté siempre listo para el camino.</p>
+            <span class="fx-pill">Desde 45 min</span>
+        </div>
+
+        <div class="fx-card">
+            <svg viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="110" cy="92" rx="90" ry="6" fill="#e5edf5" />
+                <path d="M22 80 L32 50 Q38 38 54 38 L160 38 Q176 38 184 50 L196 80 Z" fill="#123d70" />
+                <path d="M54 40 L68 20 Q73 14 82 14 L134 14 Q143 14 148 20 L162 40 Z" fill="#1f5fa8" />
+                <rect x="70" y="20" width="26" height="18" rx="2" fill="#e6eef8" />
+                <rect x="100" y="20" width="26" height="18" rx="2" fill="#e6eef8" />
+                <circle cx="60" cy="82" r="14" fill="#101a24" />
+                <circle cx="60" cy="82" r="6" fill="#cfd9e0" />
+                <circle cx="158" cy="82" r="14" fill="#101a24" />
+                <circle cx="158" cy="82" r="6" fill="#cfd9e0" />
+            </svg>
+            <h3>Diagnóstico y reparación</h3>
+            <p>Detectamos la falla y te decimos el costo antes de empezar el trabajo.</p>
+            <span class="fx-pill">Con cita previa</span>
+        </div>
+
+        <div class="fx-card">
+            <svg viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="110" cy="92" rx="90" ry="6" fill="#e5edf5" />
+                <path d="M20 78 Q20 56 44 54 L60 40 Q68 32 82 32 L142 32 Q154 32 162 42 L176 56 Q198 58 198 78 Z" fill="#1f5fa8" />
+                <path d="M64 34 L78 18 Q83 13 90 13 L132 13 Q140 13 145 19 L157 34 Z" fill="#145c3f" />
+                <rect x="80" y="18" width="22" height="16" rx="2" fill="#e3f3ea" />
+                <rect x="106" y="18" width="22" height="16" rx="2" fill="#e3f3ea" />
+                <circle cx="60" cy="80" r="14" fill="#101a24" />
+                <circle cx="60" cy="80" r="6" fill="#cfd9e0" />
+                <circle cx="158" cy="80" r="14" fill="#101a24" />
+                <circle cx="158" cy="80" r="6" fill="#cfd9e0" />
+            </svg>
+            <h3>Reemplazo de componentes</h3>
+            <p>Piezas originales instaladas por agentes certificados de FlexiCar.</p>
+            <span class="fx-pill">Garantía incluida</span>
+        </div>
+
+    </div>
+</section>
+
+<section class="fx-section">
+    <div class="fx-head">
+        <h2>Nuestro equipo</h2>
+        <span>Técnicos certificados listos para atender tu vehículo con calidad y confianza.</span>
+    </div>
+
+    <div class="fx-grid">
+        @foreach (var agente in agentes)
+        {
+            <div class="fx-agent">
+                <div class="fx-avatar">@agente.Iniciales</div>
+                <h3>@agente.Nombre</h3>
+                <div class="fx-role">@agente.Especialidad</div>
+                <span class="fx-pill">@agente.Anios años de experiencia</span>
+                <span class="fx-status @(agente.Disponible ? "on" : "off")">@(agente.Disponible ? "Disponible hoy" : "Ocupado hoy")</span>
+                <button type="button" class="fx-btn fx-btn-outline fx-btn-sm" @onclick="() => VerAgente(agente)">Ver más</button>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="fx-section fx-brands">
+    <div class="fx-brands-label">MARCAS QUE ATENDEMOS</div>
+    <div class="fx-brands-row">
+        @foreach (var marca in marcasAtendidas)
+        {
+            <span class="fx-brand-chip">@marca</span>
+        }
+    </div>
+</section>
+
+@if (agenteSeleccionado is not null)
+{
+    <div class="fx-modal-bg" @onclick="CerrarAgente">
+        <div class="fx-modal" @onclick:stopPropagation="true">
+            <div class="fx-avatar">@agenteSeleccionado.Iniciales</div>
+            <h3>@agenteSeleccionado.Nombre</h3>
+            <div class="fx-role">@agenteSeleccionado.Especialidad · @agenteSeleccionado.Anios años de experiencia</div>
+            <span class="fx-status @(agenteSeleccionado.Disponible ? "on" : "off")">@(agenteSeleccionado.Disponible ? "Disponible hoy" : "Ocupado hoy")</span>
+            <p>@agenteSeleccionado.Bio</p>
+            <div class="fx-modal-actions">
+                <a class="fx-btn fx-btn-solid fx-btn-sm" href="citas/nueva">Agendar con @PrimerNombre(agenteSeleccionado)</a>
+                <button type="button" class="fx-btn fx-btn-outline fx-btn-sm" @onclick="CerrarAgente">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private record Agente(string Nombre, string Especialidad, string Iniciales, int Anios, bool Disponible, string Bio);
+
+    // TODO: reemplazar por los agentes reales cuando exista el servicio de agentes
+    private List<Agente> agentes = new()
+    {
+        new("Carlos Ruiz", "Mecánica general", "CR", 8, true, "Especialista en mantenimiento preventivo y revisión general. Te explica cada trabajo antes de empezarlo."),
+        new("Ana López", "Diagnóstico electrónico", "AL", 5, true, "Experta en escáner computarizado y fallas eléctricas. Encuentra el problema exacto antes de cotizar."),
+        new("Mario Gómez", "Frenos y suspensión", "MG", 10, false, "Más de una década en frenos, amortiguadores y dirección, con enfoque en tu seguridad en carretera."),
+        new("Diana Pérez", "Aire acondicionado", "DP", 6, true, "Se encarga del sistema de aire acondicionado y de la instalación de componentes originales."),
+    };
+
+    private Agente? agenteSeleccionado;
+
+    private void VerAgente(Agente agente) => agenteSeleccionado = agente;
+
+    private void CerrarAgente() => agenteSeleccionado = null;
+
+    private static string PrimerNombre(Agente agente) => agente.Nombre.Split(' ')[0];
+
+    private List<string> marcasAtendidas = new()
+    {
+        "Toyota", "Honda", "Nissan", "Mazda", "Hyundai", "Kia", "Chevrolet"
+    };
+}

@@ -1,0 +1,1217 @@
+﻿@page "/mis-vehiculos"
+@using System.Globalization
+
+<PageTitle>FlexiCar — Mis vehículos</PageTitle>
+
+<style>
+    .mv-page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 28px 0;
+    }
+
+    .mv-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 26px;
+    }
+
+    .mv-eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #1f8a5b;
+        margin-bottom: 8px;
+    }
+
+    .mv-head h1 {
+        margin: 0 0 6px;
+        font-size: clamp(30px, 4vw, 42px);
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .mv-head p {
+        margin: 0;
+        max-width: 560px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #6b7a90;
+    }
+
+    .mv-btn {
+        display: inline-block;
+        padding: 11px 20px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .mv-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(20, 64, 111, .22);
+        }
+
+        .mv-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    .mv-btn-primary {
+        background: linear-gradient(90deg, #14406f, #1f5fa8);
+        color: #ffffff;
+        padding: 12px 22px;
+        font-size: 14px;
+    }
+
+    .mv-btn-solid {
+        background: #14406f;
+        color: #ffffff;
+    }
+
+    .mv-btn-outline {
+        background: #ffffff;
+        border-color: #14406f;
+        color: #14406f;
+    }
+
+    .mv-btn-plain {
+        background: #ffffff;
+        border-color: #c4d2e4;
+        color: #14406f;
+    }
+
+    .mv-btn-danger {
+        background: #b42318;
+        color: #ffffff;
+    }
+
+    /* Resumen */
+    .mv-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 26px;
+    }
+
+    .mv-stat {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 18px;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+    }
+
+    .mv-stat-ico {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #e6effa;
+        color: #1a56a0;
+    }
+
+        .mv-stat-ico svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .mv-stat-ico.green {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .mv-stat-ico.amber {
+            background: #fdf1dc;
+            color: #9a6200;
+        }
+
+    .mv-stat b {
+        display: block;
+        font-size: 24px;
+        line-height: 1.1;
+        color: #0f2a4a;
+    }
+
+    .mv-stat small {
+        font-size: 12px;
+        color: #6b7a90;
+    }
+
+    /* Filtros */
+    .mv-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .mv-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .mv-chip {
+        padding: 8px 16px;
+        border: 1px solid #dbe3ee;
+        border-radius: 999px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a5a70;
+        cursor: pointer;
+    }
+
+        .mv-chip:hover {
+            background: #eef3fa;
+        }
+
+        .mv-chip.active {
+            background: #14406f;
+            border-color: #14406f;
+            color: #ffffff;
+        }
+
+    .mv-search {
+        width: 260px;
+        padding: 10px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        color: #0f172a;
+    }
+
+        .mv-search:focus {
+            outline: 2px solid #1f5fa8;
+        }
+
+    /* Tarjetas */
+    .mv-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+        gap: 22px;
+    }
+
+    .mv-card {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 20px;
+        box-shadow: 0 2px 10px rgba(15, 42, 74, .06);
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .mv-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(15, 42, 74, .13);
+        }
+
+    .mv-art {
+        position: relative;
+        padding: 18px 40px 6px;
+        background: linear-gradient(180deg, #eef4fb, #ffffff);
+    }
+
+        .mv-art svg {
+            display: block;
+            width: 100%;
+            max-height: 120px;
+        }
+
+    .mv-badge {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+        .mv-badge.ok {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .mv-badge.taller {
+            background: #e1ecfa;
+            color: #1a56a0;
+        }
+
+        .mv-badge.warn {
+            background: #fdf1dc;
+            color: #9a6200;
+        }
+
+    .mv-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 6px 22px 22px;
+    }
+
+        .mv-body h3 {
+            margin: 0 0 4px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f2a4a;
+        }
+
+            .mv-body h3 small {
+                font-size: 13px;
+                font-weight: 500;
+                color: #8492a6;
+                margin-left: 4px;
+            }
+
+    .mv-sub {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: #6b7a90;
+    }
+
+    .mv-driver {
+        margin-bottom: 12px;
+        font-size: 13px;
+        color: #6b7a90;
+    }
+
+        .mv-driver b {
+            color: #0f2a4a;
+            font-weight: 600;
+        }
+
+    .mv-docs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .mv-doc {
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+        .mv-doc.verde {
+            background: #e3f5ec;
+            color: #146c43;
+        }
+
+        .mv-doc.ambar {
+            background: #fdf1dc;
+            color: #9a6200;
+        }
+
+        .mv-doc.rojo {
+            background: #fdecea;
+            color: #b42318;
+        }
+
+        .mv-doc.neutro {
+            background: #eceff4;
+            color: #5b6778;
+        }
+
+    .mv-line {
+        flex: 1;
+        margin-bottom: 16px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #f2f6fb;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #4a5a70;
+    }
+
+    .mv-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+        .mv-actions .mv-btn {
+            flex: 1;
+        }
+
+    .mv-empty {
+        padding: 44px 20px;
+        border: 1px dashed #c4d2e4;
+        border-radius: 18px;
+        text-align: center;
+        font-size: 14px;
+        color: #6b7a90;
+    }
+
+    /* Ventanas */
+    .mv-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .mv-modal {
+        width: 100%;
+        max-width: 480px;
+        max-height: 92vh;
+        overflow-y: auto;
+        padding: 28px;
+        border-radius: 22px;
+        background: #ffffff;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+        .mv-modal.wide {
+            max-width: 680px;
+        }
+
+    .mv-modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .mv-modal h3 {
+        margin: 0 0 4px;
+        font-size: 20px;
+        color: #0f2a4a;
+    }
+
+    .mv-modal-sub {
+        font-size: 13px;
+        color: #6b7a90;
+    }
+
+    .mv-close {
+        border: 0;
+        background: none;
+        font-size: 26px;
+        line-height: 1;
+        color: #9aa7ba;
+        cursor: pointer;
+    }
+
+        .mv-close:hover {
+            color: #0f2a4a;
+        }
+
+    .mv-sec {
+        padding: 18px 0 4px;
+        border-top: 1px solid #eef1f6;
+        margin-top: 16px;
+    }
+
+        .mv-sec h4 {
+            margin: 0 0 12px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: #1a56a0;
+        }
+
+    .mv-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+        .mv-info div {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f2f6fb;
+        }
+
+        .mv-info small {
+            display: block;
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+        .mv-info b {
+            font-size: 13px;
+            color: #0f2a4a;
+        }
+
+    .mv-label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4a5a70;
+    }
+
+    .mv-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-family: inherit;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+        .mv-input:focus {
+            outline: 2px solid #1f5fa8;
+            background: #ffffff;
+        }
+
+    .mv-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 14px;
+    }
+
+    .mv-form-title {
+        margin: 18px 0 2px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #1a56a0;
+    }
+
+    .mv-error {
+        margin-top: 14px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #fdecea;
+        color: #b42318;
+        font-size: 13px;
+    }
+
+    .mv-modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 22px;
+    }
+
+        .mv-modal-actions .left {
+            margin-right: auto;
+        }
+
+    /* Documentos */
+    .mv-docrow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        padding: 10px 12px;
+        border: 1px solid #e6ebf2;
+        border-radius: 12px;
+    }
+
+        .mv-docrow .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mv-docrow b {
+            display: block;
+            font-size: 13px;
+            color: #0f2a4a;
+        }
+
+        .mv-docrow small {
+            font-size: 11px;
+            color: #8492a6;
+        }
+
+        .mv-docrow button {
+            border: 0;
+            background: none;
+            font-size: 12px;
+            font-weight: 600;
+            color: #b42318;
+            cursor: pointer;
+        }
+
+    .mv-upload {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: end;
+        margin-top: 12px;
+        padding: 14px;
+        border: 1.5px dashed #b7c7dc;
+        border-radius: 14px;
+        background: #fbfcfe;
+    }
+
+        .mv-upload .mv-label {
+            margin-top: 0;
+        }
+
+    .mv-file {
+        display: none;
+    }
+
+    .mv-upload label.mv-btn {
+        margin: 0;
+    }
+
+    .mv-hint {
+        margin-top: 8px;
+        font-size: 11px;
+        color: #8492a6;
+    }
+
+        .mv-hint.warn {
+            color: #9a6200;
+        }
+
+    /* Historial */
+    .mv-time {
+        position: relative;
+        margin: 0;
+        padding: 0 0 0 22px;
+        list-style: none;
+    }
+
+        .mv-time::before {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: #dbe3ee;
+        }
+
+        .mv-time li {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+            .mv-time li::before {
+                content: "";
+                position: absolute;
+                left: -22px;
+                top: 4px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #1f8a5b;
+                border: 2px solid #ffffff;
+                box-shadow: 0 0 0 1px #1f8a5b;
+            }
+
+        .mv-time b {
+            display: block;
+            font-size: 13px;
+            color: #0f2a4a;
+        }
+
+        .mv-time small {
+            font-size: 12px;
+            color: #6b7a90;
+        }
+
+    .mv-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 300;
+        padding: 14px 20px;
+        border-radius: 12px;
+        background: #14406f;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+
+    @@media (max-width: 900px) {
+        .mv-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .mv-page {
+            padding: 28px 14px 0;
+        }
+
+        .mv-search {
+            width: 100%;
+        }
+
+        .mv-info {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .mv-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .mv-upload {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="mv-page">
+
+    <header class="mv-head">
+        <div>
+            <div class="mv-eyebrow">Tu garaje</div>
+            <h1>Mis vehículos</h1>
+            <p>Registra tus vehículos y sus conductores, mantén tus documentos al día y revisa el estado y el historial de cada uno.</p>
+        </div>
+        <button type="button" class="mv-btn mv-btn-primary" @onclick="AbrirNuevo">+ Agregar vehículo</button>
+    </header>
+
+    <!-- Resumen -->
+    <div class="mv-stats">
+        <div class="mv-stat">
+            <div class="mv-stat-ico"><svg viewBox="0 0 24 24"><path d="M3 15l2-6a2 2 0 0 1 2-1h10a2 2 0 0 1 2 1l2 6v4h-3v-2H6v2H3z" /><circle cx="7.5" cy="14" r="1" /><circle cx="16.5" cy="14" r="1" /></svg></div>
+            <div><b>@vehiculos.Count</b><small>Vehículos</small></div>
+        </div>
+        <div class="mv-stat">
+            <div class="mv-stat-ico green"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></div>
+            <div><b>@vehiculos.Count(v => EstadoVeh(v).Clase == "ok")</b><small>Al día</small></div>
+        </div>
+        <div class="mv-stat">
+            <div class="mv-stat-ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z" /></svg></div>
+            <div><b>@vehiculos.Count(v => v.EnTaller)</b><small>En taller</small></div>
+        </div>
+        <div class="mv-stat">
+            <div class="mv-stat-ico amber"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h5" /></svg></div>
+            <div><b>@DocsPorAtender</b><small>Documentos por atender</small></div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="mv-toolbar">
+        <div class="mv-chips">
+            <button type="button" class="mv-chip @(filtro == "todos" ? "active" : "")" @onclick='() => filtro = "todos"'>Todos</button>
+            <button type="button" class="mv-chip @(filtro == "ok" ? "active" : "")" @onclick='() => filtro = "ok"'>Al día</button>
+            <button type="button" class="mv-chip @(filtro == "taller" ? "active" : "")" @onclick='() => filtro = "taller"'>En taller</button>
+            <button type="button" class="mv-chip @(filtro == "warn" ? "active" : "")" @onclick='() => filtro = "warn"'>Requiere atención</button>
+        </div>
+        <input class="mv-search" placeholder="Buscar por placa, marca o modelo" @bind="busqueda" @bind:event="oninput" />
+    </div>
+
+    <!-- Tarjetas -->
+    <div class="mv-grid">
+        @foreach (var v in Filtrados)
+        {
+            var est = EstadoVeh(v);
+            <article class="mv-card">
+                <div class="mv-art">
+                    <svg viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="110" cy="92" rx="90" ry="6" fill="#e5edf5" />
+                        <path d="M25 78 L34 52 Q40 40 55 40 L150 40 Q165 40 172 52 L184 78 Z" fill="@Hex(v.Color)" />
+                        <path d="M55 42 L70 22 Q75 16 84 16 L128 16 Q137 16 142 22 L157 42 Z" fill="@Hex(v.Color)" />
+                        <path d="M55 42 L70 22 Q75 16 84 16 L128 16 Q137 16 142 22 L157 42 Z" fill="#000000" opacity=".2" />
+                        <rect x="72" y="22" width="24" height="18" rx="2" fill="#e6eef8" />
+                        <rect x="100" y="22" width="24" height="18" rx="2" fill="#e6eef8" />
+                        <circle cx="62" cy="80" r="14" fill="#101a24" />
+                        <circle cx="62" cy="80" r="6" fill="#cfd9e0" />
+                        <circle cx="150" cy="80" r="14" fill="#101a24" />
+                        <circle cx="150" cy="80" r="6" fill="#cfd9e0" />
+                    </svg>
+                    <span class="mv-badge @est.Clase">@est.Texto</span>
+                </div>
+
+                <div class="mv-body">
+                    <h3>@v.Marca @v.Modelo<small>@v.Anio</small></h3>
+                    <p class="mv-sub">Placa @v.Placa · @v.Tipo · @Km(v)</p>
+                    <div class="mv-driver">Conductor: <b>@v.Conductor</b></div>
+
+                    <div class="mv-docs">
+                        @foreach (var tipo in new[] { "Seguro", "Inspección" })
+                        {
+                            var doc = DocDe(v, tipo);
+                            var ed = doc is null ? ("Sin cargar", "neutro") : EstadoDoc(doc);
+                            <span class="mv-doc @ed.Item2">@tipo · @ed.Item1</span>
+                        }
+                    </div>
+
+                    <div class="mv-line">
+                        @if (v.EnTaller)
+                        {
+                            <text><b>En taller:</b> @v.EstadoTaller</text>
+                        }
+                        else if (v.ProximaCita is not null)
+                        {
+                            <text><b>Próxima cita:</b> @v.ProximaCita</text>
+                        }
+                        else
+                        {
+                            <text>Sin citas próximas.</text>
+                        }
+                    </div>
+
+                    <div class="mv-actions">
+                        <button type="button" class="mv-btn mv-btn-outline" @onclick="() => VerEstado(v)">Ver estado</button>
+                        <a class="mv-btn mv-btn-solid" href="citas/nueva">Agendar cita</a>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+
+    @if (!Filtrados.Any())
+    {
+        <div class="mv-empty">
+            @(vehiculos.Any() ? "Ningún vehículo coincide con tu búsqueda." : "Aún no has registrado vehículos. Agrega el primero para poder agendar citas.")
+        </div>
+    }
+</div>
+
+<!-- ================= VENTANAS ================= -->
+@if (modal == "nuevo")
+{
+    <div class="mv-modal-bg" @onclick="CerrarModal">
+        <div class="mv-modal" @onclick:stopPropagation="true">
+            <div class="mv-modal-head">
+                <div>
+                    <h3>Registrar vehículo</h3>
+                    <div class="mv-modal-sub">Datos del vehículo y de su conductor. Los documentos los adjuntas después.</div>
+                </div>
+                <button type="button" class="mv-close" @onclick="CerrarModal">×</button>
+            </div>
+
+            <div class="mv-form-title" style="margin-top:0;">Vehículo</div>
+            <div class="mv-form-grid">
+                <div><label class="mv-label">Marca *</label><input class="mv-input" @bind="nvMarca" placeholder="Toyota" /></div>
+                <div><label class="mv-label">Modelo *</label><input class="mv-input" @bind="nvModelo" placeholder="Corolla" /></div>
+                <div><label class="mv-label">Año</label><input class="mv-input" @bind="nvAnio" placeholder="2020" /></div>
+                <div><label class="mv-label">Placa *</label><input class="mv-input" @bind="nvPlaca" placeholder="P 000 ABC" /></div>
+                <div>
+                    <label class="mv-label">Tipo</label>
+                    <select class="mv-input" @bind="nvTipo">
+                        @foreach (var t in tipos)
+                        {
+                            <option value="@t">@t</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="mv-label">Color</label>
+                    <select class="mv-input" @bind="nvColor">
+                        @foreach (var c in ColoresHex.Keys)
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    </select>
+                </div>
+                <div><label class="mv-label">Kilometraje</label><input type="number" class="mv-input" @bind="nvKm" min="0" /></div>
+            </div>
+
+            <div class="mv-form-title">Conductor</div>
+            <div class="mv-form-grid">
+                <div><label class="mv-label">Nombre</label><input class="mv-input" @bind="nvConductor" placeholder="Nombre completo" /></div>
+                <div><label class="mv-label">No. de licencia</label><input class="mv-input" @bind="nvLicencia" placeholder="L-000000" /></div>
+            </div>
+
+            @if (errorNuevo is not null)
+            {
+                <div class="mv-error">@errorNuevo</div>
+            }
+
+            <div class="mv-modal-actions">
+                <button type="button" class="mv-btn mv-btn-plain" @onclick="CerrarModal">Cancelar</button>
+                <button type="button" class="mv-btn mv-btn-solid" @onclick="GuardarVehiculo">Guardar vehículo</button>
+            </div>
+        </div>
+    </div>
+}
+else if (modal == "detalle" && sel is not null)
+{
+    var est = EstadoVeh(sel);
+    <div class="mv-modal-bg" @onclick="CerrarModal">
+        <div class="mv-modal wide" @onclick:stopPropagation="true">
+            <div class="mv-modal-head">
+                <div>
+                    <h3>@sel.Marca @sel.Modelo @sel.Anio</h3>
+                    <div class="mv-modal-sub">Placa @sel.Placa · <span class="mv-badge @est.Clase" style="position:static; display:inline-block;">@est.Texto</span></div>
+                </div>
+                <button type="button" class="mv-close" @onclick="CerrarModal">×</button>
+            </div>
+
+            <div class="mv-info">
+                <div><small>Tipo</small><b>@sel.Tipo</b></div>
+                <div><small>Color</small><b>@sel.Color</b></div>
+                <div><small>Kilometraje</small><b>@Km(sel)</b></div>
+                <div><small>Conductor</small><b>@sel.Conductor</b></div>
+                <div><small>Licencia</small><b>@sel.Licencia</b></div>
+                <div><small>Estado actual</small><b>@(sel.EnTaller? sel.EstadoTaller: "Disponible")</b></div>
+            </div>
+
+            <div class="mv-sec">
+                <h4>Documentos</h4>
+
+                @if (!sel.Documentos.Any())
+                {
+                    <div class="mv-hint warn">Aún no hay documentos. Adjunta el seguro y la inspección para tener todo al día.</div>
+                }
+
+                @foreach (var d in sel.Documentos)
+                {
+                    var ed = EstadoDoc(d);
+                    <div class="mv-docrow">
+                        <div class="info">
+                            <b>@d.Tipo</b>
+                            <small>@d.Archivo · @(d.Tamano + (d.Vence is null ? "" : " · vence " + FechaCorta(d.Vence.Value)))</small>
+                        </div>
+                        <span class="mv-doc @ed.Clase">@ed.Texto</span>
+                        <button type="button" @onclick="() => QuitarDoc(d)">Quitar</button>
+                    </div>
+                }
+
+                <div class="mv-upload">
+                    <div>
+                        <label class="mv-label">Tipo de documento</label>
+                        <select class="mv-input" @bind="docTipo">
+                            @foreach (var t in tiposDoc)
+                            {
+                                <option value="@t">@t</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mv-label">Vence (opcional)</label>
+                        <input type="date" class="mv-input" @bind="docVence" />
+                    </div>
+                    <label class="mv-btn mv-btn-solid">
+                        Adjuntar
+                        <InputFile OnChange="OnDocumentos" multiple accept=".pdf,.jpg,.jpeg,.png" class="mv-file" />
+                    </label>
+                </div>
+                <div class="mv-hint">PDF, JPG o PNG · máx. 5 MB por archivo.</div>
+                @if (errorDoc is not null)
+                {
+                    <div class="mv-hint warn">@errorDoc</div>
+                }
+            </div>
+
+            <div class="mv-sec">
+                <h4>Historial de servicios</h4>
+                @if (sel.Historial.Any())
+                {
+                    <ul class="mv-time">
+                        @foreach (var h in sel.Historial.OrderByDescending(x => x.Fecha))
+                        {
+                            <li>
+                                <b>@h.Nombre</b>
+                                <small>@FechaCorta(h.Fecha) · Agente: @h.Agente · @h.Costo</small>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="mv-hint">Este vehículo todavía no tiene servicios registrados.</div>
+                }
+            </div>
+
+            <div class="mv-modal-actions">
+                <button type="button" class="mv-btn mv-btn-plain left" style="color:#b42318; border-color:#e3a59d;" @onclick='() => modal = "eliminar"'>Eliminar vehículo</button>
+                <button type="button" class="mv-btn mv-btn-plain" @onclick="CerrarModal">Cerrar</button>
+                <a class="mv-btn mv-btn-solid" href="citas/nueva">Agendar cita</a>
+            </div>
+        </div>
+    </div>
+}
+else if (modal == "eliminar" && sel is not null)
+{
+    <div class="mv-modal-bg" @onclick="CerrarModal">
+        <div class="mv-modal" @onclick:stopPropagation="true">
+            <h3 style="color:#b42318;">¿Eliminar vehículo?</h3>
+            <p class="mv-modal-sub" style="margin:8px 0 0; line-height:1.6;">
+                Se eliminará <b>@sel.Marca @sel.Modelo (@sel.Placa)</b> junto con sus documentos e historial. Esta acción no se puede deshacer.
+            </p>
+            <div class="mv-modal-actions">
+                <button type="button" class="mv-btn mv-btn-plain" @onclick='() => modal = "detalle"'>Cancelar</button>
+                <button type="button" class="mv-btn mv-btn-danger" @onclick="EliminarVehiculo">Eliminar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (toast is not null)
+{
+    <div class="mv-toast">@toast</div>
+}
+
+@code {
+    // ---------- Modelos ----------
+    private record Documento(string Tipo, string Archivo, string Tamano, DateTime? Vence);
+
+    private record Servicio(DateTime Fecha, string Nombre, string Agente, string Costo);
+
+    private record EstadoInfo(string Texto, string Clase);
+
+    private class Vehiculo
+    {
+        public int Id { get; set; }
+        public string Marca { get; set; } = "";
+        public string Modelo { get; set; } = "";
+        public string Anio { get; set; } = "";
+        public string Placa { get; set; } = "";
+        public string Tipo { get; set; } = "Sedán";
+        public string Color { get; set; } = "Azul";
+        public int Kilometraje { get; set; }
+        public string Conductor { get; set; } = "";
+        public string Licencia { get; set; } = "";
+        public bool EnTaller { get; set; }
+        public string EstadoTaller { get; set; } = "";
+        public string? ProximaCita { get; set; }
+        public List<Documento> Documentos { get; set; } = new();
+        public List<Servicio> Historial { get; set; } = new();
+    }
+
+    // ---------- Datos de ejemplo (TODO: reemplazar por el servicio real, AutosPAService) ----------
+    private List<Vehiculo> vehiculos = new()
+    {
+        new Vehiculo
+        {
+            Id = 1, Marca = "Toyota", Modelo = "Corolla", Anio = "2019", Placa = "P 428 DKL", Tipo = "Sedán", Color = "Azul",
+            Kilometraje = 68500, Conductor = "Est. Jiménez", Licencia = "L-100234",
+            ProximaCita = "2 oct · 10:00 a. m. — Mantenimiento preventivo",
+            Documentos = new()
+            {
+                new Documento("Seguro", "seguro-corolla.pdf", "412 KB", new DateTime(2027, 3, 15)),
+                new Documento("Inspección", "inspeccion-corolla.pdf", "280 KB", new DateTime(2026, 10, 20)),
+            },
+            Historial = new()
+            {
+                new Servicio(new DateTime(2026, 9, 2), "Batería y sistema eléctrico", "Carlos Ruiz", "Q185"),
+                new Servicio(new DateTime(2026, 3, 14), "Mantenimiento preventivo", "Carlos Ruiz", "Q240"),
+            }
+        },
+        new Vehiculo
+        {
+            Id = 2, Marca = "Honda", Modelo = "CR-V", Anio = "2021", Placa = "P 019 CTM", Tipo = "SUV", Color = "Gris",
+            Kilometraje = 41200, Conductor = "Est. Jiménez", Licencia = "L-100234",
+            ProximaCita = "6 oct · 2:00 p. m. — Diagnóstico general (en espera)",
+            Documentos = new()
+            {
+                new Documento("Seguro", "seguro-crv.pdf", "390 KB", new DateTime(2026, 9, 10)),
+                new Documento("Inspección", "inspeccion-crv.pdf", "301 KB", new DateTime(2027, 1, 30)),
+            },
+            Historial = new()
+            {
+                new Servicio(new DateTime(2026, 5, 20), "Sistema de frenos", "Mario Gómez", "Q380"),
+            }
+        },
+        new Vehiculo
+        {
+            Id = 3, Marca = "Mazda", Modelo = "3", Anio = "2022", Placa = "P 987 XYZ", Tipo = "Hatchback", Color = "Rojo",
+            Kilometraje = 23800, Conductor = "Laura Jiménez", Licencia = "L-204518",
+            EnTaller = true, EstadoTaller = "Diagnóstico en proceso con Ana López",
+            Documentos = new()
+            {
+                new Documento("Seguro", "seguro-mazda.pdf", "455 KB", new DateTime(2027, 6, 1)),
+            },
+            Historial = new()
+            {
+                new Servicio(new DateTime(2026, 8, 12), "Mantenimiento preventivo", "Carlos Ruiz", "Q210"),
+            }
+        },
+    };
+
+    private List<string> tipos = new() { "Sedán", "Hatchback", "SUV", "Pickup", "Camión ligero", "Moto" };
+    private List<string> tiposDoc = new() { "Seguro", "Inspección", "Tarjeta de circulación", "Otro" };
+
+    private static readonly Dictionary<string, string> ColoresHex = new()
+    {
+        ["Azul"] = "#1f5fa8",
+        ["Blanco"] = "#dfe5ee",
+        ["Negro"] = "#2b3340",
+        ["Gris"] = "#6b7685",
+        ["Plata"] = "#aab4c3",
+        ["Rojo"] = "#c0392b",
+        ["Verde"] = "#1f8a5b",
+    };
+
+    // ---------- Estado de la pantalla ----------
+    private string filtro = "todos";
+    private string busqueda = "";
+    private string? modal;
+    private Vehiculo? sel;
+    private string? toast;
+
+    private string nvMarca = "", nvModelo = "", nvAnio = "", nvPlaca = "", nvConductor = "", nvLicencia = "";
+    private string nvTipo = "Sedán", nvColor = "Azul";
+    private int nvKm;
+    private string? errorNuevo;
+
+    private string docTipo = "Seguro";
+    private DateTime? docVence;
+    private string? errorDoc;
+
+    // ---------- Calculados ----------
+    private IEnumerable<Vehiculo> Filtrados =>
+        vehiculos
+            .Where(v => filtro == "todos" || EstadoVeh(v).Clase == filtro)
+            .Where(v => string.IsNullOrWhiteSpace(busqueda)
+                        || $"{v.Marca} {v.Modelo} {v.Placa}".Contains(busqueda.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private int DocsPorAtender => vehiculos.Sum(v => v.Documentos.Count(d => EstadoDoc(d).Clase is "rojo" or "ambar"));
+
+    private EstadoInfo EstadoVeh(Vehiculo v)
+    {
+        if (v.EnTaller) return new EstadoInfo("En taller", "taller");
+        if (v.Documentos.Any(d => EstadoDoc(d).Clase is "rojo" or "ambar")) return new EstadoInfo("Requiere atención", "warn");
+        return new EstadoInfo("Al día", "ok");
+    }
+
+    private static (string Texto, string Clase) EstadoDoc(Documento d)
+    {
+        if (d.Vence is null) return ("Sin vencimiento", "neutro");
+        var dias = (d.Vence.Value.Date - DateTime.Today).Days;
+        if (dias < 0) return ("Vencido", "rojo");
+        if (dias <= 30) return ($"Vence en {dias} d", "ambar");
+        return ("Vigente", "verde");
+    }
+
+    private static Documento? DocDe(Vehiculo v, string tipo) =>
+        v.Documentos.Where(d => d.Tipo == tipo).OrderByDescending(d => d.Vence).FirstOrDefault();
+
+    private static string Hex(string color) => ColoresHex.TryGetValue(color, out var h) ? h : "#1f5fa8";
+
+    private static string Km(Vehiculo v) => v.Kilometraje.ToString("N0", CultureInfo.InvariantCulture) + " km";
+
+    private static readonly string[] Meses = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+
+    private static string FechaCorta(DateTime f) => $"{f.Day} {Meses[f.Month - 1]} {f.Year}";
+
+    // ---------- Acciones ----------
+    private void AbrirNuevo()
+    {
+        nvMarca = nvModelo = nvAnio = nvPlaca = nvConductor = nvLicencia = "";
+        nvTipo = "Sedán";
+        nvColor = "Azul";
+        nvKm = 0;
+        errorNuevo = null;
+        modal = "nuevo";
+    }
+
+    private void VerEstado(Vehiculo v)
+    {
+        sel = v;
+        docTipo = "Seguro";
+        docVence = null;
+        errorDoc = null;
+        modal = "detalle";
+    }
+
+    private void CerrarModal() => modal = null;
+
+    private async Task GuardarVehiculo()
+    {
+        if (string.IsNullOrWhiteSpace(nvMarca) || string.IsNullOrWhiteSpace(nvModelo) || string.IsNullOrWhiteSpace(nvPlaca))
+        {
+            errorNuevo = "Marca, modelo y placa son obligatorios.";
+            return;
+        }
+
+        var placa = nvPlaca.Trim().ToUpper();
+        if (vehiculos.Any(v => v.Placa.Equals(placa, StringComparison.OrdinalIgnoreCase)))
+        {
+            errorNuevo = "Ya tienes un vehículo registrado con esa placa.";
+            return;
+        }
+
+        // TODO: guardar en el servidor (AutosPAService)
+        vehiculos.Add(new Vehiculo
+        {
+            Id = vehiculos.Any() ? vehiculos.Max(v => v.Id) + 1 : 1,
+            Marca = nvMarca.Trim(),
+            Modelo = nvModelo.Trim(),
+            Anio = nvAnio.Trim(),
+            Placa = placa,
+            Tipo = nvTipo,
+            Color = nvColor,
+            Kilometraje = Math.Max(0, nvKm),
+            Conductor = string.IsNullOrWhiteSpace(nvConductor) ? "Sin registrar" : nvConductor.Trim(),
+            Licencia = string.IsNullOrWhiteSpace(nvLicencia) ? "—" : nvLicencia.Trim()
+        });
+
+        modal = null;
+        await Aviso("Vehículo registrado. Ahora puedes adjuntar sus documentos.");
+    }
+
+    private void OnDocumentos(InputFileChangeEventArgs e)
+    {
+        errorDoc = null;
+        if (sel is null) return;
+
+        foreach (var f in e.GetMultipleFiles(10))
+        {
+            if (f.Size > 5 * 1024 * 1024)
+            {
+                errorDoc = $"\"{f.Name}\" supera los 5 MB.";
+                continue;
+            }
+
+            // TODO: enviar el archivo al servidor cuando exista el endpoint de documentos
+            sel.Documentos.Add(new Documento(docTipo, f.Name, FormatoTamano(f.Size), docVence));
+        }
+    }
+
+    private void QuitarDoc(Documento d) => sel?.Documentos.Remove(d);
+
+    private async Task EliminarVehiculo()
+    {
+        if (sel is null) return;
+
+        // TODO: eliminar en el servidor
+        vehiculos.Remove(sel);
+        sel = null;
+        modal = null;
+        await Aviso("Vehículo eliminado.");
+    }
+
+    private static string FormatoTamano(long bytes) =>
+        bytes >= 1024 * 1024 ? $"{bytes / 1024.0 / 1024.0:0.0} MB" : $"{Math.Max(1, bytes / 1024)} KB";
+
+    private async Task Aviso(string mensaje)
+    {
+        toast = mensaje;
+        StateHasChanged();
+        await Task.Delay(2500);
+        toast = null;
+    }
+}

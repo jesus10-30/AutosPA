@@ -1,0 +1,772 @@
+﻿@page "/cuenta"
+@inject NavigationManager Nav
+
+<PageTitle>FlexiCar — Cuenta</PageTitle>
+
+<style>
+    .ac-page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 40px 28px 0;
+    }
+
+    .ac-head {
+        margin-bottom: 22px;
+    }
+
+    .ac-eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #1f8a5b;
+        margin-bottom: 8px;
+    }
+
+    .ac-head h1 {
+        margin: 0 0 6px;
+        font-size: clamp(30px, 4vw, 40px);
+        font-weight: 700;
+        color: #0f2a4a;
+    }
+
+    .ac-head p {
+        margin: 0;
+        font-size: 15px;
+        color: #6b7a90;
+    }
+
+    .ac-card {
+        background: #ffffff;
+        border: 1px solid #e6ebf2;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 2px 10px rgba(15, 42, 74, .05);
+    }
+
+        .ac-card h3 {
+            margin: 0 0 14px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f2a4a;
+        }
+
+    /* Perfil */
+    .ac-profile {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding: 24px;
+        border-radius: 18px;
+        color: #ffffff;
+        background: linear-gradient(135deg, #0f2a4a, #14406f 65%, #1f8a5b);
+        box-shadow: 0 8px 24px rgba(15, 42, 74, .18);
+    }
+
+    .ac-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 68px;
+        height: 68px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #14406f;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .ac-who {
+        flex: 1;
+        min-width: 200px;
+    }
+
+        .ac-who h2 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            color: #ffffff;
+        }
+
+        .ac-who p {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, .8);
+        }
+
+        .ac-who .ac-input {
+            background: rgba(255, 255, 255, .95);
+            margin-bottom: 8px;
+            max-width: 360px;
+        }
+
+    .ac-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+
+        .ac-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, .15);
+        }
+
+        .ac-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    .ac-btn-light {
+        background: #ffffff;
+        color: #14406f;
+    }
+
+    .ac-btn-ghost {
+        background: rgba(255, 255, 255, .12);
+        border-color: rgba(255, 255, 255, .6);
+        color: #ffffff;
+    }
+
+    .ac-btn-solid {
+        background: #14406f;
+        color: #ffffff;
+    }
+
+    .ac-btn-outline {
+        background: #ffffff;
+        border-color: #c4d2e4;
+        color: #14406f;
+    }
+
+    .ac-btn-danger {
+        background: #b42318;
+        color: #ffffff;
+    }
+
+    .ac-btn-danger-outline {
+        background: #ffffff;
+        border-color: #e3a59d;
+        color: #b42318;
+    }
+
+    .ac-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* Grid */
+    .ac-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .ac-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 13px 0;
+        border-bottom: 1px solid #eef1f6;
+        font-size: 14px;
+    }
+
+        .ac-row:last-child {
+            border-bottom: 0;
+        }
+
+        .ac-row span {
+            color: #6b7a90;
+        }
+
+        .ac-row b {
+            font-weight: 600;
+            color: #0f2a4a;
+        }
+
+    .ac-link {
+        padding: 0;
+        border: 0;
+        background: none;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a56a0;
+        cursor: pointer;
+    }
+
+        .ac-link:hover {
+            text-decoration: underline;
+        }
+
+    .ac-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .ac-stat {
+        padding: 16px 10px;
+        border-radius: 14px;
+        background: #f2f6fb;
+        text-align: center;
+    }
+
+        .ac-stat b {
+            display: block;
+            font-size: 26px;
+            line-height: 1.1;
+            color: #14406f;
+        }
+
+        .ac-stat small {
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+    /* Preferencias */
+    .ac-pref {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        padding: 14px 4px;
+        border: 0;
+        border-bottom: 1px solid #eef1f6;
+        background: none;
+        font-family: inherit;
+        text-align: left;
+    }
+
+        .ac-pref:last-child {
+            border-bottom: 0;
+        }
+
+    button.ac-pref {
+        cursor: pointer;
+    }
+
+        button.ac-pref:hover {
+            background: #f7f9fc;
+        }
+
+    .ac-ico {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        background: #e6effa;
+    }
+
+        .ac-ico svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: #14406f;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .ac-ico.green {
+            background: #e3f5ec;
+        }
+
+            .ac-ico.green svg {
+                stroke: #146c43;
+            }
+
+        .ac-ico.amber {
+            background: #fdf1dc;
+        }
+
+            .ac-ico.amber svg {
+                stroke: #9a6200;
+            }
+
+    .ac-pref-text {
+        flex: 1;
+    }
+
+        .ac-pref-text b {
+            display: block;
+            font-size: 14px;
+            color: #0f2a4a;
+        }
+
+        .ac-pref-text small {
+            font-size: 12px;
+            color: #6b7a90;
+        }
+
+    .ac-chev {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: #9aa7ba;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .ac-switch {
+        position: relative;
+        width: 42px;
+        height: 24px;
+        flex-shrink: 0;
+        border: 0;
+        border-radius: 999px;
+        background: #cfd8e6;
+        cursor: pointer;
+        transition: background .2s;
+    }
+
+        .ac-switch::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            transition: transform .2s;
+        }
+
+        .ac-switch.on {
+            background: #1f8a5b;
+        }
+
+            .ac-switch.on::after {
+                transform: translateX(18px);
+            }
+
+    /* Zona de peligro */
+    .ac-danger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding: 20px 24px;
+        border-radius: 16px;
+        background: #fdf4f2;
+        border: 1px solid #f3d0ca;
+    }
+
+        .ac-danger b {
+            display: block;
+            font-size: 14px;
+            color: #b42318;
+        }
+
+        .ac-danger small {
+            font-size: 12px;
+            color: #6b7a90;
+        }
+
+    /* Ventanas */
+    .ac-modal-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 30, 60, .55);
+    }
+
+    .ac-modal {
+        width: 100%;
+        max-width: 420px;
+        padding: 28px;
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    }
+
+        .ac-modal h3 {
+            margin: 0 0 6px;
+            font-size: 19px;
+            color: #0f2a4a;
+        }
+
+        .ac-modal > p {
+            margin: 0 0 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #6b7a90;
+        }
+
+    .ac-label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4a5a70;
+    }
+
+    .ac-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #f7f9fc;
+        font-family: inherit;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+        .ac-input:focus {
+            outline: 2px solid #1f5fa8;
+            background: #ffffff;
+        }
+
+    .ac-modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .ac-error {
+        margin-top: 12px;
+        font-size: 12px;
+        color: #b42318;
+    }
+
+    .ac-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 300;
+        padding: 14px 20px;
+        border-radius: 12px;
+        background: #14406f;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+
+    @@media (max-width: 800px) {
+        .ac-page {
+            padding: 28px 14px 0;
+        }
+
+        .ac-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="ac-page">
+
+    <header class="ac-head">
+        <div class="ac-eyebrow">Tu perfil</div>
+        <h1>Cuenta</h1>
+        <p>Administra tus datos, tus avisos y la seguridad de tu cuenta.</p>
+    </header>
+
+    <!-- Perfil -->
+    <section class="ac-profile">
+        <div class="ac-avatar">@Iniciales</div>
+
+        <div class="ac-who">
+            @if (!editando)
+            {
+                <h2>@nombre</h2>
+                <p>Cliente · @correo</p>
+            }
+            else
+            {
+                <input class="ac-input" @bind="eNombre" placeholder="Nombre completo" />
+                <input class="ac-input" @bind="eCorreo" placeholder="Correo electrónico" />
+            }
+        </div>
+
+        @if (!editando)
+        {
+            <button type="button" class="ac-btn ac-btn-ghost" @onclick="Editar">Editar perfil</button>
+        }
+        else
+        {
+            <div class="ac-actions">
+                <button type="button" class="ac-btn ac-btn-light" @onclick="GuardarPerfil">Guardar</button>
+                <button type="button" class="ac-btn ac-btn-ghost" @onclick="() => editando = false">Cancelar</button>
+            </div>
+        }
+    </section>
+
+    <!-- Datos y resumen -->
+    <div class="ac-grid">
+        <section class="ac-card">
+            <h3>Datos de la cuenta</h3>
+            <div class="ac-row">
+                <span>Teléfono</span>
+                @if (!editando)
+                {
+                    <b>@telefono</b>
+                }
+                else
+                {
+                    <input class="ac-input" style="max-width:180px;" @bind="eTelefono" />
+                }
+            </div>
+            <div class="ac-row">
+                <span>Contraseña</span>
+                <button type="button" class="ac-link" @onclick="@(() => AbrirModal("password"))">Cambiar</button>
+            </div>
+            <div class="ac-row">
+                <span>Miembro desde</span>
+                <b>Ene 2025</b>
+            </div>
+        </section>
+
+        <section class="ac-card">
+            <h3>Tu actividad</h3>
+            <div class="ac-stats">
+                <div class="ac-stat"><b>2</b><small>Vehículos</small></div>
+                <div class="ac-stat"><b>2</b><small>Citas próximas</small></div>
+                <div class="ac-stat"><b>1</b><small>Servicios completados</small></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Preferencias -->
+    <section class="ac-card">
+        <h3>Preferencias</h3>
+
+        <button type="button" class="ac-pref" @onclick="@(() => AbrirModal("facturacion"))">
+            <span class="ac-ico">
+                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h4" /></svg>
+            </span>
+            <span class="ac-pref-text"><b>Facturación</b><small>NIT, nombre y dirección para tus facturas</small></span>
+            <svg class="ac-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
+
+        <div class="ac-pref">
+            <span class="ac-ico green">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z" /><path d="M4 7l8 6 8-6" /></svg>
+            </span>
+            <span class="ac-pref-text"><b>Avisos por correo</b><small>Confirmaciones de cita y servicio finalizado</small></span>
+            <button type="button" role="switch" aria-checked="@avisoCorreo" class="ac-switch @(avisoCorreo ? "on" : "")" @onclick="() => avisoCorreo = !avisoCorreo"></button>
+        </div>
+
+        <div class="ac-pref">
+            <span class="ac-ico green">
+                <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>
+            </span>
+            <span class="ac-pref-text"><b>Recordatorios de cita</b><small>Te avisamos antes de tu cita</small></span>
+            <button type="button" role="switch" aria-checked="@avisoRecordatorio" class="ac-switch @(avisoRecordatorio ? "on" : "")" @onclick="() => avisoRecordatorio = !avisoRecordatorio"></button>
+        </div>
+
+        <div class="ac-pref">
+            <span class="ac-ico amber">
+                <svg viewBox="0 0 24 24"><path d="M20 12l-8 8-9-9V3h8z" /><circle cx="7.5" cy="7.5" r="1.3" /></svg>
+            </span>
+            <span class="ac-pref-text"><b>Promociones</b><small>Descuentos y ofertas del taller</small></span>
+            <button type="button" role="switch" aria-checked="@avisoPromos" class="ac-switch @(avisoPromos ? "on" : "")" @onclick="() => avisoPromos = !avisoPromos"></button>
+        </div>
+
+        <button type="button" class="ac-pref" @onclick="@(() => AbrirModal("logout"))">
+            <span class="ac-ico">
+                <svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4" /><path d="M16 8l4 4-4 4M20 12H9" /></svg>
+            </span>
+            <span class="ac-pref-text"><b>Cerrar sesión</b><small>Salir de tu cuenta en este dispositivo</small></span>
+            <svg class="ac-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
+    </section>
+
+    <!-- Eliminar cuenta -->
+    <section class="ac-danger">
+        <div>
+            <b>Eliminar cuenta</b>
+            <small>Se borrarán tus datos, vehículos y citas de forma permanente.</small>
+        </div>
+        <button type="button" class="ac-btn ac-btn-danger-outline" @onclick="@(() => AbrirModal("eliminar"))">Eliminar</button>
+    </section>
+</div>
+
+@if (modal is not null)
+{
+    <div class="ac-modal-bg" @onclick="CerrarModal">
+        <div class="ac-modal" @onclick:stopPropagation="true">
+
+            @if (modal == "password")
+            {
+                <h3>Cambiar contraseña</h3>
+                <p>Usa al menos 8 caracteres.</p>
+                <label class="ac-label">Contraseña actual</label>
+                <input type="password" class="ac-input" @bind="pwActual" />
+                <label class="ac-label">Nueva contraseña</label>
+                <input type="password" class="ac-input" @bind="pwNueva" />
+                <label class="ac-label">Confirmar nueva contraseña</label>
+                <input type="password" class="ac-input" @bind="pwConfirma" />
+                @if (errorModal is not null)
+                {
+                    <div class="ac-error">@errorModal</div>
+                }
+                <div class="ac-modal-actions">
+                    <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="ac-btn ac-btn-solid" @onclick="CambiarPassword">Guardar</button>
+                </div>
+            }
+            else if (modal == "facturacion")
+            {
+                <h3>Datos de facturación</h3>
+                <p>Los usaremos en las facturas de tus servicios.</p>
+                <label class="ac-label">NIT</label>
+                <input class="ac-input" @bind="nit" placeholder="CF o tu NIT" />
+                <label class="ac-label">Nombre para la factura</label>
+                <input class="ac-input" @bind="nombreFactura" />
+                <label class="ac-label">Dirección</label>
+                <input class="ac-input" @bind="direccionFactura" placeholder="Zona, ciudad" />
+                <div class="ac-modal-actions">
+                    <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="ac-btn ac-btn-solid" @onclick="GuardarFacturacion">Guardar</button>
+                </div>
+            }
+            else if (modal == "logout")
+            {
+                <h3>¿Cerrar sesión?</h3>
+                <p>Tendrás que iniciar sesión de nuevo para agendar citas y ver tus vehículos.</p>
+                <div class="ac-modal-actions">
+                    <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="ac-btn ac-btn-solid" @onclick="CerrarSesion">Cerrar sesión</button>
+                </div>
+            }
+            else if (modal == "eliminar")
+            {
+                <h3 style="color:#b42318;">Eliminar cuenta</h3>
+                <p>Esta acción no se puede deshacer. Se borrarán tus datos, vehículos y citas. Escribe <b>ELIMINAR</b> para confirmar.</p>
+                <input class="ac-input" @bind="confirmacion" @bind:event="oninput" placeholder="ELIMINAR" />
+                <div class="ac-modal-actions">
+                    <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="ac-btn ac-btn-danger" disabled="@(!ConfirmacionValida)" @onclick="EliminarCuenta">Eliminar definitivamente</button>
+                </div>
+            }
+
+        </div>
+    </div>
+}
+
+@if (toast is not null)
+{
+    <div class="ac-toast">@toast</div>
+}
+
+@code {
+    // TODO: reemplazar por los datos del usuario logueado (AutosPAService)
+    private string nombre = "Esteban Jiménez";
+    private string correo = "esteban.jimenez@correo.com";
+    private string telefono = "+502 5555 1234";
+
+    private bool editando;
+    private string eNombre = "", eCorreo = "", eTelefono = "";
+
+    private bool avisoCorreo = true;
+    private bool avisoRecordatorio = true;
+    private bool avisoPromos = false;
+
+    private string nit = "CF";
+    private string nombreFactura = "Esteban Jiménez";
+    private string direccionFactura = "";
+
+    private string? modal;
+    private string? errorModal;
+    private string pwActual = "", pwNueva = "", pwConfirma = "";
+    private string confirmacion = "";
+    private string? toast;
+
+    private string Iniciales =>
+        string.Concat(nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpper(p[0])));
+
+    private bool ConfirmacionValida => confirmacion.Trim().ToUpper() == "ELIMINAR";
+
+    private void Editar()
+    {
+        eNombre = nombre;
+        eCorreo = correo;
+        eTelefono = telefono;
+        editando = true;
+    }
+
+    private async Task GuardarPerfil()
+    {
+        if (string.IsNullOrWhiteSpace(eNombre) || string.IsNullOrWhiteSpace(eCorreo))
+        {
+            await Aviso("El nombre y el correo no pueden quedar vacíos.");
+            return;
+        }
+
+        nombre = eNombre.Trim();
+        correo = eCorreo.Trim();
+        telefono = string.IsNullOrWhiteSpace(eTelefono) ? telefono : eTelefono.Trim();
+        editando = false;
+        await Aviso("Perfil actualizado.");
+    }
+
+    private void AbrirModal(string nombreModal)
+    {
+        modal = nombreModal;
+        errorModal = null;
+        pwActual = pwNueva = pwConfirma = confirmacion = "";
+    }
+
+    private void CerrarModal() => modal = null;
+
+    private async Task CambiarPassword()
+    {
+        if (string.IsNullOrWhiteSpace(pwActual)) { errorModal = "Escribe tu contraseña actual."; return; }
+        if (pwNueva.Length < 8) { errorModal = "La nueva contraseña debe tener al menos 8 caracteres."; return; }
+        if (pwNueva != pwConfirma) { errorModal = "Las contraseñas no coinciden."; return; }
+
+        // TODO: enviar el cambio al servidor
+        modal = null;
+        await Aviso("Contraseña actualizada.");
+    }
+
+    private async Task GuardarFacturacion()
+    {
+        // TODO: guardar en el servidor
+        modal = null;
+        await Aviso("Datos de facturación guardados.");
+    }
+
+    private void CerrarSesion()
+    {
+        // TODO: cerrar la sesión real
+        modal = null;
+        Nav.NavigateTo("");
+    }
+
+    private void EliminarCuenta()
+    {
+        // TODO: eliminar la cuenta en el servidor
+        modal = null;
+        Nav.NavigateTo("");
+    }
+
+    private async Task Aviso(string mensaje)
+    {
+        toast = mensaje;
+        StateHasChanged();
+        await Task.Delay(2500);
+        toast = null;
+    }
+}
