@@ -5,7 +5,7 @@
 
 <style>
     .ac-page {
-        max-width: 960px;
+        max-width: 1040px;
         margin: 0 auto;
         padding: 40px 28px 0;
     }
@@ -37,29 +37,43 @@
     }
 
     .ac-card {
+        margin-bottom: 20px;
+        padding: 28px;
         background: #ffffff;
         border: 1px solid #e6ebf2;
-        border-radius: 18px;
-        padding: 24px;
+        border-radius: 20px;
         box-shadow: 0 2px 10px rgba(15, 42, 74, .05);
     }
 
-        .ac-card h3 {
-            margin: 0 0 14px;
-            font-size: 15px;
+    .ac-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+        .ac-card-head h3 {
+            margin: 0 0 4px;
+            font-size: 19px;
             font-weight: 700;
             color: #0f2a4a;
+        }
+
+        .ac-card-head small {
+            font-size: 13px;
+            color: #6b7a90;
         }
 
     /* Perfil */
     .ac-profile {
         display: flex;
         align-items: center;
-        gap: 18px;
+        gap: 22px;
         flex-wrap: wrap;
         margin-bottom: 20px;
-        padding: 24px;
-        border-radius: 18px;
+        padding: 30px 32px;
+        border-radius: 20px;
         color: #ffffff;
         background: linear-gradient(135deg, #0f2a4a, #14406f 65%, #1f8a5b);
         box-shadow: 0 8px 24px rgba(15, 42, 74, .18);
@@ -69,46 +83,54 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 68px;
-        height: 68px;
+        width: 88px;
+        height: 88px;
         flex-shrink: 0;
         border-radius: 50%;
         background: #ffffff;
         color: #14406f;
-        font-size: 22px;
+        font-size: 30px;
         font-weight: 800;
+        box-shadow: 0 0 0 5px rgba(255, 255, 255, .2);
     }
 
     .ac-who {
         flex: 1;
-        min-width: 200px;
+        min-width: 220px;
     }
 
         .ac-who h2 {
-            margin: 0 0 4px;
-            font-size: 22px;
+            margin: 0 0 6px;
+            font-size: 28px;
+            font-weight: 700;
             color: #ffffff;
         }
 
         .ac-who p {
-            margin: 0;
-            font-size: 13px;
-            color: rgba(255, 255, 255, .8);
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: rgba(255, 255, 255, .85);
         }
 
-        .ac-who .ac-input {
-            background: rgba(255, 255, 255, .95);
-            margin-bottom: 8px;
-            max-width: 360px;
-        }
+    .ac-badge {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .18);
+        border: 1px solid rgba(255, 255, 255, .35);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        color: #ffffff;
+    }
 
     .ac-btn {
         display: inline-block;
-        padding: 10px 20px;
+        padding: 11px 22px;
         border-radius: 10px;
         border: 1px solid transparent;
         font-family: inherit;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
         transition: transform .15s, box-shadow .15s;
@@ -123,11 +145,6 @@
             opacity: .5;
             cursor: not-allowed;
         }
-
-    .ac-btn-light {
-        background: #ffffff;
-        color: #14406f;
-    }
 
     .ac-btn-ghost {
         background: rgba(255, 255, 255, .12);
@@ -157,41 +174,54 @@
         color: #b42318;
     }
 
-    .ac-actions {
-        display: flex;
-        gap: 10px;
-    }
-
-    /* Grid */
-    .ac-grid {
+    /* Datos del cliente */
+    .ac-fields {
         display: grid;
-        grid-template-columns: 1.2fr 1fr;
-        gap: 20px;
-        margin-bottom: 20px;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
     }
 
-    .ac-row {
+    .ac-field {
+        padding: 18px 20px;
+        border: 1px solid #eef1f6;
+        border-radius: 14px;
+        background: #f7f9fc;
+    }
+
+        .ac-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: #8492a6;
+        }
+
+        .ac-field b {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #0f2a4a;
+            word-break: break-word;
+        }
+
+            .ac-field b.muted {
+                font-weight: 500;
+                color: #9aa7ba;
+            }
+
+        .ac-field .ac-input {
+            font-size: 16px;
+        }
+
+    .ac-field-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        padding: 13px 0;
-        border-bottom: 1px solid #eef1f6;
-        font-size: 14px;
+        gap: 12px;
     }
-
-        .ac-row:last-child {
-            border-bottom: 0;
-        }
-
-        .ac-row span {
-            color: #6b7a90;
-        }
-
-        .ac-row b {
-            font-weight: 600;
-            color: #0f2a4a;
-        }
 
     .ac-link {
         padding: 0;
@@ -208,28 +238,38 @@
             text-decoration: underline;
         }
 
+    .ac-edit-bar {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eef1f6;
+    }
+
+    /* Actividad */
     .ac-stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
+        gap: 16px;
     }
 
     .ac-stat {
-        padding: 16px 10px;
-        border-radius: 14px;
-        background: #f2f6fb;
+        padding: 22px 12px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #eef4fb, #e6effa);
         text-align: center;
     }
 
         .ac-stat b {
             display: block;
-            font-size: 26px;
+            font-size: 34px;
             line-height: 1.1;
             color: #14406f;
         }
 
         .ac-stat small {
-            font-size: 11px;
+            font-size: 13px;
             color: #6b7a90;
         }
 
@@ -237,25 +277,23 @@
     .ac-pref {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 16px;
         width: 100%;
-        padding: 14px 4px;
+        padding: 16px 6px;
         border: 0;
         border-bottom: 1px solid #eef1f6;
+        border-radius: 10px;
         background: none;
         font-family: inherit;
         text-align: left;
+        cursor: pointer;
     }
 
         .ac-pref:last-child {
             border-bottom: 0;
         }
 
-    button.ac-pref {
-        cursor: pointer;
-    }
-
-        button.ac-pref:hover {
+        .ac-pref:hover {
             background: #f7f9fc;
         }
 
@@ -263,16 +301,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         flex-shrink: 0;
         border-radius: 12px;
         background: #e6effa;
     }
 
         .ac-ico svg {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             fill: none;
             stroke: #14406f;
             stroke-width: 1.8;
@@ -280,34 +318,18 @@
             stroke-linejoin: round;
         }
 
-        .ac-ico.green {
-            background: #e3f5ec;
-        }
-
-            .ac-ico.green svg {
-                stroke: #146c43;
-            }
-
-        .ac-ico.amber {
-            background: #fdf1dc;
-        }
-
-            .ac-ico.amber svg {
-                stroke: #9a6200;
-            }
-
     .ac-pref-text {
         flex: 1;
     }
 
         .ac-pref-text b {
             display: block;
-            font-size: 14px;
+            font-size: 15px;
             color: #0f2a4a;
         }
 
         .ac-pref-text small {
-            font-size: 12px;
+            font-size: 13px;
             color: #6b7a90;
         }
 
@@ -321,38 +343,6 @@
         stroke-linejoin: round;
     }
 
-    .ac-switch {
-        position: relative;
-        width: 42px;
-        height: 24px;
-        flex-shrink: 0;
-        border: 0;
-        border-radius: 999px;
-        background: #cfd8e6;
-        cursor: pointer;
-        transition: background .2s;
-    }
-
-        .ac-switch::after {
-            content: "";
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #ffffff;
-            transition: transform .2s;
-        }
-
-        .ac-switch.on {
-            background: #1f8a5b;
-        }
-
-            .ac-switch.on::after {
-                transform: translateX(18px);
-            }
-
     /* Zona de peligro */
     .ac-danger {
         display: flex;
@@ -360,21 +350,20 @@
         justify-content: space-between;
         gap: 16px;
         flex-wrap: wrap;
-        margin-top: 20px;
-        padding: 20px 24px;
-        border-radius: 16px;
+        padding: 22px 28px;
+        border-radius: 18px;
         background: #fdf4f2;
         border: 1px solid #f3d0ca;
     }
 
         .ac-danger b {
             display: block;
-            font-size: 14px;
+            font-size: 15px;
             color: #b42318;
         }
 
         .ac-danger small {
-            font-size: 12px;
+            font-size: 13px;
             color: #6b7a90;
         }
 
@@ -392,16 +381,16 @@
 
     .ac-modal {
         width: 100%;
-        max-width: 420px;
-        padding: 28px;
-        border-radius: 20px;
+        max-width: 440px;
+        padding: 30px;
+        border-radius: 22px;
         background: #ffffff;
         box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
     }
 
         .ac-modal h3 {
             margin: 0 0 6px;
-            font-size: 19px;
+            font-size: 20px;
             color: #0f2a4a;
         }
 
@@ -422,10 +411,10 @@
 
     .ac-input {
         width: 100%;
-        padding: 11px 14px;
+        padding: 12px 14px;
         border: 1px solid #dbe3ee;
         border-radius: 10px;
-        background: #f7f9fc;
+        background: #ffffff;
         font-family: inherit;
         font-size: 14px;
         color: #0f172a;
@@ -433,14 +422,13 @@
 
         .ac-input:focus {
             outline: 2px solid #1f5fa8;
-            background: #ffffff;
         }
 
     .ac-modal-actions {
         display: flex;
         gap: 10px;
         justify-content: flex-end;
-        margin-top: 20px;
+        margin-top: 22px;
     }
 
     .ac-error {
@@ -468,7 +456,21 @@
             padding: 28px 14px 0;
         }
 
-        .ac-grid {
+        .ac-card {
+            padding: 22px;
+        }
+
+        .ac-profile {
+            padding: 24px;
+        }
+
+        .ac-fields {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 520px) {
+        .ac-stats {
             grid-template-columns: 1fr;
         }
     }
@@ -479,7 +481,7 @@
     <header class="ac-head">
         <div class="ac-eyebrow">Tu perfil</div>
         <h1>Cuenta</h1>
-        <p>Administra tus datos, tus avisos y la seguridad de tu cuenta.</p>
+        <p>Administra tus datos y la seguridad de tu cuenta.</p>
     </header>
 
     <!-- Perfil -->
@@ -487,69 +489,130 @@
         <div class="ac-avatar">@Iniciales</div>
 
         <div class="ac-who">
-            @if (!editando)
-            {
-                <h2>@nombre</h2>
-                <p>Cliente · @correo</p>
-            }
-            else
-            {
-                <input class="ac-input" @bind="eNombre" placeholder="Nombre completo" />
-                <input class="ac-input" @bind="eCorreo" placeholder="Correo electrónico" />
-            }
+            <h2>@nombre</h2>
+            <p>@correo</p>
+            <span class="ac-badge">Cliente</span>
         </div>
 
         @if (!editando)
         {
             <button type="button" class="ac-btn ac-btn-ghost" @onclick="Editar">Editar perfil</button>
         }
-        else
-        {
-            <div class="ac-actions">
-                <button type="button" class="ac-btn ac-btn-light" @onclick="GuardarPerfil">Guardar</button>
-                <button type="button" class="ac-btn ac-btn-ghost" @onclick="() => editando = false">Cancelar</button>
-            </div>
-        }
     </section>
 
-    <!-- Datos y resumen -->
-    <div class="ac-grid">
-        <section class="ac-card">
-            <h3>Datos de la cuenta</h3>
-            <div class="ac-row">
-                <span>Teléfono</span>
+    <!-- Datos del cliente -->
+    <section class="ac-card">
+        <div class="ac-card-head">
+            <div>
+                <h3>Datos del cliente</h3>
+                <small>Esta información se usa para tus citas y tus facturas.</small>
+            </div>
+        </div>
+
+        <div class="ac-fields">
+            <div class="ac-field">
+                <label>Nombre completo</label>
+                @if (!editando)
+                {
+                    <b>@nombre</b>
+                }
+                else
+                {
+                    <input class="ac-input" @bind="eNombre" placeholder="Nombre completo" />
+                }
+            </div>
+
+            <div class="ac-field">
+                <label>Correo electrónico</label>
+                @if (!editando)
+                {
+                    <b>@correo</b>
+                }
+                else
+                {
+                    <input class="ac-input" @bind="eCorreo" placeholder="Correo electrónico" />
+                }
+            </div>
+
+            <div class="ac-field">
+                <label>Teléfono</label>
                 @if (!editando)
                 {
                     <b>@telefono</b>
                 }
                 else
                 {
-                    <input class="ac-input" style="max-width:180px;" @bind="eTelefono" />
+                    <input class="ac-input" @bind="eTelefono" placeholder="+502 0000 0000" />
                 }
             </div>
-            <div class="ac-row">
-                <span>Contraseña</span>
-                <button type="button" class="ac-link" @onclick="@(() => AbrirModal("password"))">Cambiar</button>
-            </div>
-            <div class="ac-row">
-                <span>Miembro desde</span>
-                <b>Ene 2025</b>
-            </div>
-        </section>
 
-        <section class="ac-card">
-            <h3>Tu actividad</h3>
-            <div class="ac-stats">
-                <div class="ac-stat"><b>2</b><small>Vehículos</small></div>
-                <div class="ac-stat"><b>2</b><small>Citas próximas</small></div>
-                <div class="ac-stat"><b>1</b><small>Servicios completados</small></div>
+            <div class="ac-field">
+                <label>NIT para facturación</label>
+                <b>@(string.IsNullOrWhiteSpace(nit) ? "CF" : nit)</b>
             </div>
-        </section>
-    </div>
+
+            <div class="ac-field">
+                <label>Dirección</label>
+                @if (string.IsNullOrWhiteSpace(direccionFactura))
+                {
+                    <b class="muted">Sin registrar</b>
+                }
+                else
+                {
+                    <b>@direccionFactura</b>
+                }
+            </div>
+
+            <div class="ac-field">
+                <label>Contraseña</label>
+                <div class="ac-field-row">
+                    <b>••••••••••</b>
+                    <button type="button" class="ac-link" @onclick="@(() => AbrirModal("password"))">Cambiar</button>
+                </div>
+            </div>
+
+            <div class="ac-field">
+                <label>Miembro desde</label>
+                <b>Enero 2025</b>
+            </div>
+
+            <div class="ac-field">
+                <label>Tipo de cuenta</label>
+                <b>Cliente</b>
+            </div>
+        </div>
+
+        @if (editando)
+        {
+            <div class="ac-edit-bar">
+                <button type="button" class="ac-btn ac-btn-outline" @onclick="() => editando = false">Cancelar</button>
+                <button type="button" class="ac-btn ac-btn-solid" @onclick="GuardarPerfil">Guardar cambios</button>
+            </div>
+        }
+    </section>
+
+    <!-- Actividad -->
+    <section class="ac-card">
+        <div class="ac-card-head">
+            <div>
+                <h3>Tu actividad</h3>
+                <small>Resumen de tu historial en FlexiCar.</small>
+            </div>
+        </div>
+        <div class="ac-stats">
+            <div class="ac-stat"><b>2</b><small>Vehículos registrados</small></div>
+            <div class="ac-stat"><b>2</b><small>Citas próximas</small></div>
+            <div class="ac-stat"><b>1</b><small>Servicios completados</small></div>
+        </div>
+    </section>
 
     <!-- Preferencias -->
     <section class="ac-card">
-        <h3>Preferencias</h3>
+        <div class="ac-card-head">
+            <div>
+                <h3>Preferencias</h3>
+            </div>
+        </div>
 
         <button type="button" class="ac-pref" @onclick="@(() => AbrirModal("facturacion"))">
             <span class="ac-ico">
@@ -558,30 +621,6 @@
             <span class="ac-pref-text"><b>Facturación</b><small>NIT, nombre y dirección para tus facturas</small></span>
             <svg class="ac-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
         </button>
-
-        <div class="ac-pref">
-            <span class="ac-ico green">
-                <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z" /><path d="M4 7l8 6 8-6" /></svg>
-            </span>
-            <span class="ac-pref-text"><b>Avisos por correo</b><small>Confirmaciones de cita y servicio finalizado</small></span>
-            <button type="button" role="switch" aria-checked="@avisoCorreo" class="ac-switch @(avisoCorreo ? "on" : "")" @onclick="() => avisoCorreo = !avisoCorreo"></button>
-        </div>
-
-        <div class="ac-pref">
-            <span class="ac-ico green">
-                <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>
-            </span>
-            <span class="ac-pref-text"><b>Recordatorios de cita</b><small>Te avisamos antes de tu cita</small></span>
-            <button type="button" role="switch" aria-checked="@avisoRecordatorio" class="ac-switch @(avisoRecordatorio ? "on" : "")" @onclick="() => avisoRecordatorio = !avisoRecordatorio"></button>
-        </div>
-
-        <div class="ac-pref">
-            <span class="ac-ico amber">
-                <svg viewBox="0 0 24 24"><path d="M20 12l-8 8-9-9V3h8z" /><circle cx="7.5" cy="7.5" r="1.3" /></svg>
-            </span>
-            <span class="ac-pref-text"><b>Promociones</b><small>Descuentos y ofertas del taller</small></span>
-            <button type="button" role="switch" aria-checked="@avisoPromos" class="ac-switch @(avisoPromos ? "on" : "")" @onclick="() => avisoPromos = !avisoPromos"></button>
-        </div>
 
         <button type="button" class="ac-pref" @onclick="@(() => AbrirModal("logout"))">
             <span class="ac-ico">
@@ -679,10 +718,6 @@
     private bool editando;
     private string eNombre = "", eCorreo = "", eTelefono = "";
 
-    private bool avisoCorreo = true;
-    private bool avisoRecordatorio = true;
-    private bool avisoPromos = false;
-
     private string nit = "CF";
     private string nombreFactura = "Esteban Jiménez";
     private string direccionFactura = "";
@@ -692,6 +727,7 @@
     private string pwActual = "", pwNueva = "", pwConfirma = "";
     private string confirmacion = "";
     private string? toast;
+    private int toastId;
 
     private string Iniciales =>
         string.Concat(nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpper(p[0])));
@@ -714,6 +750,7 @@
             return;
         }
 
+        // TODO: guardar los cambios en el servidor
         nombre = eNombre.Trim();
         correo = eCorreo.Trim();
         telefono = string.IsNullOrWhiteSpace(eTelefono) ? telefono : eTelefono.Trim();
@@ -733,7 +770,7 @@
     private async Task CambiarPassword()
     {
         if (string.IsNullOrWhiteSpace(pwActual)) { errorModal = "Escribe tu contraseña actual."; return; }
-        if (pwNueva.Length < 8) { errorModal = "La nueva contraseña debe tener al menos 8 caracteres."; return; }
+        if (!(pwNueva.Length > 7)) { errorModal = "La nueva contraseña debe tener al menos 8 caracteres."; return; }
         if (pwNueva != pwConfirma) { errorModal = "Las contraseñas no coinciden."; return; }
 
         // TODO: enviar el cambio al servidor
@@ -764,9 +801,10 @@
 
     private async Task Aviso(string mensaje)
     {
+        var id = ++toastId;
         toast = mensaje;
         StateHasChanged();
         await Task.Delay(2500);
-        toast = null;
+        if (id == toastId) toast = null;
     }
 }
