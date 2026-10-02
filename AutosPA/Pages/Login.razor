@@ -54,11 +54,6 @@
                 <p>Accede a tu cuenta para agendar citas y dar seguimiento a tus servicios.</p>
             </div>
 
-            <div class="au-roles">
-                <button type="button" class="au-role @(rol == "cliente" ? "active" : "")" @onclick='() => rol = "cliente"'>Soy cliente</button>
-                <button type="button" class="au-role @(rol == "agente" ? "active" : "")" @onclick='() => rol = "agente"'>Soy agente</button>
-            </div>
-
             @if (error is not null)
             {
                 <div class="au-alert">@error</div>
@@ -119,15 +114,8 @@
                 </button>
             </form>
 
-            @if (rol == "cliente")
-            {
-                <div class="au-divider">¿Eres nuevo en FlexiCar?</div>
-                <a class="au-btn au-btn-plain" href="registro">Crear una cuenta</a>
-            }
-            else
-            {
-                <div class="au-note">Las cuentas de agente las crea el taller. Si aún no tienes acceso, solicítalo a la administración.</div>
-            }
+            <div class="au-divider">¿Eres nuevo en FlexiCar?</div>
+            <a class="au-btn au-btn-plain" href="registro">Crear una cuenta</a>
 
             <div class="au-legal">Al continuar aceptas los Términos de uso y la Política de privacidad de FlexiCar.</div>
         </div>
@@ -168,7 +156,6 @@
 }
 
 @code {
-    private string rol = "cliente";          // cliente | agente
     private string correo = "";
     private string password = "";
     private bool recordarme;
@@ -211,12 +198,13 @@
         StateHasChanged();
 
         // TODO: validar con el servicio de autenticación (AutosPAService), por ejemplo:
-        //   POST api/auth/login  { correo, password, rol, recordarme }
+        //   POST api/auth/login  { correo, password, recordarme }  ->  { token, rol }
         //   Si las credenciales no son correctas: error = "Correo o contraseña incorrectos.";
-        //   Si son correctas: guardar el token / la sesión y redirigir según el rol.
+        //   Si son correctas: guardar el token / la sesión y redirigir según el rol que devuelve el servidor.
         await Task.Delay(900);
         cargando = false;
 
+        var rol = "cliente";   // TODO: usar el rol que devuelva el servidor ("cliente" o "agente")
         Nav.NavigateTo(rol == "agente" ? "panel-agente" : "");
     }
 
