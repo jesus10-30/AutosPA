@@ -1,6 +1,7 @@
 ﻿@page "/agente/trabajos"
 @implements IDisposable
 @using System.Globalization
+@inject IAgenteService Servicio
 
 <PageTitle>FlexiCar — Mis trabajos</PageTitle>
 
@@ -834,27 +835,6 @@
 }
 
 @code {
-    private class Trabajo
-    {
-        public int Id { get; set; }
-        public string Cliente { get; set; } = "";
-        public string Vehiculo { get; set; } = "";
-        public string Placa { get; set; } = "";
-        public string Servicio { get; set; } = "";
-        public DateTime Fecha { get; set; }
-        public TimeOnly Hora { get; set; }
-        public string Estado { get; set; } = "porhacer";   // porhacer | proceso | finalizado
-        public string CostoEstimado { get; set; } = "";
-        public decimal CostoSugerido { get; set; }
-        public int EstimadoMin { get; set; } = 60;
-        public DateTime? Inicio { get; set; }
-        public int DuracionMin { get; set; }
-        public decimal CostoFinal { get; set; }
-        public string Notas { get; set; } = "";
-        public string? Comentario { get; set; }
-        public int Calificacion { get; set; }
-    }
-
     private List<Trabajo> trabajos = new();
 
     private string tab = "porhacer";
@@ -871,20 +851,16 @@
 
     private static DateTime Hoy => DateTime.Today;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // TODO: reemplazar por los trabajos reales del agente (AutosPAService)
-        trabajos = new()
+        try
         {
-            new Trabajo { Id = 1, Cliente = "Laura Jiménez", Vehiculo = "Mazda 3 2022", Placa = "P 987 XYZ", Servicio = "Diagnóstico general", Fecha = Hoy, Hora = new TimeOnly(13, 0), Estado = "proceso", CostoEstimado = "Q100–Q200", CostoSugerido = 150, EstimadoMin = 60, Inicio = DateTime.Now.AddMinutes(-35) },
-            new Trabajo { Id = 2, Cliente = "Juan Pérez", Vehiculo = "Toyota Corolla 2018", Placa = "P 640 MKD", Servicio = "Cambio de aceite y filtros", Fecha = Hoy, Hora = new TimeOnly(15, 0), CostoEstimado = "Q150–Q300", CostoSugerido = 220, EstimadoMin = 45 },
-            new Trabajo { Id = 3, Cliente = "Esteban Jiménez", Vehiculo = "Toyota Corolla 2019", Placa = "P 428 DKL", Servicio = "Mantenimiento preventivo", Fecha = Hoy.AddDays(1), Hora = new TimeOnly(9, 0), CostoEstimado = "Q150–Q300", CostoSugerido = 240, EstimadoMin = 60, Notas = "Pidió revisar también el aire acondicionado." },
-            new Trabajo { Id = 4, Cliente = "Ana Morales", Vehiculo = "Kia Rio 2017", Placa = "P 622 HLT", Servicio = "Llantas y alineación", Fecha = Hoy.AddDays(1), Hora = new TimeOnly(15, 0), CostoEstimado = "Q60–Q180", CostoSugerido = 120, EstimadoMin = 50 },
-            new Trabajo { Id = 5, Cliente = "Pedro Castillo", Vehiculo = "Toyota Hilux 2016", Placa = "P 311 BQR", Servicio = "Sistema de frenos", Fecha = Hoy.AddDays(2), Hora = new TimeOnly(9, 0), CostoEstimado = "Q200–Q450", CostoSugerido = 350, EstimadoMin = 90 },
-            new Trabajo { Id = 6, Cliente = "Mario Castillo", Vehiculo = "Hyundai Tucson 2020", Placa = "P 221 LLT", Servicio = "Reemplazo de frenos", Fecha = Hoy.AddDays(-1), Hora = new TimeOnly(9, 0), Estado = "finalizado", CostoEstimado = "Q200–Q450", EstimadoMin = 90, DuracionMin = 95, CostoFinal = 380, Comentario = "Excelente atención, muy rápido y explicó todo bien.", Calificacion = 5 },
-            new Trabajo { Id = 7, Cliente = "Ana Castañeda", Vehiculo = "Kia Rio 2018", Placa = "P 553 ABH", Servicio = "Cambio de aceite", Fecha = Hoy.AddDays(-3), Hora = new TimeOnly(11, 0), Estado = "finalizado", CostoEstimado = "Q150–Q300", EstimadoMin = 40, DuracionMin = 55, CostoFinal = 185, Comentario = "Buen trabajo, pero tardó un poco más de lo esperado.", Calificacion = 4 },
-            new Trabajo { Id = 8, Cliente = "Luis García", Vehiculo = "Mazda 3 2019", Placa = "P 987 XYZ", Servicio = "Frenos delanteros", Fecha = Hoy.AddDays(-5), Hora = new TimeOnly(14, 0), Estado = "finalizado", CostoEstimado = "Q200–Q450", EstimadoMin = 90, DuracionMin = 80, CostoFinal = 310 },
-        };
+            trabajos = await Servicio.ObtenerTrabajosAsync(Hoy.AddDays(-60), Hoy.AddDays(60));
+        }
+        catch (Exception)
+        {
+            await Aviso("No se pudieron cargar los trabajos.");
+        }
 
         // Refresca el avance del trabajo en curso cada 30 segundos
         timer = new System.Threading.Timer(_ => InvokeAsync(StateHasChanged), null, 30000, 30000);
@@ -936,13 +912,20 @@
     private async Task Iniciar(Trabajo t)
     {
         if (actual is not null) return;
-
-        t.Estado = "proceso";
-        t.Inicio = DateTime.Now;
-        detalle = null;
-        tab = "proceso";
-        // TODO: guardar el cambio de estado en el servicio
-        await Aviso($"Iniciaste el servicio de {t.Cliente}.");
+        try
+        {
+            var inicio = DateTime.Now;
+            await Servicio.IniciarTrabajoAsync(t.Id, inicio);
+            t.Estado = "proceso";
+            t.Inicio = inicio;
+            detalle = null;
+            tab = "proceso";
+            await Aviso($"Iniciaste el servicio de {t.Cliente}.");
+        }
+        catch (Exception)
+        {
+            await Aviso("No se pudo iniciar el trabajo.");
+        }
     }
 
     private void AbrirFinalizar(Trabajo t)
@@ -958,17 +941,30 @@
         if (finalizando is null) return;
 
         var t = finalizando;
-        var inicio = t.Inicio ?? DateTime.Now;
+        var duracion = Math.Max(1, (int)(DateTime.Now - (t.Inicio ?? DateTime.Now)).TotalMinutes);
 
-        t.Estado = "finalizado";
-        t.DuracionMin = Math.Max(1, (int)(DateTime.Now - inicio).TotalMinutes);
-        t.CostoFinal = finCosto;
-        if (!string.IsNullOrWhiteSpace(finNotas)) t.Notas = finNotas.Trim();
+        try
+        {
+            await Servicio.FinalizarTrabajoAsync(t.Id, finCosto, duracion, finNotas);
+            t.Estado = "finalizado";
+            t.DuracionMin = duracion;
+            t.CostoFinal = finCosto;
+            if (!string.IsNullOrWhiteSpace(finNotas)) t.Notas = finNotas.Trim();
+            finalizando = null;
+            tab = "finalizado";
+            await Aviso($"Se notificó a {t.Cliente}: su {t.Servicio.ToLower()} ya está listo.");
+        }
+        catch (Exception)
+        {
+            await Aviso("No se pudo finalizar el trabajo. Intenta de nuevo.");
+        }
+    }
 
-        finalizando = null;
-        tab = "finalizado";
-        // TODO: guardar en el servicio y notificar al cliente que su vehículo está listo
-        await Aviso($"Se notificó a {t.Cliente}: su {t.Servicio.ToLower()} ya está listo.");
+    private async Task GuardarNotas()
+    {
+        if (detalle is null) return;
+        try { await Servicio.GuardarNotasAsync(detalle.Id, detalle.Notas); }
+        catch (Exception) { await Aviso("No se pudieron guardar las notas."); }
     }
 
     private async Task Aviso(string mensaje)

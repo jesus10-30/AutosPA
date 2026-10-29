@@ -1,6 +1,7 @@
 ﻿@page "/panel-agente"
 @implements IDisposable
 @inject NavigationManager Nav
+@inject IAgenteService Servicio
 
 <PageTitle>FlexiCar — Panel del agente</PageTitle>
 
@@ -977,7 +978,7 @@
 
             @foreach (var h in HorasDe(diaSel))
             {
-                var t = TrabajosDe(diaSel).FirstOrDefault(x => x.Hora == h);
+                var t = TrabajosDe(diaSel).FirstOrDefault(x => x.Hora.Hour == h);
                 var cls = t is null ? "" : ClaseEstado(t.Estado);
 
                 if (h == 14)
@@ -1136,104 +1137,42 @@
     <div class="ag-toast">@toast</div>
 }
 
+
 @code {
-    // TODO: tomar el agente desde la sesión
-    private string nombreAgente = "Carlos Ruiz";
-    private string especialidad = "Mecánica general";
-
-    private class Trabajo
-    {
-        public int Id { get; set; }
-        public DateTime Fecha { get; set; }
-        public int Hora { get; set; }
-        public string Vehiculo { get; set; } = "";
-        public string Cliente { get; set; } = "";
-        public string Servicio { get; set; } = "";
-        public string Estado { get; set; } = "Confirmada";   // Confirmada | En proceso | Finalizada
-        public int EstimadoMin { get; set; } = 60;
-        public DateTime? Inicio { get; set; }
-        public string Notas { get; set; } = "";
-    }
-
-    private class Solicitud
-    {
-        public int Id { get; set; }
-        public DateTime Fecha { get; set; }
-        public int Hora { get; set; }
-        public string Vehiculo { get; set; } = "";
-        public string Cliente { get; set; } = "";
-        public string Servicio { get; set; } = "";
-        public string Costo { get; set; } = "";
-        public string Tiempo { get; set; } = "";
-        public int EstimadoMin { get; set; } = 60;
-    }
-
-    private class Notificacion
-    {
-        public string Tipo { get; set; } = "solicitud";   // solicitud | recordatorio | calificacion
-        public string Titulo { get; set; } = "";
-        public string Mensaje { get; set; } = "";
-        public string Hace { get; set; } = "";
-        public string Destino { get; set; } = "";
-        public bool Leida { get; set; }
-    }
-
+    private Agente agente = new();
     private List<Notificacion> notificaciones = new();
-
     private List<DateTime> dias = new();
     private List<Trabajo> trabajos = new();
     private List<Solicitud> solicitudes = new();
 
     private DateTime diaSel;
     private bool disponible = true;
-    private int finalizadosSemana = 8;
     private Trabajo? detalle;
     private string? toast;
     private System.Threading.Timer? timer;
 
     private static DateTime Hoy => DateTime.Today;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         // Próximos 6 días hábiles (sin domingos)
-        var d = Hoy;
-        while (dias.Count != 6)
-        {
+        for (var d = Hoy; dias.Count < 6; d = d.AddDays(1))
             if (d.DayOfWeek != DayOfWeek.Sunday) dias.Add(d);
-            d = d.AddDays(1);
-        }
         diaSel = Hoy;
 
-        // TODO: reemplazar por los datos reales del agente (AutosPAService)
-        trabajos = new()
+        try
         {
-            new Trabajo { Id = 1, Fecha = dias[0], Hora = 8, Vehiculo = "Toyota Corolla 2018", Cliente = "Juan Pérez", Servicio = "Cambio de aceite y filtros", Estado = "Finalizada", EstimadoMin = 45 },
-            new Trabajo { Id = 2, Fecha = dias[0], Hora = 10, Vehiculo = "Honda Civic 2020", Cliente = "María López", Servicio = "Diagnóstico de motor", Estado = "En proceso", EstimadoMin = 60, Inicio = DateTime.Now.AddMinutes(-25) },
-            new Trabajo { Id = 3, Fecha = dias[0], Hora = 14, Vehiculo = "Mazda 3 2019", Cliente = "Luis García", Servicio = "Frenos delanteros", Estado = "Confirmada", EstimadoMin = 90 },
-            new Trabajo { Id = 4, Fecha = dias[1], Hora = 9, Vehiculo = "Kia Rio 2017", Cliente = "Ana Morales", Servicio = "Mantenimiento preventivo", Estado = "Confirmada", EstimadoMin = 60 },
-            new Trabajo { Id = 5, Fecha = dias[3], Hora = 10, Vehiculo = "Nissan Sentra 2021", Cliente = "Carlos Méndez", Servicio = "Llantas y alineación", Estado = "Confirmada", EstimadoMin = 50 },
-        };
-
-        solicitudes = new()
+            agente = await Servicio.ObtenerAgenteActualAsync();
+            disponible = agente.Disponible;
+            // desde hace 7 días para contar los finalizados de la semana
+            trabajos = await Servicio.ObtenerTrabajosAsync(Hoy.AddDays(-7), dias.Last());
+            solicitudes = await Servicio.ObtenerSolicitudesPendientesAsync();
+            notificaciones = await Servicio.ObtenerNotificacionesAsync();
+        }
+        catch (Exception)
         {
-            new Solicitud { Id = 1, Fecha = dias[2], Hora = 9, Vehiculo = "Toyota Hilux 2016", Cliente = "Pedro Castillo", Servicio = "Sistema de frenos", Costo = "Q200–Q450", Tiempo = "1–2 h", EstimadoMin = 90 },
-            new Solicitud { Id = 2, Fecha = dias[1], Hora = 15, Vehiculo = "Honda CR-V 2021", Cliente = "Est. Jiménez", Servicio = "Diagnóstico general", Costo = "Q100–Q200", Tiempo = "30 min", EstimadoMin = 30 },
-        };
-
-        // TODO: reemplazar por las notificaciones reales del agente (AutosPAService)
-        notificaciones = solicitudes
-            .Select(x => new Notificacion
-            {
-                Tipo = "solicitud",
-                Titulo = $"Nueva solicitud: {x.Servicio}",
-                Mensaje = $"{x.Cliente} · {x.Vehiculo} · {FechaCorta(x.Fecha)}, {Hora(x.Hora)}",
-                Hace = x.Id == 1 ? "Hace 5 h" : "Hace 1 día",
-                Destino = "agente/solicitudes"
-            })
-            .ToList();
-
-        notificaciones.Add(new Notificacion { Tipo = "recordatorio", Titulo = "Recordatorio de trabajo", Mensaje = "Hoy a las 2:00 p. m.: Frenos delanteros · Mazda 3 2019 · Luis García", Hace = "Hace 1 h", Destino = "agente/trabajos" });
-        notificaciones.Add(new Notificacion { Tipo = "calificacion", Titulo = "Nueva calificación", Mensaje = "Mario Castillo te calificó con 5 estrellas.", Hace = "Hace 2 días", Destino = "agente/trabajos", Leida = true });
+            await Aviso("No se pudieron cargar los datos del panel.");
+        }
 
         // Refresca el avance del trabajo en curso cada 30 segundos
         timer = new System.Threading.Timer(_ => InvokeAsync(StateHasChanged), null, 30000, 30000);
@@ -1242,7 +1181,12 @@
     public void Dispose() => timer?.Dispose();
 
     // ---------- Calculados ----------
-    private string PrimerNombre => nombreAgente.Split(' ')[0];
+    private string PrimerNombre => agente.Nombre.Split(' ')[0];
+
+    private string especialidad => agente.Especialidad;
+
+    private int finalizadosSemana =>
+        trabajos.Count(t => t.Estado == "finalizado" && t.Fecha.Date >= Hoy.AddDays(-6));
 
     private int SinLeer => notificaciones.Count(x => !x.Leida);
 
@@ -1257,9 +1201,9 @@
         }
     }
 
-    private Trabajo? actual => TrabajosDe(Hoy).FirstOrDefault(t => t.Estado == "En proceso");
+    private Trabajo? actual => TrabajosDe(Hoy).FirstOrDefault(t => t.Estado == "proceso");
 
-    private Trabajo? siguiente => TrabajosDe(Hoy).Where(t => t.Estado == "Confirmada").OrderBy(t => t.Hora).FirstOrDefault();
+    private Trabajo? siguiente => TrabajosDe(Hoy).Where(t => t.Estado == "porhacer").OrderBy(t => t.Hora).FirstOrDefault();
 
     private IEnumerable<Trabajo> TrabajosDe(DateTime d) => trabajos.Where(t => t.Fecha.Date == d.Date).OrderBy(t => t.Hora);
 
@@ -1285,34 +1229,69 @@
     }
 
     // ---------- Acciones ----------
-    private void CambiarDisponibilidad()
+    private async Task CambiarDisponibilidad()
     {
-        disponible = !disponible;
-        // TODO: guardar la disponibilidad para que los clientes vean si pueden elegirte
+        var nuevo = !disponible;
+        disponible = nuevo;
+        try
+        {
+            await Servicio.CambiarDisponibilidadAsync(nuevo);
+        }
+        catch (Exception)
+        {
+            disponible = !nuevo;   // si falla, se revierte
+            await Aviso("No se pudo cambiar la disponibilidad.");
+        }
     }
 
-    private void Iniciar(Trabajo t)
+    private async Task Iniciar(Trabajo t)
     {
         if (actual is not null) return;
-        t.Estado = "En proceso";
-        t.Inicio = DateTime.Now;
+        try
+        {
+            var inicio = DateTime.Now;
+            await Servicio.IniciarTrabajoAsync(t.Id, inicio);
+            t.Estado = "proceso";
+            t.Inicio = inicio;
+        }
+        catch (Exception)
+        {
+            await Aviso("No se pudo iniciar el trabajo.");
+        }
     }
 
     private async Task Finalizar(Trabajo t)
     {
-        t.Estado = "Finalizada";
-        finalizadosSemana++;
-        // TODO: notificar al cliente que su vehículo está listo (correo, WhatsApp o notificación interna)
-        await Aviso("Trabajo finalizado. El cliente fue notificado.");
+        try
+        {
+            var duracion = Math.Max(1, (int)(DateTime.Now - (t.Inicio ?? DateTime.Now)).TotalMinutes);
+            await Servicio.FinalizarTrabajoAsync(t.Id, t.CostoSugerido, duracion, t.Notas);
+            t.Estado = "finalizado";
+            t.DuracionMin = duracion;
+            t.CostoFinal = t.CostoSugerido;
+            await Aviso("Trabajo finalizado. El cliente fue notificado.");
+        }
+        catch (Exception)
+        {
+            await Aviso("No se pudo finalizar el trabajo. Intenta de nuevo.");
+        }
     }
 
     private void AbrirDetalle(Trabajo t) => detalle = t;
 
-    private void IniciarDesdeDetalle()
+    private async Task GuardarNotas()
     {
         if (detalle is null) return;
-        Iniciar(detalle);
+        try { await Servicio.GuardarNotasAsync(detalle.Id, detalle.Notas); }
+        catch (Exception) { await Aviso("No se pudieron guardar las notas."); }
+    }
+
+    private async Task IniciarDesdeDetalle()
+    {
+        if (detalle is null) return;
+        var t = detalle;
         detalle = null;
+        await Iniciar(t);
     }
 
     private async Task FinalizarDesdeDetalle()
@@ -1323,15 +1302,20 @@
         await Finalizar(t);
     }
 
-    private void Abrir(Notificacion n)
+    private async Task Abrir(Notificacion n)
     {
-        n.Leida = true;
+        if (!n.Leida)
+        {
+            n.Leida = true;
+            await Servicio.MarcarNotificacionLeidaAsync(n.Id);
+        }
         Nav.NavigateTo(n.Destino);
     }
 
-    private void MarcarTodas()
+    private async Task MarcarTodas()
     {
         foreach (var n in notificaciones) n.Leida = true;
+        await Servicio.MarcarTodasLeidasAsync();
     }
 
     private async Task Aviso(string mensaje)
@@ -1358,10 +1342,20 @@
         return $"{h12}:00 {(h > 11 ? "p. m." : "a. m.")}";
     }
 
+    private static string Hora(TimeOnly t) => Hora(t.Hour);
+
     private static string ClaseEstado(string estado) => estado switch
     {
-        "En proceso" => "proceso",
-        "Finalizada" => "finalizada",
+        "proceso" => "proceso",
+        "finalizado" => "finalizada",
         _ => "confirmada"
+    };
+
+    private static string Etiqueta(string estado) => estado switch
+    {
+        "porhacer" => "Por hacer",
+        "proceso" => "En proceso",
+        "finalizado" => "Finalizado",
+        _ => estado
     };
 }
