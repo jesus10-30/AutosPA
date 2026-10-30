@@ -735,16 +735,23 @@
         try
         {
             await Servicio.AceptarSolicitudAsync(s.Id);
+
             s.Estado = "Aceptada";
             s.Motivo = "";
             ultima = s;
+
             await CargarTrabajos();
+
             await Aviso($"Aceptaste la cita de {s.Cliente}. Ya aparece en tu agenda.");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine("ERROR AL ACEPTAR SOLICITUD:");
+            Console.WriteLine(ex.ToString());
+
             ultima = null;
-            await Aviso("No se pudo aceptar la solicitud.");
+
+            await Aviso("Error al aceptar: " + ex.Message);
         }
     }
 

@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject NavigationManager Nav
 @inject IAgenteService Servicio
+@inject NavigationManager Navigation
 
 <PageTitle>FlexiCar — Panel del agente</PageTitle>
 
@@ -910,6 +911,12 @@
                 <span class="ag-sw"></span>
                 @(disponible ? "Disponible para citas" : "En pausa")
             </button>
+
+            <button class="btn btn-primary"
+                    @onclick="IrALogin">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Iniciar sesión
+            </button>
         </div>
     </header>
 
@@ -1153,30 +1160,54 @@
 
     private static DateTime Hoy => DateTime.Today;
 
+    private void IrALogin()
+    {
+        Navigation.NavigateTo("/loginagente");
+    }
+
     protected override async Task OnInitializedAsync()
     {
         // Próximos 6 días hábiles (sin domingos)
         for (var d = Hoy; dias.Count < 6; d = d.AddDays(1))
-            if (d.DayOfWeek != DayOfWeek.Sunday) dias.Add(d);
+        {
+            if (d.DayOfWeek != DayOfWeek.Sunday)
+                dias.Add(d);
+        }
+
         diaSel = Hoy;
 
         try
         {
+            Console.WriteLine("PASO 1: Cargando agente...");
             agente = await Servicio.ObtenerAgenteActualAsync();
             disponible = agente.Disponible;
-            // desde hace 7 días para contar los finalizados de la semana
+
+            Console.WriteLine("PASO 2: Cargando trabajos...");
             trabajos = await Servicio.ObtenerTrabajosAsync(Hoy.AddDays(-7), dias.Last());
+
+            Console.WriteLine("PASO 3: Cargando solicitudes...");
             solicitudes = await Servicio.ObtenerSolicitudesPendientesAsync();
+
+            Console.WriteLine("PASO 4: Cargando notificaciones...");
             notificaciones = await Servicio.ObtenerNotificacionesAsync();
+
+            Console.WriteLine("CARGA COMPLETADA CORRECTAMENTE.");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await Aviso("No se pudieron cargar los datos del panel.");
+            Console.WriteLine("ERROR AL CARGAR EL PANEL:");
+            Console.WriteLine(ex.ToString());
+
+            toast = $"Error al cargar: {ex.Message}";
         }
 
-        // Refresca el avance del trabajo en curso cada 30 segundos
-        timer = new System.Threading.Timer(_ => InvokeAsync(StateHasChanged), null, 30000, 30000);
+        timer = new System.Threading.Timer(
+            _ => InvokeAsync(StateHasChanged),
+            null,
+            30000,
+            30000);
     }
+
 
     public void Dispose() => timer?.Dispose();
 
@@ -1244,21 +1275,28 @@
         }
     }
 
+    
     private async Task Iniciar(Trabajo t)
     {
         if (actual is not null) return;
+
         try
         {
             var inicio = DateTime.Now;
             await Servicio.IniciarTrabajoAsync(t.Id, inicio);
+
             t.Estado = "proceso";
             t.Inicio = inicio;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await Aviso("No se pudo iniciar el trabajo.");
+            Console.WriteLine("ERROR AL INICIAR EL TRABAJO:");
+            Console.WriteLine(ex.ToString());
+
+            await Aviso("Error al iniciar: " + ex.Message);
         }
     }
+
 
     private async Task Finalizar(Trabajo t)
     {
