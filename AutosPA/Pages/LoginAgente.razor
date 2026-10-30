@@ -1,0 +1,57 @@
+﻿@page "/loginAgente"
+@inject NavigationManager Navigation
+@inject Supabase.Client Supabase
+
+<PageTitle>Iniciar sesión</PageTitle>
+
+<div class="container mt-5" style="max-width: 420px;">
+    <h2 class="text-center mb-4">AutosPA</h2>
+    <h4 class="text-center mb-4">Iniciar sesión</h4>
+
+    <div class="mb-3">
+        <label class="form-label">Correo electrónico</label>
+        <input class="form-control"
+               type="email"
+               @bind="correo" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <input class="form-control"
+               type="password"
+               @bind="contrasena" />
+    </div>
+
+    <button class="btn btn-primary w-100"
+            @onclick="IniciarSesion">
+        Entrar
+    </button>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <p class="text-danger mt-3">@mensaje</p>
+    }
+</div>
+
+@code {
+    private string correo = "";
+    private string contrasena = "";
+    private string mensaje = "";
+
+    private async Task IniciarSesion()
+    {
+        mensaje = "El botón funciona. Intentando iniciar sesión...";
+
+        try
+        {
+            await Supabase.Auth.SignIn(correo, contrasena);
+
+            mensaje = "Inicio de sesión correcto.";
+            Navigation.NavigateTo("/panel-agente");
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error: " + ex.Message;
+        }
+    }
+}

@@ -1,4 +1,5 @@
 ﻿@page "/agente/solicitudes"
+@inject IAgenteService Servicio
 
 <PageTitle>FlexiCar — Solicitudes</PageTitle>
 
@@ -665,30 +666,8 @@
 }
 
 @code {
-    private record Doc(string Texto, string Clase);
-
-    private record Ocupado(DateTime Fecha, int Hora, string Detalle);
-
-    private class Solicitud
-    {
-        public int Id { get; set; }
-        public string Cliente { get; set; } = "";
-        public string Vehiculo { get; set; } = "";
-        public string Placa { get; set; } = "";
-        public string Servicio { get; set; } = "";
-        public DateTime Fecha { get; set; }
-        public int Hora { get; set; }
-        public string Costo { get; set; } = "";
-        public string Tiempo { get; set; } = "";
-        public string Notas { get; set; } = "";
-        public int HaceMin { get; set; }
-        public List<Doc> Docs { get; set; } = new();
-        public string Estado { get; set; } = "Pendiente";  
-        public string Motivo { get; set; } = "";
-    }
-
     private List<Solicitud> solicitudes = new();
-    private List<Ocupado> agenda = new();
+    private List<Trabajo> trabajos = new();
 
     private List<string> motivos = new()
     {
@@ -711,60 +690,23 @@
 
     private static DateTime Hoy => DateTime.Today;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-   
-        agenda = new()
+        try
         {
-            new Ocupado(Hoy, 8, "Toyota Corolla · Juan Pérez"),
-            new Ocupado(Hoy, 10, "Honda Civic · María López"),
-            new Ocupado(Hoy.AddDays(1), 9, "Kia Rio · Ana Morales"),
-            new Ocupado(Hoy.AddDays(2), 9, "Nissan Sentra · Carlos Méndez"),
-        };
+            solicitudes = await Servicio.ObtenerSolicitudesAsync();
+            await CargarTrabajos();
+        }
+        catch (Exception)
+        {
+            await Aviso("No se pudieron cargar las solicitudes.");
+        }
+    }
 
-        solicitudes = new()
-        {
-            new Solicitud
-            {
-                Id = 1, Cliente = "Esteban Jiménez", Vehiculo = "Toyota Corolla 2019", Placa = "P 428 DKL", Servicio = "Mantenimiento preventivo",
-                Fecha = Hoy, Hora = 11, Costo = "Q150–Q300", Tiempo = "45–60 min", HaceMin = 120,
-                Notas = "Quiero que revisen también el aire acondicionado.",
-                Docs = new() { new Doc("Seguro vigente", "verde"), new Doc("Inspección vence en 19 d", "ambar") }
-            },
-            new Solicitud
-            {
-                Id = 2, Cliente = "Est. Jiménez", Vehiculo = "Honda CR-V 2021", Placa = "P 019 CTM", Servicio = "Diagnóstico general",
-                Fecha = Hoy.AddDays(4), Hora = 14, Costo = "Q100–Q200", Tiempo = "30 min", HaceMin = 1500,
-                Notas = "Se enciende la luz del motor desde hace unos días.",
-                Docs = new() { new Doc("Seguro vencido", "rojo"), new Doc("Inspección vigente", "verde") }
-            },
-            new Solicitud
-            {
-                Id = 3, Cliente = "Pedro Castillo", Vehiculo = "Toyota Hilux 2016", Placa = "P 311 BQR", Servicio = "Sistema de frenos",
-                Fecha = Hoy.AddDays(2), Hora = 9, Costo = "Q200–Q450", Tiempo = "1–2 h", HaceMin = 300,
-                Notas = "Hace ruido al frenar y el pedal baja demasiado.",
-                Docs = new() { new Doc("Seguro vigente", "verde"), new Doc("Inspección sin cargar", "neutro") }
-            },
-            new Solicitud
-            {
-                Id = 4, Cliente = "Ana Morales", Vehiculo = "Kia Rio 2017", Placa = "P 622 HLT", Servicio = "Llantas y alineación",
-                Fecha = Hoy.AddDays(1), Hora = 15, Costo = "Q60–Q180", Tiempo = "50 min", HaceMin = 30,
-                Docs = new() { new Doc("Seguro vigente", "verde"), new Doc("Inspección vigente", "verde") }
-            },
-            new Solicitud
-            {
-                Id = 5, Cliente = "Luis García", Vehiculo = "Mazda 3 2019", Placa = "P 987 XYZ", Servicio = "Frenos delanteros",
-                Fecha = Hoy, Hora = 14, Costo = "Q200–Q450", Tiempo = "1–2 h", HaceMin = 2900, Estado = "Aceptada",
-                Docs = new() { new Doc("Seguro vigente", "verde") }
-            },
-            new Solicitud
-            {
-                Id = 6, Cliente = "Sofía Ramírez", Vehiculo = "Hyundai Accent 2018", Placa = "P 205 TRD", Servicio = "Reemplazo de componentes",
-                Fecha = Hoy.AddDays(3), Hora = 10, Costo = "Desde Q80", Tiempo = "Según pieza", HaceMin = 4300, Estado = "Rechazada",
-                Motivo = "No cuento con el repuesto o la herramienta",
-                Docs = new() { new Doc("Seguro vigente", "verde") }
-            },
-        };
+    // Los trabajos reales sirven para detectar choques de horario
+    private async Task CargarTrabajos()
+    {
+        trabajos = await Servicio.ObtenerTrabajosAsync(Hoy, Hoy.AddDays(90));
     }
 
     // ---------- Calculados ----------
@@ -778,14 +720,11 @@
             .OrderBy(x => x.Fecha)
             .ThenBy(x => x.Hora);
 
-    // Devuelve con qué cita choca el horario solicitado (o null si está libre)
+    // Devuelve con qué trabajo choca el horario solicitado (o null si está libre)
     private string? Choque(Solicitud s)
     {
-        var fija = agenda.FirstOrDefault(a => a.Fecha.Date == s.Fecha.Date && a.Hora == s.Hora);
-        if (fija is not null) return fija.Detalle;
-
-        var otra = solicitudes.FirstOrDefault(x => x.Id != s.Id && x.Estado == "Aceptada" && x.Fecha.Date == s.Fecha.Date && x.Hora == s.Hora);
-        return otra is null ? null : $"{otra.Vehiculo} · {otra.Cliente}";
+        var t = trabajos.FirstOrDefault(x => x.Fecha.Date == s.Fecha.Date && x.Hora.Hour == s.Hora);
+        return t is null ? null : $"{t.Vehiculo} · {t.Cliente}";
     }
 
     // ---------- Acciones ----------
@@ -793,11 +732,27 @@
     {
         if (Choque(s) is not null) return;
 
-        s.Estado = "Aceptada";
-        s.Motivo = "";
-        ultima = s;
-        //guardar en el servicio, pasar la cita a "Aprobada" y notificar al cliente
-        await Aviso($"Aceptaste la cita de {s.Cliente}. Ya aparece en tu agenda.");
+        try
+        {
+            await Servicio.AceptarSolicitudAsync(s.Id);
+
+            s.Estado = "Aceptada";
+            s.Motivo = "";
+            ultima = s;
+
+            await CargarTrabajos();
+
+            await Aviso($"Aceptaste la cita de {s.Cliente}. Ya aparece en tu agenda.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("ERROR AL ACEPTAR SOLICITUD:");
+            Console.WriteLine(ex.ToString());
+
+            ultima = null;
+
+            await Aviso("Error al aceptar: " + ex.Message);
+        }
     }
 
     private void AbrirRechazo(Solicitud s, bool porChoque)
@@ -812,22 +767,42 @@
         if (rechazando is null) return;
 
         var s = rechazando;
-        s.Estado = "Rechazada";
-        s.Motivo = string.IsNullOrWhiteSpace(comentario) ? motivo : $"{motivo}. {comentario.Trim()}";
-        rechazando = null;
-        ultima = s;
-        //enviar el motivo al cliente para que reprograme
-        await Aviso($"Rechazaste la cita de {s.Cliente}. Se le notificó para reprogramar.");
+        var motivoFinal = string.IsNullOrWhiteSpace(comentario) ? motivo : $"{motivo}. {comentario.Trim()}";
+
+        try
+        {
+            await Servicio.RechazarSolicitudAsync(s.Id, motivoFinal);
+            s.Estado = "Rechazada";
+            s.Motivo = motivoFinal;
+            rechazando = null;
+            ultima = s;
+            await Aviso($"Rechazaste la cita de {s.Cliente}. Se le notificó para reprogramar.");
+        }
+        catch (Exception)
+        {
+            ultima = null;
+            await Aviso("No se pudo rechazar la solicitud.");
+        }
     }
 
-    private void Deshacer()
+    private async Task Deshacer()
     {
         if (ultima is null) return;
 
-        ultima.Estado = "Pendiente";
-        ultima.Motivo = "";
-        ultima = null;
-        toast = null;
+        var s = ultima;
+        try
+        {
+            await Servicio.DeshacerSolicitudAsync(s.Id);
+            s.Estado = "Pendiente";
+            s.Motivo = "";
+            ultima = null;
+            toast = null;
+            await CargarTrabajos();
+        }
+        catch (Exception)
+        {
+            await Aviso("No se pudo deshacer.");
+        }
     }
 
     private async Task Aviso(string mensaje)
