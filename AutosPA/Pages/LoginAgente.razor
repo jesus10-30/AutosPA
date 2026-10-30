@@ -1,6 +1,8 @@
-﻿@page "/loginAgente"
+﻿```razor
+@page "/loginAgente"
 @inject NavigationManager Navigation
 @inject Supabase.Client Supabase
+@inject IJSRuntime JS
 
 <PageTitle>Iniciar sesión</PageTitle>
 
@@ -10,26 +12,23 @@
 
     <div class="mb-3">
         <label class="form-label">Correo electrónico</label>
-        <input class="form-control"
-               type="email"
-               @bind="correo" />
+        <input class="form-control" type="email" @bind="correo" />
     </div>
 
     <div class="mb-3">
         <label class="form-label">Contraseña</label>
-        <input class="form-control"
-               type="password"
-               @bind="contrasena" />
+        <input class="form-control" type="password" @bind="contrasena" />
     </div>
 
     <button class="btn btn-primary w-100"
-            @onclick="IniciarSesion">
-        Entrar
+            @onclick="IniciarSesion"
+            disabled="@cargando">
+        @(cargando ? "Ingresando..." : "Entrar")
     </button>
 
     @if (!string.IsNullOrEmpty(mensaje))
     {
-        <p class="text-danger mt-3">@mensaje</p>
+        <p class="mt-3">@mensaje</p>
     }
 </div>
 
@@ -37,21 +36,41 @@
     private string correo = "";
     private string contrasena = "";
     private string mensaje = "";
+    private bool cargando = false;
 
     private async Task IniciarSesion()
     {
-        mensaje = "El botón funciona. Intentando iniciar sesión...";
+        cargando = true;
+        mensaje = "";
 
         try
         {
             await Supabase.Auth.SignIn(correo, contrasena);
+
+            var token = Supabase.Auth.CurrentSession?.AccessToken;
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                mensaje = "No se pudo obtener el token de sesión.";
+                return;
+            }
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "flexicar_token",
+                token);
 
             mensaje = "Inicio de sesión correcto.";
             Navigation.NavigateTo("/panel-agente");
         }
         catch (Exception ex)
         {
-            mensaje = "Error: " + ex.Message;
+            mensaje = "Error al iniciar sesión: " + ex.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
 }
+```

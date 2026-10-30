@@ -1,8 +1,23 @@
 ﻿<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        <ErrorBoundary>
+            <ChildContent>
+                <RouteView RouteData="@routeData"
+                           DefaultLayout="@typeof(MainLayout)" />
+
+                <FocusOnNavigate RouteData="@routeData"
+                                 Selector="h1" />
+            </ChildContent>
+
+            <ErrorContent Context="ex">
+                <div style="padding: 20px; color: red;">
+                    <h3>Se produjo un error en la aplicación</h3>
+                    <pre>@ex.ToString()</pre>
+                </div>
+            </ErrorContent>
+        </ErrorBoundary>
     </Found>
+
     <NotFound>
         <PageTitle>Not found</PageTitle>
         <LayoutView Layout="@typeof(MainLayout)">

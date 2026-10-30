@@ -1,4 +1,10 @@
 ﻿@page "/notificaciones"
+@using System.Globalization
+@using AutosPALibrary.DTOs
+@using System.Net.Http.Json
+@using AutosPA.Services
+@inject HttpClient Http
+@inject NotificacionesBadgeService BadgeService
 
 <PageTitle>FlexiCar — Notificaciones</PageTitle>
 
@@ -268,6 +274,25 @@
         <button type="button" class="nt-tab @(filtro == "servicios" ? "active" : "")" @onclick='() => filtro = "servicios"'>Servicios</button>
         <button type="button" class="nt-tab @(filtro == "promociones" ? "active" : "")" @onclick='() => filtro = "promociones"'>Promociones</button>
     </div>
+    
+    @if (!string.IsNullOrEmpty(ErrorAccion))
+{
+    <p class="text-danger text-center">@ErrorAccion</p>
+}
+
+@if (Cargando)
+{
+    <p class="text-center">Cargando notificaciones...</p>
+}
+else if (!string.IsNullOrEmpty(ErrorCarga))
+{
+    <p class="text-center">@ErrorCarga</p>
+}
+else if (!Filtradas.Any())
+{
+    <p class="text-center">No hay notificaciones para mostrar.</p>
+}
+
 
     @foreach (var n in Filtradas)
     {
@@ -317,46 +342,201 @@
     }
 </div>
 
+
+
 @code {
     private class Notif
     {
-        public int Id { get; set; }
-        public string Tipo { get; set; } = "cita";   // cita | servicio | recordatorio | promocion
+        public long Id { get; set; }
+        public string Tipo { get; set; } = "servicio";
         public string Titulo { get; set; } = "";
         public string Mensaje { get; set; } = "";
-        public string Hace { get; set; } = "";
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
+        public string Hace => ObtenerTiempoRelativo(FechaCreacion);
         public bool Leida { get; set; }
     }
 
-    // TODO: reemplazar por las notificaciones reales del usuario (AutosPAService)
-    private List<Notif> notificaciones = new()
+    private static string ObtenerTiempoRelativo(DateTime fecha)
     {
-        new Notif { Id = 1, Tipo = "cita", Titulo = "Cita confirmada", Mensaje = "Tu mantenimiento preventivo del Toyota Corolla quedó agendado para el 2 de oct, 10:00 a. m. con Carlos Ruiz.", Hace = "Hace 2 h", Leida = false },
-        new Notif { Id = 2, Tipo = "servicio", Titulo = "Servicio finalizado", Mensaje = "La revisión de batería de tu Toyota Corolla terminó. Ya puedes pasar a recogerlo.", Hace = "Ayer", Leida = true },
-        new Notif { Id = 3, Tipo = "recordatorio", Titulo = "Recordatorio", Mensaje = "Tu cita del 2 de oct es a las 10:00 a. m. con el agente Carlos Ruiz.", Hace = "Hace 1 día", Leida = false },
-        new Notif { Id = 4, Tipo = "cita", Titulo = "Cita en espera", Mensaje = "Tu diagnóstico general del 6 de oct está en espera de aprobación de Ana López.", Hace = "Hace 2 días", Leida = true },
-        new Notif { Id = 5, Tipo = "promocion", Titulo = "Promoción del mes", Mensaje = "20% de descuento en reemplazo de frenos durante octubre.", Hace = "Hace 3 días", Leida = true },
-    };
+        var diferencia = DateTime.UtcNow - fecha.ToUniversalTime();
+
+        if (diferencia.TotalMinutes < 1)
+            return "Ahora mismo";
+
+        if (diferencia.TotalMinutes < 60)
+            return $"Hace {(int)diferencia.TotalMinutes} min";
+
+        if (diferencia.TotalHours < 24)
+            return $"Hace {(int)diferencia.TotalHours} h";
+
+        if (diferencia.TotalDays < 2)
+            return "Ayer";
+
+        if (diferencia.TotalDays < 7)
+            return $"Hace {(int)diferencia.TotalDays} días";
+
+        return fecha.ToLocalTime().ToString(
+            "dd/MM/yyyy",
+            CultureInfo.GetCultureInfo("es-GT"));
+    }
+
+    private List<Notif> notificaciones = new();
 
     private string filtro = "todas";
+    private bool Cargando = true;
+    private bool ProcesandoAccion = false;
+    private string? ErrorCarga;
+    private string? ErrorAccion;
 
     private int NoLeidas => notificaciones.Count(n => !n.Leida);
 
     private IEnumerable<Notif> Filtradas => filtro switch
     {
         "noleidas" => notificaciones.Where(n => !n.Leida),
-        "citas" => notificaciones.Where(n => n.Tipo == "cita" || n.Tipo == "recordatorio"),
+        "citas" => notificaciones.Where(
+            n => n.Tipo == "cita" || n.Tipo == "recordatorio"),
         "servicios" => notificaciones.Where(n => n.Tipo == "servicio"),
         "promociones" => notificaciones.Where(n => n.Tipo == "promocion"),
         _ => notificaciones
     };
 
-    private void Leer(Notif n) => n.Leida = true;
-
-    private void MarcarTodas()
+    protected override async Task OnInitializedAsync()
     {
-        foreach (var n in notificaciones) n.Leida = true;
+        await CargarNotificaciones();
     }
 
-    private void Eliminar(Notif n) => notificaciones.Remove(n);
+    private async Task CargarNotificaciones()
+    {
+        Cargando = true;
+        ErrorCarga = null;
+
+        try
+        {
+            var datos = await Http.GetFromJsonAsync<List<NotificacionDTO>>(
+                "api/Notificaciones");
+
+            notificaciones = (datos ?? new List<NotificacionDTO>())
+                .Select(n => new Notif
+                {
+                    Id = n.Id,
+                    Tipo = n.Tipo,
+                    Titulo = n.Titulo,
+                    Mensaje = n.Mensaje,
+                    FechaCreacion = n.CreatedAt,
+                    Leida = n.Leida
+                })
+                .ToList();
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorCarga =
+                ex.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                    ? "Debes iniciar sesión para consultar tus notificaciones."
+                    : "No se pudieron cargar las notificaciones. Verifica que el backend esté funcionando.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            ErrorCarga =
+                "La respuesta del servidor no tiene el formato esperado.";
+        }
+        finally
+{
+    Cargando = false;
+    BadgeService.Actualizar(NoLeidas);
 }
+    }
+
+    private async Task Leer(Notif n)
+    {
+        if (n.Leida || ProcesandoAccion)
+            return;
+
+        ProcesandoAccion = true;
+        ErrorAccion = null;
+
+        try
+        {
+            var respuesta = await Http.PutAsync(
+                $"api/Notificaciones/{n.Id}/leer", null);
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                ErrorAccion = "No se pudo marcar la notificación como leída.";
+                return;
+            }
+
+            await CargarNotificaciones();
+        }
+        catch (HttpRequestException)
+        {
+            ErrorAccion = "No se pudo conectar con el servidor.";
+        }
+        finally
+        {
+            ProcesandoAccion = false;
+        }
+    }
+
+    private async Task MarcarTodas()
+    {
+        if (NoLeidas == 0 || ProcesandoAccion)
+            return;
+
+        ProcesandoAccion = true;
+        ErrorAccion = null;
+
+        try
+        {
+            var respuesta = await Http.PutAsync(
+                "api/Notificaciones/leer-todas", null);
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                ErrorAccion = "No se pudieron marcar todas como leídas.";
+                return;
+            }
+
+            await CargarNotificaciones();
+        }
+        catch (HttpRequestException)
+        {
+            ErrorAccion = "No se pudo conectar con el servidor.";
+        }
+        finally
+        {
+            ProcesandoAccion = false;
+        }
+    }
+
+    private async Task Eliminar(Notif n)
+    {
+        if (ProcesandoAccion)
+            return;
+
+        ProcesandoAccion = true;
+        ErrorAccion = null;
+
+        try
+        {
+            var respuesta = await Http.DeleteAsync(
+                $"api/Notificaciones/{n.Id}");
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                ErrorAccion = "No se pudo eliminar la notificación.";
+                return;
+            }
+
+            await CargarNotificaciones();
+        }
+        catch (HttpRequestException)
+        {
+            ErrorAccion = "No se pudo conectar con el servidor.";
+        }
+        finally
+        {
+            ProcesandoAccion = false;
+        }
+    }
+}
+

@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navegacion
+@inject IJSRuntime JS
 
 <style>
     .fc-shell {
@@ -624,12 +625,64 @@
 </div>
 
 @code {
-    // Cambia a true para ver el usuario logueado en lugar de "Regístrate"
     private bool estaRegistrado = false;
 
-    private string nombreUsuario = "Est. Jiménez";
+    private string nombreUsuario = "Cliente";
     private string rolUsuario = "Cliente";
-    private string iniciales = "EJ";
+    private string iniciales = "CL";
 
-    private bool EsSeccionAgente => Navegacion.Uri.ToLower().Contains("agente");
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var usuario = await JS.InvokeAsync<string?>(
+                "localStorage.getItem", "flexicar_usuario");
+
+            if (string.IsNullOrWhiteSpace(usuario))
+            {
+                usuario = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem", "flexicar_usuario");
+            }
+
+            if (string.IsNullOrWhiteSpace(usuario))
+            {
+                estaRegistrado = false;
+                return;
+            }
+
+            var rol = await JS.InvokeAsync<string?>(
+                "localStorage.getItem", "flexicar_rol");
+
+            if (string.IsNullOrWhiteSpace(rol))
+            {
+                rol = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem", "flexicar_rol");
+            }
+
+            estaRegistrado = true;
+
+            rolUsuario = rol switch
+            {
+                "1" => "Cliente",
+                "2" => "Agente",
+                "3" => "Administrador",
+                _ => "Usuario"
+            };
+
+            nombreUsuario = rolUsuario;
+            iniciales = rolUsuario == "Administrador" ? "AD" :
+                        rolUsuario == "Agente" ? "AG" : "CL";
+        }
+        catch (InvalidOperationException)
+        {
+            estaRegistrado = false;
+        }
+        catch (JSException)
+        {
+            estaRegistrado = false;
+        }
+    }
+
+    private bool EsSeccionAgente =>
+        Navegacion.Uri.ToLower().Contains("agente");
 }

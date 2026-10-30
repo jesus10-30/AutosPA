@@ -1,6 +1,9 @@
 ﻿@page "/agente/perfil"
 @using Radzen
 @using Radzen.Blazor
+@using AutosPALibrary.DTOs
+@using System.Net.Http.Json
+@inject HttpClient Http
 
 <PageTitle>FlexiCar — Mi perfil</PageTitle>
 
@@ -10,16 +13,16 @@
         margin: 1rem 0 2rem;
     }
 
-        .ag-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0 0 0.4rem;
-        }
+    .ag-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 0.4rem;
+    }
 
-        .ag-header p {
-            color: #667085;
-            margin: 0;
-        }
+    .ag-header p {
+        color: #667085;
+        margin: 0;
+    }
 
     .perfil-wrap {
         max-width: 600px;
@@ -50,22 +53,22 @@
         margin-bottom: 1.1rem;
     }
 
-        .campo label {
-            display: block;
-            font-size: 0.82rem;
-            color: #475467;
-            margin-bottom: 0.35rem;
-            font-weight: 500;
-        }
+    .campo label {
+        display: block;
+        font-size: 0.82rem;
+        color: #475467;
+        margin-bottom: 0.35rem;
+        font-weight: 500;
+    }
 
-        .campo input, .campo select {
-            width: 100%;
-            border: 1px solid #e4e7ec;
-            border-radius: 10px;
-            padding: 0.6rem 0.8rem;
-            font-size: 0.9rem;
-            color: #101828;
-        }
+    .campo input {
+        width: 100%;
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+        color: #101828;
+    }
 
     .acciones {
         display: flex;
@@ -77,66 +80,159 @@
 
 <div class="ag-header">
     <h1>Mi perfil</h1>
-    <p>Mantén tus datos y especialidad actualizados.</p>
+    <p>Mantén tus datos personales actualizados.</p>
 </div>
 
-<div class="perfil-wrap">
-    <div class="perfil-top">
-        <div class="perfil-avatar">@Iniciales</div>
-        <div>
-            <strong>@Nombre</strong>
-            <p style="margin:0; color:#667085; font-size:0.85rem;">@Especialidad · @Anios años de experiencia</p>
+@if (cargando)
+{
+    <p style="text-align:center;">Cargando perfil...</p>
+}
+else
+{
+    <div class="perfil-wrap">
+        <div class="perfil-top">
+            <div class="perfil-avatar">@Iniciales</div>
+            <div>
+                <strong>@NombreCompleto</strong>
+                <p style="margin:0; color:#667085; font-size:0.85rem;">
+                    Agente de FlexiCar
+                </p>
+            </div>
         </div>
-    </div>
 
-    <div class="campo">
-        <label>Nombre completo</label>
-        <input @bind="Nombre" />
-    </div>
-    <div class="campo">
-        <label>Especialidad</label>
-        <select @bind="Especialidad">
-            <option>Mecánica general</option>
-            <option>Diagnóstico electrónico</option>
-            <option>Frenos y suspensión</option>
-            <option>Aire acondicionado</option>
-        </select>
-    </div>
-    <div class="campo">
-        <label>Teléfono</label>
-        <input @bind="Telefono" />
-    </div>
-    <div class="campo">
-        <label>Correo</label>
-        <input @bind="Correo" />
-    </div>
-    <div class="campo">
-        <label>Años de experiencia</label>
-        <input type="number" @bind="Anios" />
-    </div>
+        <div class="campo">
+            <label>Nombres</label>
+            <input @bind="Nombres" />
+        </div>
 
-    <div class="acciones">
-        <RadzenButton Text="Cambiar contraseña" ButtonStyle="ButtonStyle.Light" />
-        <RadzenButton Text="Guardar cambios" ButtonStyle="ButtonStyle.Primary" Click="@Guardar" />
-    </div>
+        <div class="campo">
+            <label>Apellidos</label>
+            <input @bind="Apellidos" />
+        </div>
 
-    @if (guardado)
-    {
-        <p style="color:#085041; margin-top:1rem; text-align:center;">Cambios guardados correctamente.</p>
-    }
-</div>
+        <div class="campo">
+            <label>Especialidad</label>
+            <input value="No disponible en el registro" disabled />
+        </div>
+
+        <div class="campo">
+            <label>Teléfono</label>
+            <input @bind="Telefono" />
+        </div>
+
+        <div class="campo">
+            <label>Correo</label>
+            <input type="email" @bind="Correo" />
+        </div>
+
+        <div class="acciones">
+            <RadzenButton Text="Guardar cambios"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Click="@Guardar"
+                          Disabled="@guardando" />
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(mensaje))
+        {
+            <p style="color:@(error ? "#b42318" : "#085041"); margin-top:1rem; text-align:center;">
+                @mensaje
+            </p>
+        }
+    </div>
+}
 
 @code {
-    private string Nombre = "Carlos Ruiz";
-    private string Especialidad = "Mecánica general";
-    private string Telefono = "+502 5555 9876";
-    private string Correo = "carlos.ruiz@flexicar.com";
-    private int Anios = 8;
-    private bool guardado = false;
+    private string Nombres = "";
+    private string Apellidos = "";
+    private string Telefono = "";
+    private string Correo = "";
 
-    private string Iniciales => string.Join("", Nombre.Split(' ').Where(p => p.Length > 0).Select(p => p[0])).ToUpper();
+    private bool cargando = true;
+    private bool guardando = false;
+    private bool error = false;
+    private string mensaje = "";
 
-    private void Guardar() => guardado = true; 
-} 
+    private string NombreCompleto => $"{Nombres} {Apellidos}".Trim();
 
+    private string Iniciales =>
+        string.Join("", NombreCompleto
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p[0]))
+        .ToUpper();
 
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var perfil = await Http.GetFromJsonAsync<PerfilAgenteDTO>(
+                "api/Agente/perfil");
+
+            if (perfil != null)
+            {
+                Nombres = perfil.Nombres;
+                Apellidos = perfil.Apellidos;
+                Correo = perfil.Email;
+                Telefono = perfil.Telefono ?? "";
+            }
+        }
+        catch
+        {
+            error = true;
+            mensaje = "No fue posible cargar los datos del perfil.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task Guardar()
+    {
+        mensaje = "";
+
+        if (string.IsNullOrWhiteSpace(Nombres) ||
+            string.IsNullOrWhiteSpace(Apellidos) ||
+            string.IsNullOrWhiteSpace(Correo))
+        {
+            error = true;
+            mensaje = "Completa los nombres, apellidos y correo.";
+            return;
+        }
+
+        guardando = true;
+
+        try
+        {
+            var datos = new ActualizarPerfilAgenteDTO
+            {
+                Nombres = Nombres,
+                Apellidos = Apellidos,
+                Email = Correo,
+                Telefono = Telefono
+            };
+
+            var respuesta = await Http.PutAsJsonAsync(
+                "api/Agente/perfil", datos);
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                error = false;
+                mensaje = "Perfil actualizado correctamente.";
+            }
+            else
+            {
+                error = true;
+                mensaje = "No se pudieron guardar los cambios.";
+            }
+        }
+        catch
+        {
+            error = true;
+            mensaje = "Ocurrió un problema al guardar el perfil.";
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+}
