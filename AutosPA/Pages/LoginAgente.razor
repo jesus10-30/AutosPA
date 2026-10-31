@@ -72,7 +72,7 @@
                 return;
             }
 
-            if (!string.Equals(resultado.Rol, "AGENTE", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(resultado.Rol?.Trim(), "AGENTE", StringComparison.OrdinalIgnoreCase))
             {
                 mensaje = "Esta cuenta no tiene acceso al panel de agente.";
                 return;
