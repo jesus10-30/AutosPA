@@ -3,6 +3,7 @@ using AutosPAService.Repositories;
 using AutosPAService.Services;
 using AutosPAService.Authentication;
 using AutosPAService.Interfaces;
+using AutosPAService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
 
@@ -25,6 +26,20 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
+    // OpenAPI representa estos tipos como los formatos que espera la API y PostgreSQL.
+    options.MapType<DateOnly>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+    {
+        Type = "string",
+        Format = "date",
+        Example = new Microsoft.OpenApi.Any.OpenApiString("2026-10-30")
+    });
+    options.MapType<TimeOnly>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+    {
+        Type = "string",
+        Format = "time",
+        Example = new Microsoft.OpenApi.Any.OpenApiString("09:30:00")
+    });
+
     options.AddSecurityDefinition("Bearer",
         new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
@@ -36,22 +51,7 @@ builder.Services.AddSwaggerGen(options =>
             Description = "Ingresa el access_token de Supabase."
         });
 
-    options.AddSecurityRequirement(
-        new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-        {
-            {
-                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                {
-                    Reference =
-                        new Microsoft.OpenApi.Models.OpenApiReference
-                        {
-                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                },
-                Array.Empty<string>()
-            }
-        });
+    options.OperationFilter<SwaggerAuthorizeOperationFilter>();
 });
 
 // Repositorios y servicios del agente
@@ -63,6 +63,8 @@ builder.Services.AddScoped<ServiciosRepository>();
 builder.Services.AddScoped<VehiculosRepository>();
 builder.Services.AddScoped<DocumentosVehiculoRepository>();
 builder.Services.AddScoped<NotificacionesRepository>();
+builder.Services.AddScoped<INotificacionesRepository>(sp =>
+    sp.GetRequiredService<NotificacionesRepository>());
 builder.Services.AddScoped<CitasRepository>();
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<ClienteService>();
@@ -72,7 +74,10 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<DocumentosVehiculoService>();
 builder.Services.AddScoped<NotificacionesService>();
+builder.Services.AddScoped<INotificacionesService>(sp =>
+    sp.GetRequiredService<NotificacionesService>());
 builder.Services.AddScoped<CitasService>();
+builder.Services.AddScoped<AutenticacionService>();
 
 // CORS: permitir comunicación con el frontend
 builder.Services.AddCors(options =>

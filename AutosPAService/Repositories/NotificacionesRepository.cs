@@ -1,11 +1,12 @@
 
 using AutosPAService.Data;
+using AutosPAService.Interfaces;
 using AutosPALibrary.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutosPAService.Repositories;
 
-public class NotificacionesRepository
+public class NotificacionesRepository : INotificacionesRepository
 {
     private readonly ApplicationDbContext _context;
 
@@ -19,6 +20,7 @@ public class NotificacionesRepository
     var consulta =
         from n in _context.Notificaciones.AsNoTracking()
         join b in _context.NotificacionesBackups.AsNoTracking()
+                .Where(b => b.IdUsuario == idCliente)
             on n.Id equals b.IdNotificacion into respaldos
         from b in respaldos.DefaultIfEmpty()
         join t in _context.CatTiposNotificacions.AsNoTracking()

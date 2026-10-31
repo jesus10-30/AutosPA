@@ -38,6 +38,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Notificacione> Notificaciones { get; set; }
 
+    public virtual DbSet<RechazoCita> RechazosCita { get; set; }
+
     public virtual DbSet<NotificacionesBackup> NotificacionesBackups { get; set; }
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
@@ -273,6 +275,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnName("fecha_creacion");
             entity.Property(e => e.HoraInicio).HasColumnName("hora_inicio");
             entity.Property(e => e.IdAgente).HasColumnName("id_agente");
+            entity.Property(e => e.IdAgenteDestino).HasColumnName("id_agente_destino");
             entity.Property(e => e.IdCliente).HasColumnName("id_cliente");
             entity.Property(e => e.IdEstadoCita).HasColumnName("id_estado_cita");
             entity.Property(e => e.IdTipoServicio).HasColumnName("id_tipo_servicio");
@@ -303,6 +306,27 @@ public partial class ApplicationDbContext : DbContext
                 .HasForeignKey(d => d.IdVehiculo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_cita_vehiculo");
+        });
+
+        modelBuilder.Entity<RechazoCita>(entity =>
+        {
+            entity.HasKey(e => e.IdRechazo);
+
+            entity.ToTable("rechazos_cita");
+
+            entity.Property(e => e.IdRechazo).HasColumnName("id_rechazo");
+            entity.Property(e => e.IdCita).HasColumnName("id_cita");
+            entity.Property(e => e.IdAgente).HasColumnName("id_agente");
+            entity.Property(e => e.Motivo).HasColumnName("motivo");
+            entity.Property(e => e.FechaRechazo).HasColumnName("fecha_rechazo");
+
+            entity.HasOne(e => e.CitaNavigation)
+                .WithMany()
+                .HasForeignKey(e => e.IdCita);
+
+            entity.HasOne(e => e.AgenteNavigation)
+                .WithMany()
+                .HasForeignKey(e => e.IdAgente);
         });
 
         modelBuilder.Entity<Conductore>(entity =>

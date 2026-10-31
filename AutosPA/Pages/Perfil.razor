@@ -3,6 +3,8 @@
 @using Radzen.Blazor
 @using AutosPALibrary.DTOs
 @using System.Net.Http.Json
+@using System.Net
+@using System.Text.Json
 @inject HttpClient Http
 
 <PageTitle>FlexiCar — Mi perfil</PageTitle>
@@ -122,7 +124,8 @@ else
 
         <div class="campo">
             <label>Correo</label>
-            <input type="email" @bind="Correo" />
+            <input type="email" @bind="Correo" readonly />
+            <small>El cambio del correo de acceso estará disponible cuando se pueda sincronizar con Supabase Auth.</small>
         </div>
 
         <div class="acciones">
@@ -162,32 +165,72 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await CargarPerfil();
+    }
+
+    private async Task<bool> CargarPerfil(bool mostrarIndicadorCarga = true)
+    {
+        if (mostrarIndicadorCarga)
+            cargando = true;
+        error = false;
+
         try
         {
-            var perfil = await Http.GetFromJsonAsync<PerfilAgenteDTO>(
-                "api/Agente/perfil");
+            using var respuesta = await Http.GetAsync("api/Agente/perfil");
 
-            if (perfil != null)
+            if (!respuesta.IsSuccessStatusCode)
             {
-                Nombres = perfil.Nombres;
-                Apellidos = perfil.Apellidos;
-                Correo = perfil.Email;
-                Telefono = perfil.Telefono ?? "";
+                error = true;
+                mensaje = await MensajeErrorRespuestaAsync(
+                    respuesta,
+                    "No fue posible cargar los datos del perfil.");
+                return false;
             }
+
+            var perfil = await respuesta.Content.ReadFromJsonAsync<PerfilAgenteDTO>();
+            if (perfil is null)
+            {
+                error = true;
+                mensaje = "El servidor no devolvió los datos del perfil.";
+                return false;
+            }
+
+            Nombres = perfil.Nombres;
+            Apellidos = perfil.Apellidos;
+            Correo = perfil.Email;
+            Telefono = perfil.Telefono ?? "";
+            mensaje = "";
+            return true;
         }
-        catch
+        catch (HttpRequestException)
         {
             error = true;
-            mensaje = "No fue posible cargar los datos del perfil.";
+            mensaje = "No se pudo conectar con el servidor para cargar el perfil.";
+        }
+        catch (JsonException)
+        {
+            error = true;
+            mensaje = "La respuesta del servidor no tiene un formato válido.";
+        }
+        catch (TaskCanceledException)
+        {
+            error = true;
+            mensaje = "La carga del perfil tardó demasiado. Intenta nuevamente.";
         }
         finally
         {
-            cargando = false;
+            if (mostrarIndicadorCarga)
+                cargando = false;
         }
+
+        return false;
     }
 
     private async Task Guardar()
     {
+        if (guardando)
+            return;
+
         mensaje = "";
 
         if (string.IsNullOrWhiteSpace(Nombres) ||
@@ -211,28 +254,121 @@ else
                 Telefono = Telefono
             };
 
-            var respuesta = await Http.PutAsJsonAsync(
+            using var respuesta = await Http.PutAsJsonAsync(
                 "api/Agente/perfil", datos);
 
             if (respuesta.IsSuccessStatusCode)
             {
-                error = false;
-                mensaje = "Perfil actualizado correctamente.";
+                var recargado = await CargarPerfil(mostrarIndicadorCarga: false);
+                if (recargado)
+                {
+                    error = false;
+                    mensaje = "Perfil actualizado correctamente.";
+                }
+                else
+                {
+                    error = true;
+                    mensaje = $"Los cambios se guardaron, pero no se pudo volver a cargar el perfil. {mensaje}";
+                }
             }
             else
             {
                 error = true;
-                mensaje = "No se pudieron guardar los cambios.";
+                mensaje = await MensajeErrorRespuestaAsync(
+                    respuesta,
+                    "No se pudieron guardar los cambios.");
             }
         }
-        catch
+        catch (HttpRequestException)
         {
             error = true;
-            mensaje = "Ocurrió un problema al guardar el perfil.";
+            mensaje = "No se pudo conectar con el servidor para guardar el perfil.";
+        }
+        catch (JsonException)
+        {
+            error = true;
+            mensaje = "El servidor devolvió una respuesta con formato no válido.";
+        }
+        catch (TaskCanceledException)
+        {
+            error = true;
+            mensaje = "El guardado tardó demasiado. Verifica el perfil antes de volver a intentarlo.";
         }
         finally
         {
             guardando = false;
         }
+    }
+
+    private static async Task<string> MensajeErrorRespuestaAsync(
+        HttpResponseMessage respuesta,
+        string mensajePredeterminado)
+    {
+        var cuerpo = await respuesta.Content.ReadAsStringAsync();
+
+        if (respuesta.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var detalle = ExtraerDetalleError(cuerpo);
+            return string.IsNullOrWhiteSpace(detalle)
+                ? "Revisa los nombres, apellidos y correo. " + mensajePredeterminado
+                : detalle;
+        }
+
+        if ((int)respuesta.StatusCode >= 500)
+            return "Ocurrió un error en el servidor. Intenta nuevamente más tarde.";
+
+        if (respuesta.StatusCode == HttpStatusCode.Conflict)
+            return ExtraerDetalleError(cuerpo) ??
+                   "No se pudo guardar debido a un conflicto con los datos actuales.";
+
+        return respuesta.StatusCode switch
+        {
+            HttpStatusCode.Unauthorized => "Tu sesión no es válida o expiró. Inicia sesión nuevamente.",
+            HttpStatusCode.Forbidden => "Tu cuenta no tiene permisos para editar este perfil.",
+            HttpStatusCode.NotFound => "No se encontró el perfil del agente.",
+            _ => mensajePredeterminado
+        };
+    }
+
+    private static string? ExtraerDetalleError(string cuerpo)
+    {
+        if (string.IsNullOrWhiteSpace(cuerpo))
+            return null;
+
+        try
+        {
+            using var documento = JsonDocument.Parse(cuerpo);
+            var raiz = documento.RootElement;
+
+            if (raiz.ValueKind == JsonValueKind.String)
+                return raiz.GetString();
+
+            foreach (var propiedad in new[] { "mensaje", "detail", "message", "title" })
+            {
+                if (raiz.TryGetProperty(propiedad, out var valor) &&
+                    valor.ValueKind == JsonValueKind.String)
+                    return valor.GetString();
+            }
+
+            if (raiz.TryGetProperty("errors", out var errores) &&
+                errores.ValueKind == JsonValueKind.Object)
+            {
+                var mensajes = errores.EnumerateObject()
+                    .SelectMany(error => error.Value.ValueKind == JsonValueKind.Array
+                        ? error.Value.EnumerateArray()
+                            .Where(item => item.ValueKind == JsonValueKind.String)
+                            .Select(item => item.GetString())
+                        : Enumerable.Empty<string?>())
+                    .Where(item => !string.IsNullOrWhiteSpace(item));
+
+                return string.Join(" ", mensajes);
+            }
+        }
+        catch (JsonException)
+        {
+            return cuerpo.TrimStart().StartsWith('<') ? null : cuerpo;
+        }
+
+        return null;
     }
 }

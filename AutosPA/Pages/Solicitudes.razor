@@ -1,5 +1,10 @@
 ﻿@page "/agente/solicitudes"
-@inject IAgenteService Servicio
+@using System.Globalization
+@using System.Net
+@using System.Text.Json
+@using AutosPALibrary.DTOs
+@using System.Net.Http.Json
+@inject HttpClient Http
 
 <PageTitle>FlexiCar — Solicitudes</PageTitle>
 
@@ -406,6 +411,39 @@
         background: #ffffff;
     }
 
+    .sl-error {
+        margin-bottom: 16px;
+        padding: 14px 18px;
+        border: 1px solid #f0b9b4;
+        border-radius: 12px;
+        background: #fdecea;
+        color: #9f2018;
+        font-size: 13px;
+    }
+
+    .sl-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: 200px;
+        color: #6b7a90;
+        font-size: 14px;
+    }
+
+    .sl-loading-spinner {
+        width: 22px;
+        height: 22px;
+        border: 3px solid #e6ebf2;
+        border-top-color: #1f8a5b;
+        border-radius: 50%;
+        animation: sl-spin .8s linear infinite;
+    }
+
+    @@keyframes sl-spin {
+        to { transform: rotate(360deg); }
+    }
+
     /* Ventana */
     .sl-modal-bg {
         position: fixed;
@@ -535,7 +573,7 @@
         <div>
             <div class="sl-eyebrow">Panel del agente</div>
             <h1>Solicitudes</h1>
-            <p>Revisa las citas que los clientes pidieron contigo. Al aceptar, pasan a tu agenda y el cliente recibe un aviso.</p>
+            <p>Revisa las citas que los clientes pidieron contigo. Al aceptar, pasan a tu agenda y su estado queda actualizado.</p>
         </div>
         <div class="sl-count @(Cuenta("Pendiente") == 0 ? "zero" : "")">
             <b>@Cuenta("Pendiente")</b>
@@ -543,6 +581,15 @@
         </div>
     </header>
 
+    @if (cargandoInicial)
+    {
+        <div class="sl-loading" role="status" aria-live="polite">
+            <span class="sl-loading-spinner" aria-hidden="true"></span>
+            <span>Cargando solicitudes y agenda...</span>
+        </div>
+    }
+    else
+    {
     <div class="sl-toolbar">
         <div class="sl-tabs">
             <button type="button" class="sl-tab @(filtro == "Pendiente" ? "active" : "")" @onclick='() => filtro = "Pendiente"'>Pendientes<span>@Cuenta("Pendiente")</span></button>
@@ -553,23 +600,48 @@
         <input class="sl-search" placeholder="Buscar cliente, placa o servicio" @bind="busqueda" @bind:event="oninput" />
     </div>
 
+    @if (!string.IsNullOrWhiteSpace(errorSolicitudes))
+    {
+        <div class="sl-error">
+            @errorSolicitudes
+            @if (solicitudesCargadas)
+            {
+                <span> Los datos visibles corresponden a la última carga correcta y podrían estar desactualizados.</span>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorTrabajos))
+    {
+        <div class="sl-error">
+            @errorTrabajos
+            @if (trabajosCargados)
+            {
+                <span> Los trabajos visibles corresponden a la última carga correcta y podrían estar desactualizados.</span>
+            }
+        </div>
+    }
+
     @foreach (var s in Filtradas.ToList())
     {
-        var choque = s.Estado == "Pendiente" ? Choque(s) : null;
+        var trabajoEnConflicto = s.Estado == "Pendiente" ? TrabajoEnConflicto(s) : null;
+        var choque = trabajoEnConflicto is null
+            ? null
+            : $"{trabajoEnConflicto.Vehiculo} · {trabajoEnConflicto.Cliente}";
         var clase = ClaseEstado(s.Estado);
 
         <article class="sl-card @clase">
             <div class="sl-date">
-                <small>@DiasCortos[(int)s.Fecha.DayOfWeek]</small>
-                <b>@s.Fecha.Day</b>
-                <span>@Meses[s.Fecha.Month - 1]</span>
+                <small>@DiasCortos[(int)s.FechaCita.DayOfWeek]</small>
+                <b>@s.FechaCita.Day</b>
+                <span>@Meses[s.FechaCita.Month - 1]</span>
             </div>
 
             <div class="sl-main">
                 <div class="sl-top">
                     <h3>@s.Servicio</h3>
                     <span class="sl-status @clase">@s.Estado</span>
-                    <span class="sl-when">@Cuando(s.Fecha) · @FormatoHora(s.Hora)</span>
+                    <span class="sl-when">@Cuando(s.FechaCita) · @FormatoHora(s.HoraInicio)</span>
                 </div>
 
                 <div class="sl-client">
@@ -578,21 +650,21 @@
                         <b>@s.Cliente</b>
                         <small>@s.Vehiculo · Placa @s.Placa</small>
                     </div>
-                    <span class="sl-ago">@Hace(s.HaceMin)</span>
+                    <span class="sl-ago">@Hace(s.FechaCreacion)</span>
                 </div>
 
                 <div class="sl-facts">
-                    <span class="sl-fact">Costo: <b>@s.Costo</b></span>
-                    <span class="sl-fact">Tiempo: <b>@s.Tiempo</b></span>
-                    @foreach (var d in s.Docs)
+                    <span class="sl-fact">Costo: <b>@Quetzales(s.Costo)</b></span>
+                    <span class="sl-fact">Tiempo: <b>@Tiempo(s.TiempoEstimadoMinutos)</b></span>
+                    @foreach (var d in s.Documentos)
                     {
-                        <span class="sl-doc @d.Clase">@d.Texto</span>
+                        <span class="sl-doc @ClaseDocumento(d)">@TextoDocumento(d)</span>
                     }
                 </div>
 
-                @if (!string.IsNullOrWhiteSpace(s.Notas))
+                @if (!string.IsNullOrWhiteSpace(s.Observaciones))
                 {
-                    <div class="sl-note">“@s.Notas”</div>
+                    <div class="sl-note">“@s.Observaciones”</div>
                 }
 
                 @if (choque is not null)
@@ -600,16 +672,21 @@
                     <div class="sl-warn">Choque de horario: ya tienes @choque a esa hora.</div>
                 }
 
-                @if (s.Estado == "Rechazada" && !string.IsNullOrWhiteSpace(s.Motivo))
+                @if (TieneDuracionInvalida(s))
                 {
-                    <div class="sl-motivo">Motivo enviado al cliente: @s.Motivo</div>
+                    <div class="sl-warn">No se puede validar la agenda porque la solicitud o un trabajo existente tiene una duración inválida.</div>
+                }
+
+                @if (s.Estado == "Rechazada" && !string.IsNullOrWhiteSpace(s.MotivoRechazo))
+                {
+                    <div class="sl-motivo">Motivo registrado: @s.MotivoRechazo</div>
                 }
             </div>
 
             <div class="sl-actions">
                 @if (s.Estado == "Pendiente")
                 {
-                    <button type="button" class="sl-btn sl-btn-green" disabled="@(choque is not null)" title="@(choque is not null ? "Resuelve el choque de horario antes de aceptar" : "")" @onclick="() => Aceptar(s)">Aceptar</button>
+                    <button type="button" class="sl-btn sl-btn-green" disabled="@(choque is not null || TieneDuracionInvalida(s) || errorTrabajos is not null)" title="@(errorTrabajos is not null ? "No se pudo verificar la agenda; recarga antes de aceptar" : TieneDuracionInvalida(s) ? "No se puede aceptar mientras exista una duración inválida" : choque is not null ? "Resuelve el choque de horario antes de aceptar" : "")" @onclick="() => Aceptar(s)">Aceptar</button>
                     <button type="button" class="sl-btn sl-btn-danger" @onclick="() => AbrirRechazo(s, choque is not null)">Rechazar</button>
                 }
                 else if (s.Estado == "Aceptada")
@@ -620,11 +697,12 @@
         </article>
     }
 
-    @if (!Filtradas.Any())
+    @if (!Filtradas.Any() && string.IsNullOrWhiteSpace(errorSolicitudes))
     {
         <div class="sl-empty">
-            @(filtro == "Pendiente" ? "No tienes solicitudes pendientes. Te avisaremos cuando llegue una nueva." : "No hay solicitudes en esta sección.")
+            @(filtro == "Pendiente" ? "No tienes solicitudes pendientes. Vuelve más tarde para revisar nuevas solicitudes." : "No hay solicitudes en esta sección.")
         </div>
+    }
     }
 </div>
 
@@ -633,7 +711,7 @@
     <div class="sl-modal-bg" @onclick="() => rechazando = null">
         <div class="sl-modal" @onclick:stopPropagation="true">
             <h3>Rechazar solicitud</h3>
-            <p>@rechazando.Cliente · @rechazando.Servicio · @Cuando(rechazando.Fecha), @FormatoHora(rechazando.Hora). El cliente recibirá un aviso para reprogramar.</p>
+            <p>@rechazando.Cliente · @rechazando.Servicio · @Cuando(rechazando.FechaCita), @FormatoHora(rechazando.HoraInicio). Registra el motivo de la decisión.</p>
 
             <label class="sl-label">Motivo</label>
             <select class="sl-input" @bind="motivo">
@@ -666,8 +744,8 @@
 }
 
 @code {
-    private List<Solicitud> solicitudes = new();
-    private List<Trabajo> trabajos = new();
+    private List<SolicitudAgenteDTO> solicitudes = new();
+    private List<AgenteTrabajoDTO> trabajos = new();
 
     private List<string> motivos = new()
     {
@@ -680,13 +758,18 @@
     private string filtro = "Pendiente";
     private string busqueda = "";
 
-    private Solicitud? rechazando;
+    private SolicitudAgenteDTO? rechazando;
     private string motivo = "Horario no disponible";
     private string comentario = "";
 
-    private Solicitud? ultima;
+    private SolicitudAgenteDTO? ultima;
     private string? toast;
+    private string? errorSolicitudes;
+    private string? errorTrabajos;
     private int toastId;
+    private bool cargandoInicial = true;
+    private bool solicitudesCargadas;
+    private bool trabajosCargados;
 
     private static DateTime Hoy => DateTime.Today;
 
@@ -694,68 +777,188 @@
     {
         try
         {
-            solicitudes = await Servicio.ObtenerSolicitudesAsync();
-            await CargarTrabajos();
+            await Task.WhenAll(CargarSolicitudes(), CargarTrabajos());
         }
-        catch (Exception)
+        finally
         {
-            await Aviso("No se pudieron cargar las solicitudes.");
+            cargandoInicial = false;
         }
     }
 
-    // Los trabajos reales sirven para detectar choques de horario
-    private async Task CargarTrabajos()
+    private async Task<bool> CargarSolicitudes()
     {
-        trabajos = await Servicio.ObtenerTrabajosAsync(Hoy, Hoy.AddDays(90));
+        errorSolicitudes = null;
+
+        try
+        {
+            solicitudes = await Http.GetFromJsonAsync<List<SolicitudAgenteDTO>>(
+                "api/Agente/solicitudes") ?? new();
+            solicitudesCargadas = true;
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            errorSolicitudes = MensajeErrorHttp(ex.StatusCode,
+                "No se pudieron cargar las solicitudes. Verifica que el backend esté disponible.");
+        }
+        catch (JsonException)
+        {
+            errorSolicitudes = "El backend devolvió datos de solicitudes con un formato no válido.";
+        }
+        catch (TaskCanceledException)
+        {
+            errorSolicitudes = "La carga de solicitudes tardó demasiado. Intenta recargar la página.";
+        }
+        catch (Exception)
+        {
+            errorSolicitudes = "Ocurrió un error inesperado al cargar las solicitudes.";
+        }
+
+        return false;
+    }
+
+    // Los trabajos reales sirven para detectar choques de horario
+    private async Task<bool> CargarTrabajos()
+    {
+        // Solicita todos los trabajos ocupados para detectar solapamientos que
+        // puedan extenderse desde otra fecha o estar fuera de una ventana fija.
+        var desde = DateOnly.MinValue.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var hasta = DateOnly.MaxValue.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        errorTrabajos = null;
+
+        try
+        {
+            trabajos = await Http.GetFromJsonAsync<List<AgenteTrabajoDTO>>(
+                $"api/Agente/trabajos?desde={desde}&hasta={hasta}") ?? new();
+            trabajosCargados = true;
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            errorTrabajos = MensajeErrorHttp(ex.StatusCode,
+                "No se pudieron cargar los trabajos para comprobar conflictos de horario.");
+        }
+        catch (JsonException)
+        {
+            errorTrabajos = "El backend devolvió trabajos con un formato no válido.";
+        }
+        catch (TaskCanceledException)
+        {
+            errorTrabajos = "La carga de trabajos tardó demasiado. Intenta recargar la página.";
+        }
+        catch (Exception)
+        {
+            errorTrabajos = "Ocurrió un error inesperado al cargar los trabajos.";
+        }
+
+        return false;
     }
 
     // ---------- Calculados ----------
     private int Cuenta(string estado) => solicitudes.Count(x => x.Estado == estado);
 
-    private IEnumerable<Solicitud> Filtradas =>
+    private IEnumerable<SolicitudAgenteDTO> Filtradas =>
         solicitudes
             .Where(x => filtro == "Todas" || x.Estado == filtro)
             .Where(x => string.IsNullOrWhiteSpace(busqueda)
                         || $"{x.Cliente} {x.Vehiculo} {x.Placa} {x.Servicio}".Contains(busqueda.Trim(), StringComparison.OrdinalIgnoreCase))
-            .OrderBy(x => x.Fecha)
-            .ThenBy(x => x.Hora);
+            .OrderBy(x => x.FechaCita)
+            .ThenBy(x => x.HoraInicio);
 
     // Devuelve con qué trabajo choca el horario solicitado (o null si está libre)
-    private string? Choque(Solicitud s)
+    private AgenteTrabajoDTO? TrabajoEnConflicto(SolicitudAgenteDTO s)
     {
-        var t = trabajos.FirstOrDefault(x => x.Fecha.Date == s.Fecha.Date && x.Hora.Hour == s.Hora);
-        return t is null ? null : $"{t.Vehiculo} · {t.Cliente}";
+        return trabajos.FirstOrDefault(t => SeSolapan(
+            s.FechaCita,
+            s.HoraInicio,
+            s.TiempoEstimadoMinutos,
+            t.FechaCita,
+            t.HoraInicio,
+            t.TiempoEstimadoMinutos));
+    }
+
+    private bool TieneDuracionInvalida(SolicitudAgenteDTO solicitud) =>
+        solicitud.TiempoEstimadoMinutos <= 0 ||
+        trabajos.Any(trabajo => trabajo.TiempoEstimadoMinutos <= 0);
+
+    private static bool SeSolapan(
+        DateOnly fechaA,
+        TimeOnly horaA,
+        int duracionAMinutos,
+        DateOnly fechaB,
+        TimeOnly horaB,
+        int duracionBMinutos)
+    {
+        // La duración inválida se bloquea por separado; no debe etiquetarse
+        // como un solapamiento real.
+        if (duracionAMinutos <= 0 || duracionBMinutos <= 0)
+            return false;
+
+        var inicioA = (long)fechaA.DayNumber * TimeSpan.TicksPerDay + horaA.Ticks;
+        var finA = inicioA + (long)duracionAMinutos * TimeSpan.TicksPerMinute;
+        var inicioB = (long)fechaB.DayNumber * TimeSpan.TicksPerDay + horaB.Ticks;
+        var finB = inicioB + (long)duracionBMinutos * TimeSpan.TicksPerMinute;
+
+        return inicioA < finB && inicioB < finA;
     }
 
     // ---------- Acciones ----------
-    private async Task Aceptar(Solicitud s)
+    private async Task Aceptar(SolicitudAgenteDTO s)
     {
-        if (Choque(s) is not null) return;
+        if (errorTrabajos is not null || !trabajosCargados)
+        {
+            await Aviso("No se pudo verificar la agenda. Recarga los trabajos antes de aceptar.");
+            return;
+        }
+
+        if (TieneDuracionInvalida(s))
+        {
+            await Aviso("No se puede aceptar porque la solicitud o un trabajo existente tiene una duración inválida.");
+            return;
+        }
+
+        if (TrabajoEnConflicto(s) is not null) return;
 
         try
         {
-            await Servicio.AceptarSolicitudAsync(s.Id);
+            using var respuesta = await Http.PutAsync(
+                $"api/Agente/solicitudes/{s.IdCita}/aceptar", null);
 
-            s.Estado = "Aceptada";
-            s.Motivo = "";
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                await Aviso(await MensajeErrorRespuestaAsync(respuesta,
+                    "No se pudo aceptar la solicitud."));
+                return;
+            }
+
             ultima = s;
 
-            await CargarTrabajos();
+            var solicitudesActualizadas = await CargarSolicitudes();
+            var agendaActualizada = await ActualizarTrabajosDespuesDeAccion();
 
-            await Aviso($"Aceptaste la cita de {s.Cliente}. Ya aparece en tu agenda.");
+            var mensaje = $"Aceptaste la cita de {s.Cliente}.";
+            var detalles = new List<string>();
+            if (!solicitudesActualizadas)
+                detalles.Add("No se pudo actualizar la lista de solicitudes.");
+            if (agendaActualizada)
+                detalles.Add("Ya aparece en tu agenda.");
+            else
+                detalles.Add("No se pudo actualizar la agenda.");
+            await Aviso($"{mensaje} {string.Join(" ", detalles)}");
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            Console.WriteLine("ERROR AL ACEPTAR SOLICITUD:");
-            Console.WriteLine(ex.ToString());
-
             ultima = null;
-
-            await Aviso("Error al aceptar: " + ex.Message);
+            await Aviso(MensajeErrorHttp(ex.StatusCode, "No se pudo conectar con el backend para aceptar la solicitud."));
+        }
+        catch (TaskCanceledException)
+        {
+            ultima = null;
+            await Aviso("La solicitud tardó demasiado y no se pudo confirmar el resultado. Recarga los datos.");
         }
     }
 
-    private void AbrirRechazo(Solicitud s, bool porChoque)
+    private void AbrirRechazo(SolicitudAgenteDTO s, bool porChoque)
     {
         rechazando = s;
         motivo = porChoque ? "Horario no disponible" : motivos[0];
@@ -771,17 +974,34 @@
 
         try
         {
-            await Servicio.RechazarSolicitudAsync(s.Id, motivoFinal);
-            s.Estado = "Rechazada";
-            s.Motivo = motivoFinal;
+            using var respuesta = await Http.PutAsJsonAsync(
+                $"api/Agente/solicitudes/{s.IdCita}/rechazar",
+                new RechazarSolicitudDTO { Motivo = motivoFinal });
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                await Aviso(await MensajeErrorRespuestaAsync(respuesta,
+                    "No se pudo rechazar la solicitud."));
+                return;
+            }
+
             rechazando = null;
             ultima = s;
-            await Aviso($"Rechazaste la cita de {s.Cliente}. Se le notificó para reprogramar.");
+            var solicitudesActualizadas = await CargarSolicitudes();
+            var mensaje = $"Rechazaste la cita de {s.Cliente}. El motivo quedó registrado.";
+            if (!solicitudesActualizadas)
+                mensaje += " No se pudo actualizar la lista de solicitudes.";
+            await Aviso(mensaje);
         }
-        catch (Exception)
+        catch (HttpRequestException ex)
         {
             ultima = null;
-            await Aviso("No se pudo rechazar la solicitud.");
+            await Aviso(MensajeErrorHttp(ex.StatusCode, "No se pudo conectar con el backend para rechazar la solicitud."));
+        }
+        catch (TaskCanceledException)
+        {
+            ultima = null;
+            await Aviso("La solicitud tardó demasiado y no se pudo confirmar el resultado. Recarga los datos.");
         }
     }
 
@@ -792,17 +1012,38 @@
         var s = ultima;
         try
         {
-            await Servicio.DeshacerSolicitudAsync(s.Id);
-            s.Estado = "Pendiente";
-            s.Motivo = "";
+            using var respuesta = await Http.PutAsync(
+                $"api/Agente/solicitudes/{s.IdCita}/deshacer", null);
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                await Aviso(await MensajeErrorRespuestaAsync(respuesta,
+                    "No se pudo deshacer la acción."));
+                return;
+            }
+
+            var solicitudesActualizadas = await CargarSolicitudes();
             ultima = null;
             toast = null;
-            await CargarTrabajos();
+            var agendaActualizada = await ActualizarTrabajosDespuesDeAccion();
+            if (!solicitudesActualizadas)
+                return;
+            if (!agendaActualizada)
+                await Aviso("La acción se deshizo, pero no se pudo actualizar la agenda.");
         }
-        catch (Exception)
+        catch (HttpRequestException ex)
         {
-            await Aviso("No se pudo deshacer.");
+            await Aviso(MensajeErrorHttp(ex.StatusCode, "No se pudo conectar con el backend para deshacer la acción."));
         }
+        catch (TaskCanceledException)
+        {
+            await Aviso("La solicitud tardó demasiado y no se pudo confirmar el resultado. Recarga los datos.");
+        }
+    }
+
+    private async Task<bool> ActualizarTrabajosDespuesDeAccion()
+    {
+        return await CargarTrabajos();
     }
 
     private async Task Aviso(string mensaje)
@@ -822,19 +1063,36 @@
     private static readonly string[] DiasCortos = { "Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb" };
     private static readonly string[] Meses = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
 
-    private static string FormatoHora(int h)
+    private static string FormatoHora(TimeOnly hora)
     {
+        var h = hora.Hour;
         var h12 = h % 12 == 0 ? 12 : h % 12;
-        return $"{h12}:00 {(h > 11 ? "p. m." : "a. m.")}";
+        return $"{h12}:{hora.Minute:00} {(h > 11 ? "p. m." : "a. m.")}";
     }
 
-    private static string Cuando(DateTime f)
+    private static string Cuando(DateOnly f)
     {
-        var n = (f.Date - Hoy).Days;
+        var n = f.DayNumber - DateOnly.FromDateTime(Hoy).DayNumber;
         if (n == 0) return "Hoy";
         if (n == 1) return "Mañana";
         if (n > 1) return $"En {n} días";
         return "Fecha pasada";
+    }
+
+    private static string Hace(DateTime? fechaCreacion)
+    {
+        if (fechaCreacion is null)
+            return "Fecha no disponible";
+
+        var creada = fechaCreacion.Value.Kind switch
+        {
+            DateTimeKind.Utc => fechaCreacion.Value.ToLocalTime(),
+            DateTimeKind.Unspecified => DateTime.SpecifyKind(fechaCreacion.Value, DateTimeKind.Utc).ToLocalTime(),
+            _ => fechaCreacion.Value
+        };
+
+        var minutos = Math.Max(0, (int)(DateTime.Now - creada).TotalMinutes);
+        return Hace(minutos);
     }
 
     private static string Hace(int minutos)
@@ -842,6 +1100,97 @@
         if (minutos >= 1440) return $"Hace {minutos / 1440} d";
         if (minutos >= 60) return $"Hace {minutos / 60} h";
         return $"Hace {minutos} min";
+    }
+
+    private static string Quetzales(decimal monto) =>
+        "Q" + monto.ToString("N2", CultureInfo.InvariantCulture);
+
+    private static string Tiempo(int minutos) => $"{minutos} min";
+
+    private static string TextoDocumento(DocumentoSolicitudDTO documento)
+    {
+        if (!documento.EstadoActivo)
+        {
+            var estado = string.IsNullOrWhiteSpace(documento.Estado)
+                ? "estado no disponible"
+                : documento.Estado;
+            var vencimiento = documento.FechaVencimiento is not null &&
+                documento.FechaVencimiento.Value < DateOnly.FromDateTime(Hoy)
+                    ? " · vencido"
+                    : "";
+            return $"{documento.Tipo}: {estado}{vencimiento}";
+        }
+
+        if (documento.FechaVencimiento is null)
+            return $"{documento.Tipo} registrado";
+
+        var dias = documento.FechaVencimiento.Value.DayNumber - DateOnly.FromDateTime(Hoy).DayNumber;
+        if (dias < 0)
+            return $"{documento.Tipo} vencido";
+        if (dias <= 30)
+            return $"{documento.Tipo} vence en {dias} d";
+
+        return $"{documento.Tipo} vigente";
+    }
+
+    private static string ClaseDocumento(DocumentoSolicitudDTO documento)
+    {
+        if (!documento.EstadoActivo)
+            return "rojo";
+
+        if (documento.FechaVencimiento is null)
+            return "neutro";
+
+        var dias = documento.FechaVencimiento.Value.DayNumber - DateOnly.FromDateTime(Hoy).DayNumber;
+        if (dias < 0)
+            return "rojo";
+        if (dias <= 30)
+            return "ambar";
+
+        return "verde";
+    }
+
+    private static string MensajeErrorHttp(HttpStatusCode? estado, string fallback) => estado switch
+    {
+        HttpStatusCode.Unauthorized => "Tu sesión venció. Inicia sesión nuevamente.",
+        HttpStatusCode.Forbidden => "Tu cuenta no tiene autorización para gestionar estas solicitudes.",
+        HttpStatusCode.NotFound => "La solicitud ya no existe o dejó de estar disponible.",
+        HttpStatusCode.BadRequest => "Los datos enviados no son válidos.",
+        HttpStatusCode.Conflict => "La solicitud cambió o tiene un conflicto de horario. Recarga los datos e inténtalo de nuevo.",
+        _ => fallback
+    };
+
+    private static async Task<string> MensajeErrorRespuestaAsync(
+        HttpResponseMessage respuesta,
+        string fallback)
+    {
+        var cuerpo = await respuesta.Content.ReadAsStringAsync();
+        if (!string.IsNullOrWhiteSpace(cuerpo))
+        {
+            try
+            {
+                using var documento = JsonDocument.Parse(cuerpo);
+                if (documento.RootElement.ValueKind == JsonValueKind.String)
+                    return documento.RootElement.GetString() ?? fallback;
+
+                if (documento.RootElement.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var propiedad in new[] { "detail", "message", "title" })
+                    {
+                        if (documento.RootElement.TryGetProperty(propiedad, out var valor) &&
+                            valor.ValueKind == JsonValueKind.String)
+                            return valor.GetString() ?? fallback;
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                if (!cuerpo.TrimStart().StartsWith('<'))
+                    return cuerpo;
+            }
+        }
+
+        return MensajeErrorHttp(respuesta.StatusCode, fallback);
     }
 
     private static string Iniciales(string nombre) =>

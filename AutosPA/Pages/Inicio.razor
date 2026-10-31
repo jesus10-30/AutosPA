@@ -1,5 +1,9 @@
 ﻿@page "/"
 @page "/inicio"
+@using System.Net
+@using System.Net.Http.Json
+@using AutosPA.Data
+@inject HttpClient Http
 
 <PageTitle>FlexiCar — Inicio</PageTitle>
 
@@ -411,6 +415,18 @@
         {
             <span class="fx-brand-chip">@marca</span>
         }
+        @if (cargandoMarcas)
+        {
+            <span class="fx-brand-chip">Cargando marcas...</span>
+        }
+        else if (!string.IsNullOrWhiteSpace(errorMarcas))
+        {
+            <span class="fx-brand-chip">@errorMarcas</span>
+        }
+        else if (marcasAtendidas.Count == 0)
+        {
+            <span class="fx-brand-chip">No hay marcas disponibles.</span>
+        }
     </div>
 </section>
 
@@ -451,8 +467,38 @@
 
     private static string PrimerNombre(Agente agente) => agente.Nombre.Split(' ')[0];
 
-    private List<string> marcasAtendidas = new()
+    private List<string> marcasAtendidas = new();
+    private bool cargandoMarcas = true;
+    private string? errorMarcas;
+
+    protected override async Task OnInitializedAsync()
     {
-        "Toyota", "Honda", "Nissan", "Mazda", "Hyundai", "Kia", "Chevrolet"
-    };
+        try
+        {
+            var marcas = await Http.GetFromJsonAsync<List<UsuarioDb.MarcaDb>>(
+                "api/Vehiculos/marcas");
+            marcasAtendidas = marcas?
+                .Select(marca => marca.Nombre)
+                .Where(nombre => !string.IsNullOrWhiteSpace(nombre))
+                .ToList() ?? new();
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMarcas = ex.StatusCode == HttpStatusCode.Unauthorized
+                ? "Inicia sesión para consultar las marcas."
+                : "No se pudieron cargar las marcas.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            errorMarcas = "La respuesta de marcas no tiene un formato válido.";
+        }
+        catch (TaskCanceledException)
+        {
+            errorMarcas = "La carga de marcas tardó demasiado.";
+        }
+        finally
+        {
+            cargandoMarcas = false;
+        }
+    }
 }

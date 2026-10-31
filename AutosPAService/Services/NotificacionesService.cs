@@ -1,14 +1,14 @@
 
 using AutosPALibrary.DTOs;
-using AutosPAService.Repositories;
+using AutosPAService.Interfaces;
 
 namespace AutosPAService.Services;
 
-public class NotificacionesService
+public class NotificacionesService : INotificacionesService
 {
-    private readonly NotificacionesRepository _repository;
+    private readonly INotificacionesRepository _repository;
 
-    public NotificacionesService(NotificacionesRepository repository)
+    public NotificacionesService(INotificacionesRepository repository)
     {
         _repository = repository;
     }
