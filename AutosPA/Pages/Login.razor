@@ -1,11 +1,16 @@
-﻿@page "/login"
+﻿```razor
+@page "/login"
 @layout AuthLayout
+
 @inject NavigationManager Nav
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+@using System.Net.Http.Json
 
 <PageTitle>FlexiCar — Iniciar sesión</PageTitle>
 
 <div class="au-shell">
-
     <aside class="au-brand">
         <a class="au-logo" href=""><span class="au-logo-mark">FC</span>FlexiCar</a>
 
@@ -46,7 +51,6 @@
 
     <main class="au-main">
         <div class="au-card">
-
             <a class="au-back" href="">← Volver al inicio</a>
 
             <div class="au-head">
@@ -60,7 +64,6 @@
             }
 
             <form @onsubmit="Ingresar" @onsubmit:preventDefault>
-
                 <div class="au-field">
                     <label class="au-label">Correo electrónico</label>
                     <input type="email" class="au-input @(Err("correo") is not null ? "invalid" : "")" placeholder="nombre@@correo.com" autocomplete="email" @bind="correo" />
@@ -169,15 +172,18 @@
     private bool enviado;
     private string? errorRecuperar;
 
-    private string? Err(string campo) => errores.TryGetValue(campo, out var e) ? e : null;
+    private string? Err(string campo) =>
+        errores.TryGetValue(campo, out var e) ? e : null;
 
     private static bool EmailValido(string texto)
     {
         var e = texto.Trim();
         var arroba = e.IndexOf('@');
+
         if (0 >= arroba) return false;
         if (e.IndexOf('@', arroba + 1) != -1) return false;
         if (e.Contains(' ')) return false;
+
         var punto = e.LastIndexOf('.');
         return punto > arroba + 1 && punto != e.Length - 1;
     }
@@ -187,25 +193,90 @@
         errores.Clear();
         error = null;
 
-        if (string.IsNullOrWhiteSpace(correo)) errores["correo"] = "Ingresa tu correo electrónico.";
-        else if (!EmailValido(correo)) errores["correo"] = "Escribe un correo válido, por ejemplo nombre@correo.com.";
+        if (string.IsNullOrWhiteSpace(correo))
+            errores["correo"] = "Ingresa tu correo electrónico.";
+        else if (!EmailValido(correo))
+            errores["correo"] = "Escribe un correo válido.";
 
-        if (string.IsNullOrEmpty(password)) errores["password"] = "Ingresa tu contraseña.";
+        if (string.IsNullOrEmpty(password))
+            errores["password"] = "Ingresa tu contraseña.";
 
-        if (errores.Any()) return;
+        if (errores.Any())
+            return;
 
         cargando = true;
-        StateHasChanged();
 
-        // TODO: validar con el servicio de autenticación (AutosPAService), por ejemplo:
-        //   POST api/auth/login  { correo, password, recordarme }  ->  { token, rol }
-        //   Si las credenciales no son correctas: error = "Correo o contraseña incorrectos.";
-        //   Si son correctas: guardar el token / la sesión y redirigir según el rol que devuelve el servidor.
-        await Task.Delay(900);
-        cargando = false;
+        try
+        {
+            var respuesta = await Http.PostAsJsonAsync(
+                "api/auth/login",
+                new { Correo = correo.Trim(), Password = password });
 
-        var rol = "cliente";   // TODO: usar el rol que devuelva el servidor ("cliente" o "agente")
-        Nav.NavigateTo(rol == "agente" ? "panel-agente" : "");
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                error = respuesta.StatusCode ==
+                        System.Net.HttpStatusCode.Unauthorized
+                    ? "Correo o contraseña incorrectos."
+                    : "No se pudo iniciar sesión. Intenta nuevamente.";
+                return;
+            }
+
+            var resultado =
+                await respuesta.Content.ReadFromJsonAsync<LoginResponse>();
+
+            if (resultado == null ||
+                string.IsNullOrWhiteSpace(resultado.Token))
+            {
+                error = "El servidor no devolvió una sesión válida.";
+                return;
+            }
+
+            // Limpiar sesiones anteriores para evitar datos contradictorios.
+            await JS.InvokeVoidAsync(
+                "localStorage.removeItem", "flexicar_token");
+            await JS.InvokeVoidAsync(
+                "localStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync(
+                "localStorage.removeItem", "flexicar_rol");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem", "flexicar_token");
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem", "flexicar_rol");
+
+            // Guardar siempre en localStorage para que todos los componentes
+            // recuperen la misma sesión.
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "flexicar_token",
+                resultado.Token);
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "flexicar_usuario",
+                resultado.IdUsuario.ToString());
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "flexicar_rol",
+                resultado.IdRol.ToString());
+
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        catch (HttpRequestException)
+        {
+            error = "No se pudo conectar con el servidor.";
+        }
+        catch (Microsoft.JSInterop.JSException)
+        {
+            error = "No se pudo guardar la sesión.";
+        }
+        finally
+        {
+            cargando = false;
+        }
     }
 
     private void AbrirRecuperar()
@@ -228,4 +299,12 @@
         errorRecuperar = null;
         enviado = true;
     }
+
+    private sealed class LoginResponse
+    {
+        public string Token { get; set; } = "";
+        public long IdUsuario { get; set; }
+        public long IdRol { get; set; }
+    }
 }
+```

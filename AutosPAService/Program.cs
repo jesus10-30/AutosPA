@@ -1,30 +1,98 @@
-using AutosPAService.Data;
+﻿using AutosPAService.Data;
+using AutosPAService.Repositories;
+using AutosPAService.Services;
+using AutosPAService.Authentication;
+using AutosPAService.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Controladores
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Autenticación Supabase
+builder.Services
+    .AddAuthentication("Supabase")
+    .AddScheme<AuthenticationSchemeOptions, SupabaseAuthenticationHandler>(
+        "Supabase", options => { });
+
+builder.Services.AddAuthorization();
+builder.Services.AddHttpClient();
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddCors(o => o.AddPolicy("Blazor", p => p
-    .AllowAnyOrigin()
-    .AllowAnyHeader()
-    .AllowAnyMethod()));
 
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer",
+        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Description = "Ingresa el access_token de Supabase."
+        });
 
-//Agregar el contexto de la base de datos 
+    options.AddSecurityRequirement(
+        new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+        {
+            {
+                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Reference =
+                        new Microsoft.OpenApi.Models.OpenApiReference
+                        {
+                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                },
+                Array.Empty<string>()
+            }
+        });
+});
+
+// Repositorios y servicios del agente
+builder.Services.AddScoped<IAgenteRepository, AgenteRepository>();
+builder.Services.AddScoped<AgenteService>();
+
+// Repositorios
+builder.Services.AddScoped<ServiciosRepository>();
+builder.Services.AddScoped<VehiculosRepository>();
+builder.Services.AddScoped<DocumentosVehiculoRepository>();
+builder.Services.AddScoped<NotificacionesRepository>();
+builder.Services.AddScoped<CitasRepository>();
+builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+builder.Services.AddScoped<ClienteService>();
+
+// Servicios
+builder.Services.AddScoped<ServiciosService>();
+builder.Services.AddScoped<VehiculosService>();
+builder.Services.AddScoped<DocumentosVehiculoService>();
+builder.Services.AddScoped<NotificacionesService>();
+builder.Services.AddScoped<CitasService>();
+
+// CORS: permitir comunicación con el frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5031")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// Base de datos Supabase
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -32,7 +100,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("Blazor");
+
+app.UseCors("Frontend");
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,5 +1,9 @@
 ﻿@page "/mis-vehiculos"
 @using System.Globalization
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using Microsoft.JSInterop
 
 <PageTitle>FlexiCar — Mis vehículos</PageTitle>
 
@@ -813,19 +817,43 @@
 
             <div class="mv-form-title" style="margin-top:0;">Vehículo</div>
             <div class="mv-form-grid">
-                <div><label class="mv-label">Marca *</label><input class="mv-input" @bind="nvMarca" placeholder="Toyota" /></div>
-                <div><label class="mv-label">Modelo *</label><input class="mv-input" @bind="nvModelo" placeholder="Corolla" /></div>
-                <div><label class="mv-label">Año</label><input class="mv-input" @bind="nvAnio" placeholder="2020" /></div>
-                <div><label class="mv-label">Placa *</label><input class="mv-input" @bind="nvPlaca" placeholder="P 000 ABC" /></div>
-                <div>
-                    <label class="mv-label">Tipo</label>
-                    <select class="mv-input" @bind="nvTipo">
-                        @foreach (var t in tipos)
-                        {
-                            <option value="@t">@t</option>
-                        }
-                    </select>
-                </div>
+            <div>
+                <label class="mv-label">Marca *</label>
+                <select class="mv-input" @bind="nvIdMarca">
+                     <option value="0">Selecciona una marca</option>
+                     @foreach (var marca in marcas)
+        {
+            <option value="@marca.IdMarca">@marca.Nombre</option>
+        }
+    </select>
+</div>
+
+<div>
+    <label class="mv-label">Modelo *</label>
+    <input class="mv-input" @bind="nvModelo" placeholder="Corolla" />
+</div>
+
+<div>
+    <label class="mv-label">Año</label>
+    <input class="mv-input" @bind="nvAnio" placeholder="2020" />
+</div>
+
+<div>
+    <label class="mv-label">Placa *</label>
+    <input class="mv-input" @bind="nvPlaca" placeholder="P 000 ABC" />
+</div>
+
+<div>
+    <label class="mv-label">Tipo</label>
+    <select class="mv-input" @bind="nvIdTipoVehiculo">
+        <option value="0">Selecciona un tipo</option>
+        @foreach (var tipo in tiposVehiculo)
+        {
+            <option value="@tipo.IdTipoVehiculo">@tipo.Nombre</option>
+        }
+    </select>
+</div>
+                                </div>
                 <div>
                     <label class="mv-label">Color</label>
                     <select class="mv-input" @bind="nvColor">
@@ -835,7 +863,10 @@
                         }
                     </select>
                 </div>
-                <div><label class="mv-label">Kilometraje</label><input type="number" class="mv-input" @bind="nvKm" min="0" /></div>
+                <div>
+                    <label class="mv-label">Kilometraje</label>
+                    <input type="number" class="mv-input" @bind="nvKm" min="0" />
+                </div>
             </div>
 
             <div class="mv-form-title">Conductor</div>
@@ -854,7 +885,6 @@
                 <button type="button" class="mv-btn mv-btn-solid" @onclick="GuardarVehiculo">Guardar vehículo</button>
             </div>
         </div>
-    </div>
 }
 else if (modal == "detalle" && sel is not null)
 {
@@ -878,72 +908,33 @@ else if (modal == "detalle" && sel is not null)
                 <div><small>Estado actual</small><b>@(sel.EnTaller? sel.EstadoTaller: "Disponible")</b></div>
             </div>
 
-            <div class="mv-sec">
-                <h4>Documentos</h4>
 
-                @if (!sel.Documentos.Any())
-                {
-                    <div class="mv-hint warn">Aún no hay documentos. Adjunta el seguro y la inspección para tener todo al día.</div>
-                }
+    <div class="mv-sec">
+    <h4>Historial de servicios</h4>
 
-                @foreach (var d in sel.Documentos)
-                {
-                    var ed = EstadoDoc(d);
-                    <div class="mv-docrow">
-                        <div class="info">
-                            <b>@d.Tipo</b>
-                            <small>@d.Archivo · @(d.Tamano + (d.Vence is null ? "" : " · vence " + FechaCorta(d.Vence.Value)))</small>
-                        </div>
-                        <span class="mv-doc @ed.Clase">@ed.Texto</span>
-                        <button type="button" @onclick="() => QuitarDoc(d)">Quitar</button>
-                    </div>
-                }
-
-                <div class="mv-upload">
-                    <div>
-                        <label class="mv-label">Tipo de documento</label>
-                        <select class="mv-input" @bind="docTipo">
-                            @foreach (var t in tiposDoc)
-                            {
-                                <option value="@t">@t</option>
-                            }
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mv-label">Vence (opcional)</label>
-                        <input type="date" class="mv-input" @bind="docVence" />
-                    </div>
-                    <label class="mv-btn mv-btn-solid">
-                        Adjuntar
-                        <InputFile OnChange="OnDocumentos" multiple accept=".pdf,.jpg,.jpeg,.png" class="mv-file" />
-                    </label>
-                </div>
-                <div class="mv-hint">PDF, JPG o PNG · máx. 5 MB por archivo.</div>
-                @if (errorDoc is not null)
-                {
-                    <div class="mv-hint warn">@errorDoc</div>
-                }
-            </div>
-
-            <div class="mv-sec">
-                <h4>Historial de servicios</h4>
-                @if (sel.Historial.Any())
-                {
-                    <ul class="mv-time">
-                        @foreach (var h in sel.Historial.OrderByDescending(x => x.Fecha))
-                        {
-                            <li>
-                                <b>@h.Nombre</b>
-                                <small>@FechaCorta(h.Fecha) · Agente: @h.Agente · @h.Costo</small>
-                            </li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <div class="mv-hint">Este vehículo todavía no tiene servicios registrados.</div>
-                }
-            </div>
+    @if (sel.Historial.Any())
+    {
+        <ul class="mv-time">
+            @foreach (var h in sel.Historial.OrderByDescending(x => x.Fecha))
+            {
+                <li>
+                    <b>@h.Nombre</b>
+                    <small>
+                        @FechaCorta(h.Fecha) ·
+                        Agente: @h.Agente ·
+                        @h.Costo
+                    </small>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <div class="mv-hint">
+            Este vehículo todavía no tiene servicios registrados.
+        </div>
+    }
+</div>
 
             <div class="mv-modal-actions">
                 <button type="button" class="mv-btn mv-btn-plain left" style="color:#b42318; border-color:#e3a59d;" @onclick='() => modal = "eliminar"'>Eliminar vehículo</button>
@@ -974,17 +965,91 @@ else if (modal == "eliminar" && sel is not null)
     <div class="mv-toast">@toast</div>
 }
 
+
 @code {
-    // ---------- Modelos ----------
-    private record Documento(string Tipo, string Archivo, string Tamano, DateTime? Vence);
+    // ---------- Catálogos ----------
+    private class MarcaCatalogo
+    {
+        public long IdMarca { get; set; }
+        public string Nombre { get; set; } = "";
+    }
+
+    private class TipoVehiculoCatalogo
+    {
+        public long IdTipoVehiculo { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? Descripcion { get; set; }
+    }
+
+    private class TipoDocumentoCatalogo
+    {
+        public long IdTipoDocumento { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? Descripcion { get; set; }
+    }
+
+    // ---------- DTO recibido desde el backend ----------
+    private class VehiculoDTO
+    {
+        public long IdVehiculo { get; set; }
+        public string Marca { get; set; } = "";
+        public string Modelo { get; set; } = "";
+        public int Anio { get; set; }
+        public string Placa { get; set; } = "";
+        public string Tipo { get; set; } = "";
+        public string? Color { get; set; }
+        public int Kilometraje { get; set; }
+    }
+
+    private class DocumentoVehiculoDTO
+    {
+        public long IdDocumento { get; set; }
+        public long IdTipoDocumento { get; set; }
+        public string Tipo { get; set; } = "";
+        public string Archivo { get; set; } = "";
+        public DateTime? FechaVencimiento { get; set; }
+        public string Estado { get; set; } = "";
+    }
+
+    private class CrearVehiculoDTO
+    {
+        public long IdMarca { get; set; }
+        public long IdTipoVehiculo { get; set; }
+        public string Modelo { get; set; } = "";
+        public int Anio { get; set; }
+        public string Placa { get; set; } = "";
+        public string? Color { get; set; }
+        public int Kilometraje { get; set; }
+    }
+
+    // ---------- Modelos de la pantalla ----------
+    private class Documento
+    {
+        public long IdDocumento { get; set; }
+        public long IdTipoDocumento { get; set; }
+        public string Tipo { get; set; } = "";
+        public string Archivo { get; set; } = "";
+        public string Tamano { get; set; } = "";
+        public DateTime? Vence { get; set; }
+        public string Estado { get; set; } = "";
+    }
 
     private record Servicio(DateTime Fecha, string Nombre, string Agente, string Costo);
+    private class CitaHistorialDTO
+{
+    public long IdCita { get; set; }
+    public long IdVehiculo { get; set; }
+    public string Servicio { get; set; } = "";
+    public string Estado { get; set; } = "";
+    public DateOnly FechaCita { get; set; }
+    public decimal Costo { get; set; }
+}
 
     private record EstadoInfo(string Texto, string Clase);
 
     private class Vehiculo
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Marca { get; set; } = "";
         public string Modelo { get; set; } = "";
         public string Anio { get; set; } = "";
@@ -992,8 +1057,8 @@ else if (modal == "eliminar" && sel is not null)
         public string Tipo { get; set; } = "Sedán";
         public string Color { get; set; } = "Azul";
         public int Kilometraje { get; set; }
-        public string Conductor { get; set; } = "";
-        public string Licencia { get; set; } = "";
+        public string Conductor { get; set; } = "—";
+        public string Licencia { get; set; } = "—";
         public bool EnTaller { get; set; }
         public string EstadoTaller { get; set; } = "";
         public string? ProximaCita { get; set; }
@@ -1001,59 +1066,98 @@ else if (modal == "eliminar" && sel is not null)
         public List<Servicio> Historial { get; set; } = new();
     }
 
-    // ---------- Datos de ejemplo (TODO: reemplazar por el servicio real, AutosPAService) ----------
-    private List<Vehiculo> vehiculos = new()
+    // ---------- Datos y catálogos ----------
+    private long idUsuario;
+    private long nvIdMarca;
+    private long nvIdTipoVehiculo;
+
+    private List<Vehiculo> vehiculos = new();
+
+    private List<string> tipos = new()
     {
-        new Vehiculo
-        {
-            Id = 1, Marca = "Toyota", Modelo = "Corolla", Anio = "2019", Placa = "P 428 DKL", Tipo = "Sedán", Color = "Azul",
-            Kilometraje = 68500, Conductor = "Est. Jiménez", Licencia = "L-100234",
-            ProximaCita = "2 oct · 10:00 a. m. — Mantenimiento preventivo",
-            Documentos = new()
-            {
-                new Documento("Seguro", "seguro-corolla.pdf", "412 KB", new DateTime(2027, 3, 15)),
-                new Documento("Inspección", "inspeccion-corolla.pdf", "280 KB", new DateTime(2026, 10, 20)),
-            },
-            Historial = new()
-            {
-                new Servicio(new DateTime(2026, 9, 2), "Batería y sistema eléctrico", "Carlos Ruiz", "Q185"),
-                new Servicio(new DateTime(2026, 3, 14), "Mantenimiento preventivo", "Carlos Ruiz", "Q240"),
-            }
-        },
-        new Vehiculo
-        {
-            Id = 2, Marca = "Honda", Modelo = "CR-V", Anio = "2021", Placa = "P 019 CTM", Tipo = "SUV", Color = "Gris",
-            Kilometraje = 41200, Conductor = "Est. Jiménez", Licencia = "L-100234",
-            ProximaCita = "6 oct · 2:00 p. m. — Diagnóstico general (en espera)",
-            Documentos = new()
-            {
-                new Documento("Seguro", "seguro-crv.pdf", "390 KB", new DateTime(2026, 9, 10)),
-                new Documento("Inspección", "inspeccion-crv.pdf", "301 KB", new DateTime(2027, 1, 30)),
-            },
-            Historial = new()
-            {
-                new Servicio(new DateTime(2026, 5, 20), "Sistema de frenos", "Mario Gómez", "Q380"),
-            }
-        },
-        new Vehiculo
-        {
-            Id = 3, Marca = "Mazda", Modelo = "3", Anio = "2022", Placa = "P 987 XYZ", Tipo = "Hatchback", Color = "Rojo",
-            Kilometraje = 23800, Conductor = "Laura Jiménez", Licencia = "L-204518",
-            EnTaller = true, EstadoTaller = "Diagnóstico en proceso con Ana López",
-            Documentos = new()
-            {
-                new Documento("Seguro", "seguro-mazda.pdf", "455 KB", new DateTime(2027, 6, 1)),
-            },
-            Historial = new()
-            {
-                new Servicio(new DateTime(2026, 8, 12), "Mantenimiento preventivo", "Carlos Ruiz", "Q210"),
-            }
-        },
+        "Sedán", "Hatchback", "SUV", "Pickup", "Camión ligero", "Moto"
     };
 
-    private List<string> tipos = new() { "Sedán", "Hatchback", "SUV", "Pickup", "Camión ligero", "Moto" };
-    private List<string> tiposDoc = new() { "Seguro", "Inspección", "Tarjeta de circulación", "Otro" };
+    private List<MarcaCatalogo> marcas = new();
+    private List<TipoVehiculoCatalogo> tiposVehiculo = new();
+    private List<TipoDocumentoCatalogo> tiposDoc = new();
 
+    // Datos del formulario de documentos
+    private long docTipo;
+    private DateTime? docVence;
+    private string? errorDoc;
+    private bool subiendoDocumento;
+
+    // ---------- Inicialización ----------
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            marcas = await Http.GetFromJsonAsync<List<MarcaCatalogo>>(
+                "api/Vehiculos/marcas") ?? new();
+
+            tiposVehiculo = await Http.GetFromJsonAsync<List<TipoVehiculoCatalogo>>(
+                "api/Vehiculos/tipos") ?? new();
+
+            tiposDoc = await Http.GetFromJsonAsync<List<TipoDocumentoCatalogo>>(
+                "api/DocumentosVehiculo/tipos") ?? new();
+
+            if (tiposDoc.Any())
+                docTipo = tiposDoc.First().IdTipoDocumento;
+
+            var usuarioGuardado = await JS.InvokeAsync<string?>(
+                "localStorage.getItem", "flexicar_usuario");
+
+            if (string.IsNullOrWhiteSpace(usuarioGuardado))
+            {
+                usuarioGuardado = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem", "flexicar_usuario");
+            }
+
+            if (!long.TryParse(usuarioGuardado, out idUsuario))
+            {
+                toast = "No se pudo identificar al usuario. Inicia sesión nuevamente.";
+                return;
+            }
+
+            await CargarVehiculos();
+        }
+        catch (HttpRequestException)
+        {
+            toast = "No se pudo conectar con el servidor.";
+        }
+        catch (Microsoft.JSInterop.JSException)
+        {
+            toast = "No se pudo leer la información de la sesión.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            toast = "El servidor devolvió información que no se pudo interpretar.";
+        }
+    }
+
+    // ---------- Consultar vehículos del usuario ----------
+    private async Task CargarVehiculos()
+    {
+        var datos = await Http.GetFromJsonAsync<List<VehiculoDTO>>(
+            $"api/Vehiculos/usuario/{idUsuario}") ?? new();
+
+        vehiculos = datos.Select(v => new Vehiculo
+        {
+            Id = v.IdVehiculo,
+            Marca = v.Marca,
+            Modelo = v.Modelo,
+            Anio = v.Anio.ToString(),
+            Placa = v.Placa,
+            Tipo = v.Tipo,
+            Color = string.IsNullOrWhiteSpace(v.Color) ? "Azul" : v.Color,
+            Kilometraje = v.Kilometraje,
+            Conductor = "—",
+            Licencia = "—"
+        }).ToList();
+    }
+
+    // ---------- Colores ----------
     private static readonly Dictionary<string, string> ColoresHex = new()
     {
         ["Azul"] = "#1f5fa8",
@@ -1072,55 +1176,88 @@ else if (modal == "eliminar" && sel is not null)
     private Vehiculo? sel;
     private string? toast;
 
-    private string nvMarca = "", nvModelo = "", nvAnio = "", nvPlaca = "", nvConductor = "", nvLicencia = "";
-    private string nvTipo = "Sedán", nvColor = "Azul";
+    private string nvModelo = "";
+    private string nvAnio = "";
+    private string nvPlaca = "";
+    private string nvConductor = "";
+    private string nvLicencia = "";
+    private string nvTipo = "Sedán";
+    private string nvColor = "Azul";
     private int nvKm;
     private string? errorNuevo;
-
-    private string docTipo = "Seguro";
-    private DateTime? docVence;
-    private string? errorDoc;
 
     // ---------- Calculados ----------
     private IEnumerable<Vehiculo> Filtrados =>
         vehiculos
             .Where(v => filtro == "todos" || EstadoVeh(v).Clase == filtro)
             .Where(v => string.IsNullOrWhiteSpace(busqueda)
-                        || $"{v.Marca} {v.Modelo} {v.Placa}".Contains(busqueda.Trim(), StringComparison.OrdinalIgnoreCase));
+                || $"{v.Marca} {v.Modelo} {v.Placa}".Contains(
+                    busqueda.Trim(), StringComparison.OrdinalIgnoreCase));
 
-    private int DocsPorAtender => vehiculos.Sum(v => v.Documentos.Count(d => EstadoDoc(d).Clase is "rojo" or "ambar"));
+    private int DocsPorAtender =>
+        vehiculos.Sum(v => v.Documentos.Count(d =>
+            EstadoDoc(d).Clase is "rojo" or "ambar"));
 
     private EstadoInfo EstadoVeh(Vehiculo v)
     {
-        if (v.EnTaller) return new EstadoInfo("En taller", "taller");
-        if (v.Documentos.Any(d => EstadoDoc(d).Clase is "rojo" or "ambar")) return new EstadoInfo("Requiere atención", "warn");
+        if (v.EnTaller)
+            return new EstadoInfo("En taller", "taller");
+
+        if (v.Documentos.Any(d =>
+            EstadoDoc(d).Clase is "rojo" or "ambar"))
+            return new EstadoInfo("Requiere atención", "warn");
+
         return new EstadoInfo("Al día", "ok");
     }
 
     private static (string Texto, string Clase) EstadoDoc(Documento d)
     {
-        if (d.Vence is null) return ("Sin vencimiento", "neutro");
+        if (d.Vence is null)
+            return ("Sin vencimiento", "neutro");
+
         var dias = (d.Vence.Value.Date - DateTime.Today).Days;
-        if (dias < 0) return ("Vencido", "rojo");
-        if (dias <= 30) return ($"Vence en {dias} d", "ambar");
+
+        if (dias < 0)
+            return ("Vencido", "rojo");
+
+        if (dias <= 30)
+            return ($"Vence en {dias} d", "ambar");
+
         return ("Vigente", "verde");
     }
 
     private static Documento? DocDe(Vehiculo v, string tipo) =>
-        v.Documentos.Where(d => d.Tipo == tipo).OrderByDescending(d => d.Vence).FirstOrDefault();
+        v.Documentos
+            .Where(d => d.Tipo.Contains(
+                tipo, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(d => d.Vence)
+            .FirstOrDefault();
 
-    private static string Hex(string color) => ColoresHex.TryGetValue(color, out var h) ? h : "#1f5fa8";
+    private static string Hex(string color) =>
+        ColoresHex.TryGetValue(color, out var h) ? h : "#1f5fa8";
 
-    private static string Km(Vehiculo v) => v.Kilometraje.ToString("N0", CultureInfo.InvariantCulture) + " km";
+    private static string Km(Vehiculo v) =>
+        v.Kilometraje.ToString("N0", CultureInfo.InvariantCulture) + " km";
 
-    private static readonly string[] Meses = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+    private static readonly string[] Meses =
+    {
+        "ene", "feb", "mar", "abr", "may", "jun",
+        "jul", "ago", "sep", "oct", "nov", "dic"
+    };
 
-    private static string FechaCorta(DateTime f) => $"{f.Day} {Meses[f.Month - 1]} {f.Year}";
+    private static string FechaCorta(DateTime f) =>
+        $"{f.Day} {Meses[f.Month - 1]} {f.Year}";
 
     // ---------- Acciones ----------
     private void AbrirNuevo()
     {
-        nvMarca = nvModelo = nvAnio = nvPlaca = nvConductor = nvLicencia = "";
+        nvIdMarca = 0;
+        nvIdTipoVehiculo = 0;
+        nvModelo = "";
+        nvAnio = "";
+        nvPlaca = "";
+        nvConductor = "";
+        nvLicencia = "";
         nvTipo = "Sedán";
         nvColor = "Azul";
         nvKm = 0;
@@ -1128,90 +1265,314 @@ else if (modal == "eliminar" && sel is not null)
         modal = "nuevo";
     }
 
-    private void VerEstado(Vehiculo v)
+    private async Task VerEstado(Vehiculo v)
+{
+    sel = v;
+    docVence = null;
+    errorDoc = null;
+    modal = "detalle";
+
+    await CargarDocumentos(v);
+    await CargarHistorial(v);
+}
+
+        // ---------- Historial de servicios ----------
+private async Task CargarHistorial(Vehiculo v)
+{
+    try
     {
-        sel = v;
-        docTipo = "Seguro";
-        docVence = null;
-        errorDoc = null;
-        modal = "detalle";
+        var citas = await Http.GetFromJsonAsync<List<CitaHistorialDTO>>(
+            $"api/Citas/cliente/{idUsuario}") ?? new();
+
+        v.Historial = citas
+            .Where(c =>
+                c.IdVehiculo == v.Id &&
+                string.Equals(c.Estado, "FINALIZADA",
+                    StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(c => c.FechaCita)
+            .Select(c => new Servicio(
+                c.FechaCita.ToDateTime(TimeOnly.MinValue),
+                c.Servicio,
+                "—",
+                $"Q {c.Costo:N2}"
+            ))
+            .ToList();
     }
+    catch (HttpRequestException)
+    {
+        v.Historial = new();
+        toast = "No se pudo cargar el historial de servicios.";
+    }
+}
 
     private void CerrarModal() => modal = null;
 
+    // ---------- Registrar vehículo ----------
     private async Task GuardarVehiculo()
     {
-        if (string.IsNullOrWhiteSpace(nvMarca) || string.IsNullOrWhiteSpace(nvModelo) || string.IsNullOrWhiteSpace(nvPlaca))
+        errorNuevo = null;
+
+        if (nvIdMarca == 0 || nvIdTipoVehiculo == 0)
         {
-            errorNuevo = "Marca, modelo y placa son obligatorios.";
+            errorNuevo = "Selecciona una marca y un tipo de vehículo.";
             return;
         }
 
-        var placa = nvPlaca.Trim().ToUpper();
-        if (vehiculos.Any(v => v.Placa.Equals(placa, StringComparison.OrdinalIgnoreCase)))
+        if (string.IsNullOrWhiteSpace(nvModelo) ||
+            string.IsNullOrWhiteSpace(nvPlaca))
+        {
+            errorNuevo = "Modelo y placa son obligatorios.";
+            return;
+        }
+
+        if (!int.TryParse(nvAnio, out int anio) || anio <= 0)
+        {
+            errorNuevo = "Ingresa un año válido.";
+            return;
+        }
+
+        if (nvKm < 0)
+        {
+            errorNuevo = "El kilometraje no puede ser negativo.";
+            return;
+        }
+
+        var placa = nvPlaca.Trim().ToUpperInvariant();
+
+        if (vehiculos.Any(v =>
+            v.Placa.Equals(placa, StringComparison.OrdinalIgnoreCase)))
         {
             errorNuevo = "Ya tienes un vehículo registrado con esa placa.";
             return;
         }
 
-        // TODO: guardar en el servidor (AutosPAService)
-        vehiculos.Add(new Vehiculo
+        var nuevoVehiculo = new CrearVehiculoDTO
         {
-            Id = vehiculos.Any() ? vehiculos.Max(v => v.Id) + 1 : 1,
-            Marca = nvMarca.Trim(),
+            IdMarca = nvIdMarca,
+            IdTipoVehiculo = nvIdTipoVehiculo,
             Modelo = nvModelo.Trim(),
-            Anio = nvAnio.Trim(),
+            Anio = anio,
             Placa = placa,
-            Tipo = nvTipo,
             Color = nvColor,
-            Kilometraje = Math.Max(0, nvKm),
-            Conductor = string.IsNullOrWhiteSpace(nvConductor) ? "Sin registrar" : nvConductor.Trim(),
-            Licencia = string.IsNullOrWhiteSpace(nvLicencia) ? "—" : nvLicencia.Trim()
-        });
+            Kilometraje = nvKm
+        };
 
-        modal = null;
-        await Aviso("Vehículo registrado. Ahora puedes adjuntar sus documentos.");
-    }
-
-    private void OnDocumentos(InputFileChangeEventArgs e)
-    {
-        errorDoc = null;
-        if (sel is null) return;
-
-        foreach (var f in e.GetMultipleFiles(10))
+        try
         {
-            if (f.Size > 5 * 1024 * 1024)
+            var respuesta = await Http.PostAsJsonAsync(
+                $"api/Vehiculos/usuario/{idUsuario}",
+                nuevoVehiculo);
+
+            if (!respuesta.IsSuccessStatusCode)
             {
-                errorDoc = $"\"{f.Name}\" supera los 5 MB.";
-                continue;
+                var mensaje = await respuesta.Content.ReadAsStringAsync();
+                errorNuevo = $"No se pudo registrar el vehículo. {mensaje}";
+                return;
             }
 
-            // TODO: enviar el archivo al servidor cuando exista el endpoint de documentos
-            sel.Documentos.Add(new Documento(docTipo, f.Name, FormatoTamano(f.Size), docVence));
+            await CargarVehiculos();
+
+            modal = null;
+            await Aviso("Vehículo registrado correctamente.");
+        }
+        catch (HttpRequestException)
+        {
+            errorNuevo = "No se pudo conectar con el servidor.";
         }
     }
 
-    private void QuitarDoc(Documento d) => sel?.Documentos.Remove(d);
-
-    private async Task EliminarVehiculo()
+    // ---------- Documentos ----------
+    private async Task CargarDocumentos(Vehiculo v)
     {
-        if (sel is null) return;
+        try
+        {
+            var documentos = await Http.GetFromJsonAsync<List<DocumentoVehiculoDTO>>(
+                $"api/DocumentosVehiculo/vehiculo/{v.Id}") ?? new();
 
-        // TODO: eliminar en el servidor
-        vehiculos.Remove(sel);
-        sel = null;
-        modal = null;
-        await Aviso("Vehículo eliminado.");
+            v.Documentos = documentos.Select(d => new Documento
+            {
+                IdDocumento = d.IdDocumento,
+                IdTipoDocumento = d.IdTipoDocumento,
+                Tipo = d.Tipo,
+                Archivo = d.Archivo,
+                Vence = d.FechaVencimiento,
+                Estado = d.Estado
+            }).ToList();
+        }
+        catch (HttpRequestException)
+        {
+            errorDoc = "No se pudieron cargar los documentos.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            errorDoc = "No se pudo interpretar la lista de documentos.";
+        }
     }
 
+    private async Task OnDocumentos(InputFileChangeEventArgs e)
+    {
+        errorDoc = null;
+
+        if (sel is null)
+            return;
+
+        if (docTipo <= 0)
+        {
+            errorDoc = "Selecciona un tipo de documento.";
+            return;
+        }
+
+        IBrowserFile archivo = e.File;
+
+        if (archivo.Size == 0 || archivo.Size > 5 * 1024 * 1024)
+        {
+            errorDoc = "El archivo debe pesar más de 0 y máximo 5 MB.";
+            return;
+        }
+
+        var extension = Path.GetExtension(archivo.Name).ToLowerInvariant();
+
+        var tipoMime = extension switch
+        {
+            ".pdf" => "application/pdf",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            _ => ""
+        };
+
+        if (string.IsNullOrEmpty(tipoMime))
+        {
+            errorDoc = "Solo se permiten archivos PDF, JPG o PNG.";
+            return;
+        }
+
+        try
+        {
+            subiendoDocumento = true;
+
+            using var contenido = new MultipartFormDataContent();
+
+            contenido.Add(
+                new StringContent(docTipo.ToString()),
+                "idTipoDocumento");
+
+            if (docVence.HasValue)
+            {
+                contenido.Add(
+                    new StringContent(
+                        docVence.Value.ToString("yyyy-MM-dd")),
+                    "fechaVencimiento");
+            }
+
+            using var flujo = archivo.OpenReadStream(5 * 1024 * 1024);
+            using var archivoContenido = new StreamContent(flujo);
+
+            archivoContenido.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(tipoMime);
+
+            contenido.Add(archivoContenido, "archivo", archivo.Name);
+
+            var respuesta = await Http.PostAsync(
+                $"api/DocumentosVehiculo/vehiculo/{sel.Id}",
+                contenido);
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                var detalle = await respuesta.Content.ReadAsStringAsync();
+                errorDoc = $"No se pudo subir el documento. {detalle}";
+                return;
+            }
+
+            await CargarDocumentos(sel);
+            docVence = null;
+
+            await Aviso("Documento guardado correctamente.");
+        }
+        catch (HttpRequestException)
+        {
+            errorDoc = "No se pudo conectar con el servidor.";
+        }
+        catch (IOException)
+        {
+            errorDoc = "No se pudo leer el archivo seleccionado.";
+        }
+        finally
+        {
+            subiendoDocumento = false;
+        }
+    }
+
+    private async Task QuitarDoc(Documento d)
+    {
+        if (sel is null)
+            return;
+
+        errorDoc = null;
+
+        try
+        {
+            var respuesta = await Http.DeleteAsync(
+                $"api/DocumentosVehiculo/{d.IdDocumento}");
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                errorDoc = "No se pudo eliminar el documento.";
+                return;
+            }
+
+            await CargarDocumentos(sel);
+            await Aviso("Documento eliminado correctamente.");
+        }
+        catch (HttpRequestException)
+        {
+            errorDoc = "No se pudo conectar con el servidor.";
+        }
+    }
+
+    // ---------- Eliminar vehículo ----------
+    private async Task EliminarVehiculo()
+    {
+        if (sel is null)
+            return;
+
+        try
+        {
+            var respuesta = await Http.DeleteAsync(
+                $"api/Vehiculos/usuario/{idUsuario}/{sel.Id}");
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                toast = "No se pudo eliminar el vehículo.";
+                return;
+            }
+
+            await CargarVehiculos();
+            sel = null;
+            modal = null;
+
+            await Aviso("Vehículo eliminado correctamente.");
+        }
+        catch (HttpRequestException)
+        {
+            toast = "No se pudo conectar con el servidor.";
+        }
+    }
+
+    // ---------- Utilidades ----------
     private static string FormatoTamano(long bytes) =>
-        bytes >= 1024 * 1024 ? $"{bytes / 1024.0 / 1024.0:0.0} MB" : $"{Math.Max(1, bytes / 1024)} KB";
+        bytes >= 1024 * 1024
+            ? $"{bytes / 1024.0 / 1024.0:0.0} MB"
+            : $"{Math.Max(1, bytes / 1024)} KB";
 
     private async Task Aviso(string mensaje)
     {
         toast = mensaje;
         StateHasChanged();
+
         await Task.Delay(2500);
+
         toast = null;
+        StateHasChanged();
     }
 }
+

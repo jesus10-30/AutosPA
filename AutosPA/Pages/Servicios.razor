@@ -1,4 +1,5 @@
 ﻿@page "/servicios"
+@inject HttpClient Http
 
 <PageTitle>FlexiCar — Servicios</PageTitle>
 
@@ -380,6 +381,15 @@
     }
 </div>
 
+@if (cargando)
+{
+    <p style="text-align:center">Cargando servicios...</p>
+}
+else if (!string.IsNullOrWhiteSpace(errorCarga))
+{
+    <p style="text-align:center; color:#b42318">@errorCarga</p>
+}
+
 <div class="sv-grid">
     @foreach (var servicio in ServiciosFiltrados)
     {
@@ -479,47 +489,121 @@
 }
 
 @code {
-    private List<string> categorias = new() { "Todos", "Mantenimiento", "Diagnóstico", "Reparación", "Componentes" };
+    private List<string> categorias = new()
+    {
+        "Todos", "Mantenimiento", "Diagnóstico", "Reparación", "Componentes"
+    };
+
     private string categoriaSeleccionada = "Todos";
+    private List<ServicioDto> servicios = new();
+    private ServicioDto? servicioSeleccionado;
+
+    private bool cargando = true;
+    private string? errorCarga;
+
+    private class ApiServicio
+    {
+        public long Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? Descripcion { get; set; }
+        public decimal CostoBase { get; set; }
+        public int TiempoEstimadoMinutos { get; set; }
+    }
 
     private class ServicioDto
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Nombre { get; set; } = "";
         public string Descripcion { get; set; } = "";
         public string RangoPrecio { get; set; } = "";
         public string TiempoEstimado { get; set; } = "";
         public string Categoria { get; set; } = "";
-        public string Color { get; set; } = "blue";      // blue | green | mix
-        public string Icono { get; set; } = "wrench";    // wrench | scan | gear | brake | battery | tire
-        public string Imagen { get; set; } = "";         // archivo dentro de wwwroot/img/servicios/
+        public string Color { get; set; } = "blue";
+        public string Icono { get; set; } = "wrench";
+        public string Imagen { get; set; } = "";
         public List<string> Incluye { get; set; } = new();
     }
 
-    private List<ServicioDto> servicios = new()
+    protected override async Task OnInitializedAsync()
     {
-        new ServicioDto { Id = 1, Nombre = "Mantenimiento preventivo", Descripcion = "Revisión de fluidos, frenos, filtros y niveles generales para que tu vehículo no te dé sorpresas.", RangoPrecio = "Q150–Q300", TiempoEstimado = "45–60 min", Categoria = "Mantenimiento", Color = "blue", Icono = "wrench", Imagen = "mantenimiento.jpg",
-            Incluye = new() { "Revisión de fluidos y niveles", "Inspección de frenos y filtros", "Chequeo de batería y luces", "Informe del estado general" } },
-        new ServicioDto { Id = 2, Nombre = "Diagnóstico general", Descripcion = "Escaneo computarizado para identificar la falla exacta antes de cotizar cualquier reparación.", RangoPrecio = "Q100–Q200", TiempoEstimado = "30 min", Categoria = "Diagnóstico", Color = "green", Icono = "scan", Imagen = "diagnostico.jpg",
-            Incluye = new() { "Escaneo computarizado", "Lectura de códigos de falla", "Reporte con la falla exacta", "Cotización antes de reparar" } },
-        new ServicioDto { Id = 3, Nombre = "Reemplazo de componentes", Descripcion = "Piezas originales instaladas por agentes certificados, con garantía sobre la mano de obra.", RangoPrecio = "Desde Q80", TiempoEstimado = "Según pieza", Categoria = "Componentes", Color = "mix", Icono = "gear", Imagen = "componentes.jpg",
-            Incluye = new() { "Piezas originales", "Instalación por agentes certificados", "Garantía sobre la mano de obra", "Prueba final del vehículo" } },
-        new ServicioDto { Id = 4, Nombre = "Sistema de frenos", Descripcion = "Revisión y cambio de pastillas, discos y líquido de frenos para una frenada segura.", RangoPrecio = "Q200–Q450", TiempoEstimado = "1–2 horas", Categoria = "Reparación", Color = "blue", Icono = "brake", Imagen = "frenos.jpg",
-            Incluye = new() { "Cambio de pastillas y discos", "Cambio de líquido de frenos", "Prueba de frenada" } },
-        new ServicioDto { Id = 5, Nombre = "Batería y sistema eléctrico", Descripcion = "Prueba de carga de batería, alternador y arranque, más revisión de fusibles y cableado.", RangoPrecio = "Q120–Q250", TiempoEstimado = "40 min", Categoria = "Reparación", Color = "green", Icono = "battery", Imagen = "bateria.jpg",
-            Incluye = new() { "Prueba de carga de batería", "Revisión de alternador y arranque", "Revisión de fusibles y cableado" } },
-        new ServicioDto { Id = 6, Nombre = "Llantas y alineación", Descripcion = "Rotación, balanceo y alineación para un desgaste parejo y mejor manejo en carretera.", RangoPrecio = "Q60–Q180", TiempoEstimado = "50 min", Categoria = "Mantenimiento", Color = "mix", Icono = "tire", Imagen = "llantas.jpg",
-            Incluye = new() { "Rotación de llantas", "Balanceo", "Alineación" } },
-    };
+        try
+        {
+            var datos = await Http.GetFromJsonAsync<List<ApiServicio>>(
+                "api/Servicios");
+
+            servicios = (datos ?? new List<ApiServicio>())
+                .Select(s => new ServicioDto
+                {
+                    Id = s.Id,
+                    Nombre = s.Nombre,
+                    Descripcion = s.Descripcion ?? "",
+                    RangoPrecio = $"Q{s.CostoBase:N2}",
+                    TiempoEstimado = $"{s.TiempoEstimadoMinutos} min",
+                    Categoria = ObtenerCategoria(s.Nombre),
+                    Color = ObtenerColor(s.Nombre),
+                    Icono = ObtenerIcono(s.Nombre)
+                })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            errorCarga = "No se pudieron cargar los servicios. Comprueba que el API esté activo.";
+            Console.Error.WriteLine(ex);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerCategoria(string nombre)
+    {
+        if (nombre.Contains("diagnóstico", StringComparison.OrdinalIgnoreCase))
+            return "Diagnóstico";
+
+        if (nombre.Contains("reparación", StringComparison.OrdinalIgnoreCase) ||
+            nombre.Contains("frenos", StringComparison.OrdinalIgnoreCase))
+            return "Reparación";
+
+        if (nombre.Contains("componente", StringComparison.OrdinalIgnoreCase))
+            return "Componentes";
+
+        return "Mantenimiento";
+    }
+
+    private string ObtenerColor(string nombre)
+    {
+        if (nombre.Contains("diagnóstico", StringComparison.OrdinalIgnoreCase))
+            return "green";
+
+        if (nombre.Contains("reparación", StringComparison.OrdinalIgnoreCase))
+            return "mix";
+
+        return "blue";
+    }
+
+    private string ObtenerIcono(string nombre)
+    {
+        if (nombre.Contains("diagnóstico", StringComparison.OrdinalIgnoreCase))
+            return "scan";
+
+        if (nombre.Contains("frenos", StringComparison.OrdinalIgnoreCase))
+            return "brake";
+
+        if (nombre.Contains("aceite", StringComparison.OrdinalIgnoreCase))
+            return "wrench";
+
+        return "gear";
+    }
 
     private IEnumerable<ServicioDto> ServiciosFiltrados =>
         categoriaSeleccionada == "Todos"
             ? servicios
             : servicios.Where(s => s.Categoria == categoriaSeleccionada);
 
-    private ServicioDto? servicioSeleccionado;
+    private void VerServicio(ServicioDto servicio) =>
+        servicioSeleccionado = servicio;
 
-    private void VerServicio(ServicioDto servicio) => servicioSeleccionado = servicio;
-
-    private void CerrarServicio() => servicioSeleccionado = null;
+    private void CerrarServicio() =>
+        servicioSeleccionado = null;
 }

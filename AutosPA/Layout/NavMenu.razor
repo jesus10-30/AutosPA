@@ -1,4 +1,6 @@
-﻿<style>
+﻿@using AutosPA.Services
+@inject NotificacionesBadgeService BadgeService
+<style>
     .fc-sidebar {
         width: 230px;
         flex-shrink: 0;
@@ -117,10 +119,10 @@
 
         <NavLink class="fc-menu-item" href="notificaciones">
             <i class="bi bi-bell-fill"></i> Notificaciones
-            @if (NotificacionesSinLeer > 0)
-            {
-                <span class="fc-menu-badge">@NotificacionesSinLeer</span>
-            }
+            @if (BadgeService.CantidadSinLeer > 0)
+{
+    <span class="fc-menu-badge">@BadgeService.CantidadSinLeer</span>
+}
         </NavLink>
 
         <NavLink class="fc-menu-item" href="cuenta">
@@ -144,6 +146,22 @@
     </nav>
 </div>
 
+@implements IDisposable
+
 @code {
-    private int NotificacionesSinLeer = 2;
+    protected override async Task OnInitializedAsync()
+    {
+        BadgeService.OnChange += ActualizarMenu;
+        await BadgeService.CargarAsync();
+    }
+
+    private void ActualizarMenu()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        BadgeService.OnChange -= ActualizarMenu;
+    }
 }
