@@ -1,4 +1,4 @@
-﻿@page "/mis-vehiculos"
+@page "/mis-vehiculos"
 @using System.Globalization
 @using System.Net.Http.Json
 @inject HttpClient Http
@@ -1114,6 +1114,18 @@ else if (modal == "eliminar" && sel is not null)
                     "sessionStorage.getItem", "flexicar_usuario");
             }
 
+            if (string.IsNullOrWhiteSpace(usuarioGuardado))
+            {
+                usuarioGuardado = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem", "flexicar_id_usuario");
+            }
+
+            if (string.IsNullOrWhiteSpace(usuarioGuardado))
+            {
+                usuarioGuardado = await JS.InvokeAsync<string?>(
+                    "localStorage.getItem", "flexicar_id_usuario");
+            }
+
             if (!long.TryParse(usuarioGuardado, out idUsuario))
             {
                 toast = "No se pudo identificar al usuario. Inicia sesión nuevamente.";
@@ -1575,4 +1587,5 @@ private async Task CargarHistorial(Vehiculo v)
         StateHasChanged();
     }
 }
+
 
