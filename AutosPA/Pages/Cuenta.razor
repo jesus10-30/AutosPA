@@ -1,4 +1,4 @@
-﻿@page "/cuenta"
+@page "/cuenta"
 @layout AuthLayout
 @using System.Net.Http.Json
 @using Microsoft.JSInterop
@@ -700,6 +700,18 @@
 
 @code {
 
+    private async Task<string?> ObtenerIdUsuarioGuardadoAsync()
+    {
+        var id = await JS.InvokeAsync<string?>("sessionStorage.getItem", "flexicar_id_usuario");
+        if (string.IsNullOrWhiteSpace(id))
+            id = await JS.InvokeAsync<string?>("localStorage.getItem", "flexicar_id_usuario");
+        if (string.IsNullOrWhiteSpace(id))
+            id = await JS.InvokeAsync<string?>("sessionStorage.getItem", "flexicar_usuario");
+        if (string.IsNullOrWhiteSpace(id))
+            id = await JS.InvokeAsync<string?>("localStorage.getItem", "flexicar_usuario");
+        return id;
+    }
+
     private string nombres = "";
     private string apellidos = "";
     private string eNombres = "";
@@ -720,10 +732,7 @@
         {
             cargandoPerfil = true;
 
-            var idGuardado = await JS.InvokeAsync<string?>(
-                "sessionStorage.getItem",
-                "flexicar_id_usuario"
-            );
+            var idGuardado = await ObtenerIdUsuarioGuardadoAsync();
 
             if (!long.TryParse(idGuardado, out idUsuario) || idUsuario <= 0)
             {
@@ -886,9 +895,7 @@
 
         try
         {
-            var idGuardado = await JS.InvokeAsync<string?>(
-                "sessionStorage.getItem",
-                "flexicar_id_usuario");
+            var idGuardado = await ObtenerIdUsuarioGuardadoAsync();
 
             if (!long.TryParse(idGuardado, out var idUsuario) ||
                 idUsuario <= 0)
@@ -974,6 +981,12 @@
                 "sessionStorage.removeItem",
                 "flexicar_apellidos");
 
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_email");
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_token");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_id_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_rol");
             await JS.InvokeVoidAsync(
                 "sessionStorage.removeItem",
                 "flexicar_rol");

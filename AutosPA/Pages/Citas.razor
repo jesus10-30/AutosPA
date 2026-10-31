@@ -1,4 +1,4 @@
-﻿@page "/citas"
+@page "/citas"
 @page "/citas/nueva"
 
 @using System.Globalization
@@ -1325,6 +1325,13 @@
             var idGuardado = await JS.InvokeAsync<string?>(
                 "sessionStorage.getItem",
                 "flexicar_id_usuario");
+
+            if (string.IsNullOrWhiteSpace(idGuardado))
+                idGuardado = await JS.InvokeAsync<string?>("localStorage.getItem", "flexicar_id_usuario");
+            if (string.IsNullOrWhiteSpace(idGuardado))
+                idGuardado = await JS.InvokeAsync<string?>("sessionStorage.getItem", "flexicar_usuario");
+            if (string.IsNullOrWhiteSpace(idGuardado))
+                idGuardado = await JS.InvokeAsync<string?>("localStorage.getItem", "flexicar_usuario");
 
             if (long.TryParse(idGuardado, out var id) && id > 0)
             {

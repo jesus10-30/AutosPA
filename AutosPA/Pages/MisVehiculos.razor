@@ -1106,7 +1106,13 @@ else if (modal == "eliminar" && sel is not null)
                 docTipo = tiposDoc.First().IdTipoDocumento;
 
             var usuarioGuardado = await JS.InvokeAsync<string?>(
-                "localStorage.getItem", "flexicar_usuario");
+                "sessionStorage.getItem", "flexicar_id_usuario");
+
+            if (string.IsNullOrWhiteSpace(usuarioGuardado))
+            {
+                usuarioGuardado = await JS.InvokeAsync<string?>(
+                    "localStorage.getItem", "flexicar_id_usuario");
+            }
 
             if (string.IsNullOrWhiteSpace(usuarioGuardado))
             {
@@ -1117,13 +1123,7 @@ else if (modal == "eliminar" && sel is not null)
             if (string.IsNullOrWhiteSpace(usuarioGuardado))
             {
                 usuarioGuardado = await JS.InvokeAsync<string?>(
-                    "sessionStorage.getItem", "flexicar_id_usuario");
-            }
-
-            if (string.IsNullOrWhiteSpace(usuarioGuardado))
-            {
-                usuarioGuardado = await JS.InvokeAsync<string?>(
-                    "localStorage.getItem", "flexicar_id_usuario");
+                    "localStorage.getItem", "flexicar_usuario");
             }
 
             if (!long.TryParse(usuarioGuardado, out idUsuario))
@@ -1587,5 +1587,3 @@ private async Task CargarHistorial(Vehiculo v)
         StateHasChanged();
     }
 }
-
-

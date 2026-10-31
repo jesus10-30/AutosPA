@@ -1,8 +1,12 @@
-﻿```razor
 @page "/loginAgente"
+@using System.Net.Http.Json
+@using Microsoft.JSInterop
+@using AutosPALibrary.Dtos
 @inject NavigationManager Navigation
 @inject Supabase.Client Supabase
+@inject HttpClient Http
 @inject IJSRuntime JS
+@inject AutosPA.Services.SessionAuthenticationStateProvider SesionAuth
 
 <PageTitle>Iniciar sesión</PageTitle>
 
@@ -28,7 +32,7 @@
 
     @if (!string.IsNullOrEmpty(mensaje))
     {
-        <p class="mt-3">@mensaje</p>
+        <p class="mt-3" role="alert">@mensaje</p>
     }
 </div>
 
@@ -36,7 +40,7 @@
     private string correo = "";
     private string contrasena = "";
     private string mensaje = "";
-    private bool cargando = false;
+    private bool cargando;
 
     private async Task IniciarSesion()
     {
@@ -45,27 +49,64 @@
 
         try
         {
-            await Supabase.Auth.SignIn(correo, contrasena);
+            using var respuesta = await Http.PostAsJsonAsync(
+                "api/auth/login",
+                new LoginRequest
+                {
+                    Email = correo.Trim(),
+                    Password = contrasena
+                });
 
-            var token = Supabase.Auth.CurrentSession?.AccessToken;
-
-            if (string.IsNullOrWhiteSpace(token))
+            if (!respuesta.IsSuccessStatusCode)
             {
-                mensaje = "No se pudo obtener el token de sesión.";
+                mensaje = respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                    ? "Correo o contraseña incorrectos, o cuenta no habilitada."
+                    : "No se pudo iniciar sesión. Intenta nuevamente.";
                 return;
             }
 
-            await JS.InvokeVoidAsync(
-                "localStorage.setItem",
-                "flexicar_token",
-                token);
+            var resultado = await respuesta.Content.ReadFromJsonAsync<LoginResponse>();
+            if (resultado is null || string.IsNullOrWhiteSpace(resultado.AccessToken))
+            {
+                mensaje = "El servidor no devolvió una sesión válida.";
+                return;
+            }
 
-            mensaje = "Inicio de sesión correcto.";
+            if (!string.Equals(resultado.Rol, "AGENTE", StringComparison.OrdinalIgnoreCase))
+            {
+                mensaje = "Esta cuenta no tiene acceso al panel de agente.";
+                return;
+            }
+
+            await Supabase.Auth.SignIn(correo.Trim(), contrasena);
+
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "flexicar_access_token", resultado.AccessToken);
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "flexicar_refresh_token", resultado.RefreshToken ?? "");
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "flexicar_id_usuario", resultado.IdUsuario.ToString());
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "flexicar_nombres", resultado.Nombres ?? "");
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "flexicar_apellidos", resultado.Apellidos ?? "");
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "flexicar_email", resultado.Email ?? "");
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "flexicar_rol", resultado.Rol);
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_token");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_id_usuario");
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_rol");
+
+            await SesionAuth.ActualizarEstadoAsync();
             Navigation.NavigateTo("/panel-agente");
         }
-        catch (Exception ex)
+        catch (HttpRequestException)
         {
-            mensaje = "Error al iniciar sesión: " + ex.Message;
+            mensaje = "No se pudo conectar con el servidor.";
+        }
+        catch (JSException)
+        {
+            mensaje = "No se pudo guardar la sesión en el navegador.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            mensaje = "El servidor devolvió una respuesta que no se pudo interpretar.";
         }
         finally
         {
@@ -73,4 +114,3 @@
         }
     }
 }
-```
