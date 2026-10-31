@@ -1,7 +1,13 @@
 ﻿@page "/cuenta"
+@layout AuthLayout
+@using System.Net.Http.Json
+@using Microsoft.JSInterop
+@using AutosPALibrary.Dtos
+
 @inject NavigationManager Nav
-@inject IJSRuntime JS
 @inject HttpClient Http
+@inject IJSRuntime JS
+@inject AutosPA.Services.SessionAuthenticationStateProvider SesionAuth
 
 <PageTitle>FlexiCar — Cuenta</PageTitle>
 
@@ -453,29 +459,6 @@
         box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
     }
 
-    .ac-loading {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        min-height: 180px;
-        color: #6b7a90;
-        font-size: 15px;
-    }
-
-    .ac-loading-spinner {
-        width: 22px;
-        height: 22px;
-        border: 3px solid #e6ebf2;
-        border-top-color: #1f8a5b;
-        border-radius: 50%;
-        animation: ac-spin .8s linear infinite;
-    }
-
-    @@keyframes ac-spin {
-        to { transform: rotate(360deg); }
-    }
-
     @@media (max-width: 800px) {
         .ac-page {
             padding: 28px 14px 0;
@@ -509,16 +492,6 @@
         <p>Administra tus datos y la seguridad de tu cuenta.</p>
     </header>
 
-    @if (cargando)
-    {
-        <div class="ac-loading" role="status" aria-live="polite">
-            <span class="ac-loading-spinner" aria-hidden="true"></span>
-            <span>Cargando los datos de tu cuenta...</span>
-        </div>
-    }
-    else
-    {
-
     <!-- Perfil -->
     <section class="ac-profile">
         <div class="ac-avatar">@Iniciales</div>
@@ -526,7 +499,7 @@
         <div class="ac-who">
             <h2>@nombre</h2>
             <p>@correo</p>
-            <span class="ac-badge">Cliente</span>
+            <span class="ac-badge">@rol</span>
         </div>
 
         @if (!editando)
@@ -546,14 +519,26 @@
 
         <div class="ac-fields">
             <div class="ac-field">
-                <label>Nombre completo</label>
+                <label>Nombres</label>
                 @if (!editando)
                 {
-                    <b>@nombre</b>
+                    <b>@nombres</b>
                 }
                 else
                 {
-                    <input class="ac-input" @bind="eNombre" placeholder="Nombre completo" />
+                    <input class="ac-input" @bind="eNombres" />
+                }
+            </div>
+
+            <div class="ac-field">
+                <label>Apellidos</label>
+                @if (!editando)
+                {
+                    <b>@apellidos</b>
+                }
+                else
+                {
+                    <input class="ac-input" @bind="eApellidos" />
                 }
             </div>
 
@@ -565,8 +550,7 @@
                 }
                 else
                 {
-                    <input class="ac-input" @bind="eCorreo" placeholder="Correo electrónico" readonly />
-                    <small>El cambio del correo de acceso estará disponible cuando se pueda sincronizar con Supabase Auth.</small>
+                    <input class="ac-input" value="@correo" readonly />
                 }
             </div>
 
@@ -583,23 +567,6 @@
             </div>
 
             <div class="ac-field">
-                <label>NIT para facturación</label>
-                <b>@(string.IsNullOrWhiteSpace(nit) ? "CF" : nit)</b>
-            </div>
-
-            <div class="ac-field">
-                <label>Dirección</label>
-                @if (string.IsNullOrWhiteSpace(direccionFactura))
-                {
-                    <b class="muted">Sin registrar</b>
-                }
-                else
-                {
-                    <b>@direccionFactura</b>
-                }
-            </div>
-
-            <div class="ac-field">
                 <label>Contraseña</label>
                 <div class="ac-field-row">
                     <b>••••••••••</b>
@@ -609,7 +576,7 @@
 
             <div class="ac-field">
                 <label>Miembro desde</label>
-                <b>Enero 2025</b>
+                <b>@(fechaRegistro?.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-GT")) ?? "No disponible")</b>
             </div>
 
             <div class="ac-field">
@@ -617,19 +584,26 @@
                 <b>Cliente</b>
             </div>
         </div>
+               
 
         @if (editando)
         {
             <div class="ac-edit-bar">
-                <button type="button" class="ac-btn ac-btn-outline" @onclick="() => editando = false">Cancelar</button>
-                <button type="button" class="ac-btn ac-btn-solid"
-        disabled="@guardando"
-        @onclick="GuardarPerfil">
-    @(guardando ? "Guardando..." : "Guardar cambios")
-</button>
+                <button type="button"
+                        class="ac-btn ac-btn-outline"
+                        @onclick="CancelarEdicion">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="ac-btn ac-btn-solid"
+                        @onclick="GuardarPerfil">
+                    Guardar cambios
+                </button>
             </div>
         }
     </section>
+        
 
     <!-- Actividad -->
     <section class="ac-card">
@@ -639,20 +613,25 @@
                 <small>Resumen de tu historial en FlexiCar.</small>
             </div>
         </div>
+
         <div class="ac-stats">
-    <div class="ac-stat">
-        <b>@totalVehiculos</b>
-        <small>Vehículos registrados</small>
-    </div>
-    <div class="ac-stat">
-        <b>@citasProximas</b>
-        <small>Citas próximas</small>
-    </div>
-    <div class="ac-stat">
-        <b>@serviciosCompletados</b>
-        <small>Servicios completados</small>
-    </div>
-</div>
+            <div class="ac-stat">
+                <b>@(cargandoEstadisticas ? "..." : vehiculosRegistrados.ToString())</b>
+                <small>Vehículos registrados</small>
+            </div>
+
+            <div class="ac-stat">
+                <b>@(cargandoEstadisticas ? "..." : citasProximas.ToString())</b>
+                <small>Citas próximas</small>
+            </div>
+
+            <div class="ac-stat">
+                <b>@(cargandoEstadisticas ? "..." : serviciosCompletados.ToString())</b>
+                <small>Servicios completados</small>
+            </div>
+        </div>
+
+
     </section>
 
     <!-- Preferencias -->
@@ -663,14 +642,6 @@
             </div>
         </div>
 
-        <button type="button" class="ac-pref" @onclick="@(() => AbrirModal("facturacion"))">
-            <span class="ac-ico">
-                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h4" /></svg>
-            </span>
-            <span class="ac-pref-text"><b>Facturación</b><small>NIT, nombre y dirección para tus facturas</small></span>
-            <svg class="ac-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
-        </button>
-
         <button type="button" class="ac-pref" @onclick="@(() => AbrirModal("logout"))">
             <span class="ac-ico">
                 <svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4" /><path d="M16 8l4 4-4 4M20 12H9" /></svg>
@@ -680,15 +651,6 @@
         </button>
     </section>
 
-    <!-- Eliminar cuenta -->
-    <section class="ac-danger">
-        <div>
-            <b>Eliminar cuenta</b>
-            <small>Se borrarán tus datos, vehículos y citas de forma permanente.</small>
-        </div>
-        <button type="button" class="ac-btn ac-btn-danger-outline" @onclick="@(() => AbrirModal("eliminar"))">Eliminar</button>
-    </section>
-    }
 </div>
 
 @if (modal is not null)
@@ -712,24 +674,10 @@
                 }
                 <div class="ac-modal-actions">
                     <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="ac-btn ac-btn-solid" disabled="@cambiandoPassword" @onclick="CambiarPassword">@(cambiandoPassword ? "Actualizando..." : "Guardar")</button>
+                    <button type="button" class="ac-btn ac-btn-solid" @onclick="CambiarPassword">Guardar</button>
                 </div>
             }
-            else if (modal == "facturacion")
-            {
-                <h3>Datos de facturación</h3>
-                <p>Los usaremos en las facturas de tus servicios.</p>
-                <label class="ac-label">NIT</label>
-                <input class="ac-input" @bind="nit" placeholder="CF o tu NIT" />
-                <label class="ac-label">Nombre para la factura</label>
-                <input class="ac-input" @bind="nombreFactura" />
-                <label class="ac-label">Dirección</label>
-                <input class="ac-input" @bind="direccionFactura" placeholder="Zona, ciudad" />
-                <div class="ac-modal-actions">
-                    <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="ac-btn ac-btn-solid" @onclick="GuardarFacturacion">Guardar</button>
-                </div>
-            }
+            
             else if (modal == "logout")
             {
                 <h3>¿Cerrar sesión?</h3>
@@ -739,16 +687,7 @@
                     <button type="button" class="ac-btn ac-btn-solid" @onclick="CerrarSesion">Cerrar sesión</button>
                 </div>
             }
-            else if (modal == "eliminar")
-            {
-                <h3 style="color:#b42318;">Eliminar cuenta</h3>
-                <p>Esta acción no se puede deshacer. Se borrarán tus datos, vehículos y citas. Escribe <b>ELIMINAR</b> para confirmar.</p>
-                <input class="ac-input" @bind="confirmacion" @bind:event="oninput" placeholder="ELIMINAR" />
-                <div class="ac-modal-actions">
-                    <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="ac-btn ac-btn-danger" disabled="@(!ConfirmacionValida)" @onclick="EliminarCuenta">Eliminar definitivamente</button>
-                </div>
-            }
+           
 
         </div>
     </div>
@@ -760,259 +699,172 @@
 }
 
 @code {
+
+    private string nombres = "";
+    private string apellidos = "";
+    private string eNombres = "";
+    private string eApellidos = "";
+    private string eTelefono = "";
+    private long idUsuario;
+    private bool cargandoPerfil;
+    private DateTime? fechaRegistro;
+    private string rol = "";
+    private int vehiculosRegistrados;
+    private int citasProximas;
+    private int serviciosCompletados;
+    private bool cargandoEstadisticas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            cargandoPerfil = true;
+
+            var idGuardado = await JS.InvokeAsync<string?>(
+                "sessionStorage.getItem",
+                "flexicar_id_usuario"
+            );
+
+            if (!long.TryParse(idGuardado, out idUsuario) || idUsuario <= 0)
+            {
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            var perfil = await Http.GetFromJsonAsync<PerfilUsuarioDto>(
+                $"api/auth/perfil/{idUsuario}"
+            );
+
+            if (perfil is null)
+                return;
+
+            nombres = perfil.Nombres;
+            apellidos = perfil.Apellidos;
+
+            nombre = $"{nombres} {apellidos}".Trim();
+            correo = perfil.Email;
+            telefono = perfil.Telefono ?? "";
+
+            fechaRegistro = perfil.FechaRegistro;
+            rol = perfil.Rol;
+
+            await CargarEstadisticasAsync();
+        }
+        catch (HttpRequestException)
+        {
+            // Aquí puedes mostrar un mensaje si falla la conexión con la API.
+        }
+        catch (JSException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        finally
+        {
+            cargandoPerfil = false;
+
+        }
+    }
+    // TODO: reemplazar por los datos del usuario logueado (AutosPAService)
     private string nombre = "";
     private string correo = "";
     private string telefono = "";
 
     private bool editando;
-    private bool cargando = true;
-    private bool guardando = false;
-    private bool cambiandoPassword;
+    private string eNombre = "", eCorreo = "";
 
-    private string eNombre = "";
-    private string eCorreo = "";
-    private string eTelefono = "";
-
-    private string nit = "CF";
-    private string nombreFactura = "";
-    private string direccionFactura = "";
-
-    private int totalVehiculos;
-    private int citasProximas;
-    private int serviciosCompletados;
 
     private string? modal;
     private string? errorModal;
-    private string pwActual = "";
-    private string pwNueva = "";
-    private string pwConfirma = "";
-    private string confirmacion = "";
+    private string pwActual = "", pwNueva = "", pwConfirma = "";
     private string? toast;
     private int toastId;
 
     private string Iniciales =>
-        string.Concat(
-            nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Take(2)
-            .Select(p => char.ToUpper(p[0]))
-        );
+        string.Concat(nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpper(p[0])));
 
-    private bool ConfirmacionValida =>
-        confirmacion.Trim().ToUpper() == "ELIMINAR";
-
-    protected override async Task OnInitializedAsync()
-    {
-        var error = await CargarPerfil();
-        if (error is not null)
-            await Aviso(error);
-    }
-
-    private async Task<string?> CargarPerfil(bool mostrarIndicador = true)
-    {
-        try
-        {
-            if (mostrarIndicador)
-                cargando = true;
-
-            using var respuesta = await Http.GetAsync("api/Cliente/perfil");
-            if (!respuesta.IsSuccessStatusCode)
-                return await ObtenerMensajeErrorAsync(respuesta, "No se pudieron cargar los datos de tu cuenta.");
-
-            var perfil = await respuesta.Content.ReadFromJsonAsync<
-                AutosPALibrary.DTOs.PerfilClienteDTO>();
-
-            if (perfil is null)
-                return "El servidor no devolvió los datos del perfil.";
-
-            nombre = $"{perfil.Nombres} {perfil.Apellidos}".Trim();
-            correo = perfil.Email;
-            telefono = perfil.Telefono ?? "";
-
-            nombreFactura = nombre;
-
-            totalVehiculos = perfil.TotalVehiculos;
-            citasProximas = perfil.CitasProximas;
-            serviciosCompletados = perfil.ServiciosCompletados;
-
-            return null;
-        }
-        catch (TaskCanceledException)
-        {
-            return "La consulta del perfil tardó demasiado. Inténtalo de nuevo.";
-        }
-        catch (HttpRequestException)
-        {
-            return "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.";
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            return "El servidor devolvió una respuesta inválida al cargar el perfil.";
-        }
-        catch (Exception)
-        {
-            return "Ocurrió un problema al cargar tu perfil.";
-        }
-        finally
-        {
-            if (mostrarIndicador)
-                cargando = false;
-        }
-    }
+    
 
     private void Editar()
     {
-        eNombre = nombre;
-        eCorreo = correo;
+        eNombres = nombres;
+        eApellidos = apellidos;
         eTelefono = telefono;
+
         editando = true;
     }
 
+    
     private async Task GuardarPerfil()
     {
-        if (guardando)
+        if (string.IsNullOrWhiteSpace(eNombres) ||
+            string.IsNullOrWhiteSpace(eApellidos))
+        {
+            await Aviso("Los nombres y apellidos son obligatorios.");
             return;
-
-        guardando = true;
+        }
 
         try
         {
-            if (string.IsNullOrWhiteSpace(eNombre) ||
-                string.IsNullOrWhiteSpace(eCorreo))
+            var request = new ActualizarPerfilRequest
             {
-                await Aviso("El nombre y el correo son obligatorios.");
-                return;
-            }
-
-            var partesNombre = eNombre.Trim()
-                .Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-
-            if (partesNombre.Length < 2)
-            {
-                await Aviso("Ingresa tus nombres y apellidos.");
-                return;
-            }
-
-            if (!System.Text.RegularExpressions.Regex.IsMatch(
-                eCorreo.Trim(),
-                @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            {
-                await Aviso("Ingresa un correo electrónico válido.");
-                return;
-            }
-
-            var datos = new AutosPALibrary.DTOs.ActualizarPerfilClienteDTO
-            {
-                Nombres = partesNombre[0],
-                Apellidos = partesNombre[1],
-                Email = eCorreo.Trim(),
-                Telefono = eTelefono
+                Nombres = eNombres.Trim(),
+                Apellidos = eApellidos.Trim(),
+                Telefono = string.IsNullOrWhiteSpace(eTelefono)
+                    ? null
+                    : eTelefono.Trim()
             };
 
-            using var respuesta = await Http.PutAsJsonAsync(
-                "api/Cliente/perfil",
-                datos
-            );
+            var respuesta = await Http.PutAsJsonAsync(
+                $"api/auth/perfil/{idUsuario}",
+                request);
 
-            if (respuesta.IsSuccessStatusCode)
+            if (!respuesta.IsSuccessStatusCode)
             {
-                editando = false;
+                var error = await respuesta.Content.ReadAsStringAsync();
 
-                var errorRecarga = await CargarPerfil(mostrarIndicador: false);
-                if (errorRecarga is null)
-                    await Aviso("Perfil actualizado correctamente.");
-                else
-                    await Aviso($"Los cambios se guardaron, pero no se pudieron confirmar al recargar el perfil. {errorRecarga}");
+                await Aviso(
+                    $"No se pudo actualizar el perfil. {error}");
+
+                return;
             }
-            else
-            {
-                await Aviso(await ObtenerMensajeErrorAsync(respuesta, "No se pudieron guardar los cambios."));
-            }
-        }
-        catch (TaskCanceledException)
-        {
-            await Aviso("La solicitud tardó demasiado. Inténtalo de nuevo.");
+
+            nombres = request.Nombres;
+            apellidos = request.Apellidos;
+            telefono = request.Telefono ?? "";
+
+            nombre = $"{nombres} {apellidos}".Trim();
+
+            editando = false;
+
+            await Aviso("Perfil actualizado correctamente.");
         }
         catch (HttpRequestException)
         {
-            await Aviso("No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.");
-        }
-        catch (Exception)
-        {
-            await Aviso("Ocurrió un problema al guardar los cambios.");
-        }
-        finally
-        {
-            guardando = false;
+            await Aviso("No fue posible conectar con el servidor.");
         }
     }
 
-    private static async Task<string> ObtenerMensajeErrorAsync(
-        HttpResponseMessage respuesta,
-        string mensajePredeterminado)
+    private void CancelarEdicion()
     {
-        var cuerpo = await respuesta.Content.ReadAsStringAsync();
-        var mensajeServidor = ExtraerMensajeServidor(cuerpo);
+        eNombres = nombres;
+        eApellidos = apellidos;
+        eTelefono = telefono;
 
-        return (int)respuesta.StatusCode switch
-        {
-            400 => mensajeServidor ?? "Revisa los datos ingresados e inténtalo de nuevo.",
-            401 => "Tu sesión no es válida o venció. Inicia sesión nuevamente.",
-            403 => "No tienes autorización para acceder a este perfil.",
-            404 => "No se encontró el perfil de tu cuenta.",
-            409 => mensajeServidor ?? "No se pudo guardar porque existe un conflicto con los datos actuales.",
-            500 => "Ocurrió un error interno del servidor. Inténtalo más tarde.",
-            >= 500 => "El servidor tuvo un problema. Inténtalo más tarde.",
-            _ => mensajeServidor ?? mensajePredeterminado
-        };
+        editando = false;
     }
-
-    private static string? ExtraerMensajeServidor(string cuerpo)
-    {
-        if (string.IsNullOrWhiteSpace(cuerpo))
-            return null;
-
-        try
-        {
-            using var documento = System.Text.Json.JsonDocument.Parse(cuerpo);
-            if (documento.RootElement.ValueKind == System.Text.Json.JsonValueKind.String)
-                return documento.RootElement.GetString();
-
-            if (documento.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
-            {
-                foreach (var propiedad in new[] { "mensaje", "message", "detail", "title" })
-                {
-                    if (documento.RootElement.TryGetProperty(propiedad, out var valor) &&
-                        valor.ValueKind == System.Text.Json.JsonValueKind.String)
-                        return valor.GetString();
-                }
-            }
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            // Algunos errores del servidor pueden devolver texto plano.
-            return cuerpo.Length <= 300 ? cuerpo : null;
-        }
-
-        return null;
-    }
-
     private void AbrirModal(string nombreModal)
     {
         modal = nombreModal;
         errorModal = null;
-        pwActual = pwNueva = pwConfirma = confirmacion = "";
+       
     }
 
-    private void CerrarModal()
-    {
-        modal = null;
-        errorModal = null;
-    }
+    private void CerrarModal() => modal = null;
 
+    
     private async Task CambiarPassword()
     {
-        if (cambiandoPassword)
-            return;
+        errorModal = null;
 
         if (string.IsNullOrWhiteSpace(pwActual))
         {
@@ -1020,7 +872,7 @@
             return;
         }
 
-        if (pwNueva.Length < 8)
+        if (string.IsNullOrWhiteSpace(pwNueva) || pwNueva.Length < 8)
         {
             errorModal = "La nueva contraseña debe tener al menos 8 caracteres.";
             return;
@@ -1032,99 +884,159 @@
             return;
         }
 
-        cambiandoPassword = true;
-        errorModal = null;
-
         try
         {
-            using var respuesta = await Http.PutAsJsonAsync(
-                "api/Auth/password",
-                new AutosPALibrary.DTOs.CambiarPasswordDTO
-                {
-                    PasswordActual = pwActual,
-                    PasswordNueva = pwNueva
-                });
+            var idGuardado = await JS.InvokeAsync<string?>(
+                "sessionStorage.getItem",
+                "flexicar_id_usuario");
 
-            if (!respuesta.IsSuccessStatusCode)
+            if (!long.TryParse(idGuardado, out var idUsuario) ||
+                idUsuario <= 0)
             {
-                errorModal = await ObtenerMensajeErrorAsync(
-                    respuesta,
-                    "No se pudo cambiar la contraseña.");
+                errorModal = "Tu sesión no es válida. Inicia sesión nuevamente.";
                 return;
             }
 
-            modal = null;
-            pwActual = pwNueva = pwConfirma = "";
-            await LimpiarSesionAsync();
-            toast = "La contraseña se actualizó correctamente. Inicia sesión de nuevo.";
-            StateHasChanged();
-            await Task.Delay(1500);
-            Nav.NavigateTo("/login", forceLoad: true);
-        }
-        catch (TaskCanceledException)
-        {
-            errorModal = "La solicitud tardó demasiado. Inicia sesión para comprobar el estado antes de volver a intentarlo.";
+            var request = new CambiarPasswordRequest
+            {
+                IdUsuario = idUsuario,
+                PasswordActual = pwActual,
+                PasswordNueva = pwNueva
+            };
+
+            var response = await Http.PutAsJsonAsync(
+                "api/auth/cambiar-password",
+                request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var contenido = await response.Content.ReadAsStringAsync();
+
+                try
+                {
+                    using var documento =
+                        System.Text.Json.JsonDocument.Parse(contenido);
+
+                    if (documento.RootElement.TryGetProperty(
+                        "mensaje", out var mensaje))
+                    {
+                        errorModal = mensaje.GetString()
+                            ?? "No se pudo cambiar la contraseña.";
+                        return;
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    // La respuesta no contenía JSON válido.
+                }
+
+                errorModal = "No se pudo cambiar la contraseña.";
+                return;
+            }
+
+            pwActual = string.Empty;
+            pwNueva = string.Empty;
+            pwConfirma = string.Empty;
+
+            CerrarModal();
+
+            await Aviso("Contraseña actualizada.");
         }
         catch (HttpRequestException)
         {
             errorModal = "No se pudo conectar con el servidor.";
         }
-        catch (Exception)
-        {
-            errorModal = "Ocurrió un problema al cambiar la contraseña.";
-        }
-        finally
-        {
-            cambiandoPassword = false;
-        }
     }
 
-    private async Task GuardarFacturacion()
-    {
-        modal = null;
-        await Aviso("Los datos de facturación aún no están conectados a la base de datos.");
-    }
+
 
     private async Task CerrarSesion()
     {
         try
         {
-            await LimpiarSesionAsync();
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_access_token");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_refresh_token");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_id_usuario");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_nombres");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_apellidos");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_rol");
+
+            await SesionAuth.ActualizarEstadoAsync();
 
             modal = null;
 
-            Nav.NavigateTo("/", forceLoad: true);
+            Nav.NavigateTo("/login", forceLoad: true);
         }
-        catch (Exception ex)
+        catch (JSException ex)
         {
-            errorModal = $"No se pudo cerrar la sesión: {ex.Message}";
+            Console.WriteLine($"Error al cerrar sesión: {ex.Message}");
         }
     }
 
-    private async Task LimpiarSesionAsync()
-    {
-        foreach (var key in new[] { "flexicar_token", "flexicar_usuario", "flexicar_rol" })
-        {
-            await JS.InvokeVoidAsync("localStorage.removeItem", key);
-            await JS.InvokeVoidAsync("sessionStorage.removeItem", key);
-        }
-    }
-
-    private async Task EliminarCuenta()
-    {
-        modal = null;
-        await Aviso("La eliminación de cuenta todavía no está habilitada.");
-    }
+    
 
     private async Task Aviso(string mensaje)
     {
         var id = ++toastId;
         toast = mensaje;
         StateHasChanged();
-
         await Task.Delay(2500);
-
-        if (id == toastId)
-            toast = null;
+        if (id == toastId) toast = null;
     }
+
+    private async Task CargarEstadisticasAsync()
+    {
+        try
+        {
+            cargandoEstadisticas = true;
+
+            var estadisticas =
+                await Http.GetFromJsonAsync<EstadisticasCuentaDto>(
+                    $"api/auth/estadisticas/{idUsuario}");
+
+            if (estadisticas is null)
+            {
+                vehiculosRegistrados = 0;
+                citasProximas = 0;
+                serviciosCompletados = 0;
+                return;
+            }
+
+            vehiculosRegistrados = estadisticas.VehiculosRegistrados;
+            citasProximas = estadisticas.CitasProximas;
+            serviciosCompletados = estadisticas.ServiciosCompletados;
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(
+                $"Error al cargar las estadísticas: {ex.Message}");
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            Console.WriteLine(
+                $"Error al interpretar las estadísticas: {ex.Message}");
+        }
+        finally
+        {
+            cargandoEstadisticas = false;
+        }
+    }
+
 }

@@ -1,5 +1,7 @@
-﻿@page "/panel-agente"
+@page "/panel-agente"
 @implements IDisposable
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "AGENTE")]
 @inject NavigationManager Nav
 @inject IAgenteService Servicio
 @inject NavigationManager Navigation
@@ -1397,3 +1399,5 @@
         _ => estado
     };
 }
+
+

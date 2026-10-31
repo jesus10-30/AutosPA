@@ -1,6 +1,10 @@
 ﻿@inherits LayoutComponentBase
+
+@using Microsoft.JSInterop
+
 @inject NavigationManager Navegacion
 @inject IJSRuntime JS
+@inject AutosPA.Services.SessionAuthenticationStateProvider SesionAuth
 
 <style>
     .fc-shell {
@@ -531,23 +535,10 @@
                 </div>
             </div>
 
+            
+            
             <div class="fc-top-right">
-                @if (EsSeccionAgente)
-                {
-                    <div class="fc-top-user">
-                        <div>
-                            <div class="fc-top-user-name">Carlos Ruiz</div>
-                            <div class="fc-top-user-role">Agente</div>
-                        </div>
-                        <div class="fc-top-avatar">CR</div>
-                    </div>
-                }
-                else if (!estaRegistrado)
-                {
-                    <a class="fc-top-login" href="login">Iniciar sesión</a>
-                    <a class="fc-top-reg" href="registro">Regístrate</a>
-                }
-                else
+                @if (estaRegistrado)
                 {
                     <div class="fc-top-user">
                         <div>
@@ -556,8 +547,21 @@
                         </div>
                         <div class="fc-top-avatar">@iniciales</div>
                     </div>
+
+                    <button type="button"
+                            class="fc-top-reg"
+                            @onclick="CerrarSesion">
+                        Cerrar sesión
+                    </button>
+                }
+                else
+                {
+                    <a class="fc-top-login" href="login">Iniciar sesión</a>
+                    <a class="fc-top-reg" href="registro">Regístrate</a>
                 }
             </div>
+            
+
         </header>
 
         <main class="fc-content">
@@ -624,65 +628,163 @@
     </div>
 </div>
 
+
 @code {
     private bool estaRegistrado = false;
 
-    private string nombreUsuario = "Cliente";
-    private string rolUsuario = "Cliente";
-    private string iniciales = "CL";
+    private string nombreUsuario = "";
+    private string rolUsuario = "";
+    private string iniciales = "";
 
-    protected override async Task OnInitializedAsync()
+    private bool EsSeccionAgente =>
+        Navegacion.Uri.Contains(
+            "agente",
+            StringComparison.OrdinalIgnoreCase);
+
+    protected override void OnInitialized()
+    {
+        Navegacion.LocationChanged += AlCambiarUbicacion;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ComprobarSesion();
+        }
+    }
+
+    
+    private async Task ComprobarSesion()
     {
         try
         {
-            var usuario = await JS.InvokeAsync<string?>(
-                "localStorage.getItem", "flexicar_usuario");
+            // Leer el token de acceso.
+            var token = await JS.InvokeAsync<string?>(
+                "sessionStorage.getItem",
+                "flexicar_access_token");
 
-            if (string.IsNullOrWhiteSpace(usuario))
+            estaRegistrado = !string.IsNullOrWhiteSpace(token);
+
+            if (estaRegistrado)
             {
-                usuario = await JS.InvokeAsync<string?>(
-                    "sessionStorage.getItem", "flexicar_usuario");
+                // Leer los datos reales del usuario.
+                var nombres = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem",
+                    "flexicar_nombres");
+
+                var apellidos = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem",
+                    "flexicar_apellidos");
+
+                var rol = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem",
+                    "flexicar_rol");
+
+                // Mostrar nombre y apellido.
+                nombreUsuario = $"{nombres} {apellidos}".Trim();
+
+                if (string.IsNullOrWhiteSpace(nombreUsuario))
+                    nombreUsuario = "Usuario";
+
+                // Mostrar el rol.
+                rolUsuario = string.IsNullOrWhiteSpace(rol)
+                    ? "Usuario"
+                    : rol.Trim();
+
+                // Calcular las iniciales.
+                iniciales = ObtenerIniciales(nombres, apellidos);
             }
-
-            if (string.IsNullOrWhiteSpace(usuario))
+            else
             {
-                estaRegistrado = false;
-                return;
+                nombreUsuario = "";
+                rolUsuario = "";
+                iniciales = "";
             }
-
-            var rol = await JS.InvokeAsync<string?>(
-                "localStorage.getItem", "flexicar_rol");
-
-            if (string.IsNullOrWhiteSpace(rol))
-            {
-                rol = await JS.InvokeAsync<string?>(
-                    "sessionStorage.getItem", "flexicar_rol");
-            }
-
-            estaRegistrado = true;
-
-            rolUsuario = rol switch
-            {
-                "1" => "Cliente",
-                "2" => "Agente",
-                "3" => "Administrador",
-                _ => "Usuario"
-            };
-
-            nombreUsuario = rolUsuario;
-            iniciales = rolUsuario == "Administrador" ? "AD" :
-                        rolUsuario == "Agente" ? "AG" : "CL";
-        }
-        catch (InvalidOperationException)
-        {
-            estaRegistrado = false;
         }
         catch (JSException)
         {
             estaRegistrado = false;
+            nombreUsuario = "";
+            rolUsuario = "";
+            iniciales = "";
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string ObtenerIniciales(
+        string? nombres,
+        string? apellidos)
+    {
+        var primerNombre = nombres?
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        var primerApellido = apellidos?
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        var inicialNombre = string.IsNullOrWhiteSpace(primerNombre)
+            ? ""
+            : primerNombre[..1].ToUpperInvariant();
+
+        var inicialApellido = string.IsNullOrWhiteSpace(primerApellido)
+            ? ""
+            : primerApellido[..1].ToUpperInvariant();
+
+        return inicialNombre + inicialApellido;
+    }
+
+
+    private void AlCambiarUbicacion(
+        object? sender,
+        Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        _ = InvokeAsync(ComprobarSesion);
+    }
+
+    private async Task CerrarSesion()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_access_token");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_refresh_token");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_nombres");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_apellidos");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_rol");
+
+            await SesionAuth.ActualizarEstadoAsync();
+            estaRegistrado = false;
+
+            nombreUsuario = "Est. Jiménez";
+            rolUsuario = "Cliente";
+            iniciales = "EJ";
+
+            Navegacion.NavigateTo("/login");
+        }
+        catch (JSException)
+        {
+            // No cambiar la interfaz si falla la eliminación de los tokens.
         }
     }
 
-    private bool EsSeccionAgente =>
-        Navegacion.Uri.ToLower().Contains("agente");
+    public void Dispose()
+    {
+        Navegacion.LocationChanged -= AlCambiarUbicacion;
+    }
 }
