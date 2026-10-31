@@ -890,7 +890,8 @@
         }
     }
 
-    private bool PuedeIniciar(Trabajo t) => Hoy >= t.Fecha.Date;
+    private bool PuedeIniciar(Trabajo t) =>
+        t.SolicitudId is null && Hoy >= t.Fecha.Date;
 
     private bool Excedido(Trabajo t) => t.Inicio is not null && (DateTime.Now - t.Inicio.Value).TotalMinutes > t.EstimadoMin;
 

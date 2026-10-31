@@ -1322,6 +1322,10 @@
 
         try
         {
+            // El catálogo es público y debe estar disponible aunque el usuario
+            // todavía no haya iniciado sesión.
+            await CargarServiciosAsync();
+
             var idGuardado = await JS.InvokeAsync<string?>(
                 "sessionStorage.getItem",
                 "flexicar_id_usuario");
@@ -1340,7 +1344,6 @@
                 await CargarCatalogosVehiculoAsync();
                 await CargarVehiculosAsync();
                 await CargarCitasAsync();
-                await CargarServiciosAsync();
                 await CargarAgentesAsync();
                 await CargarDisponibilidadAsync();
                 await InvokeAsync(StateHasChanged);
@@ -1358,8 +1361,11 @@
             Console.Error.WriteLine($"Error al leer la sesión: {ex.Message}");
         }
 
-        await CargarAgentesAsync();
-        await CargarDisponibilidadAsync();
+        if (!sesionIniciada)
+        {
+            await CargarAgentesAsync();
+            await CargarDisponibilidadAsync();
+        }
         await InvokeAsync(StateHasChanged);
     }
     private async Task CargarServiciosAsync()
@@ -1531,6 +1537,8 @@
         citas.Where(c => EstadoEs(
                 c.Estado,
                 "PENDIENTE",
+                "CONFIRMADA",
+                "EN_PROCESO",
                 "APROBADA",
                 "EN ESPERA",
                 "Aprobada",
