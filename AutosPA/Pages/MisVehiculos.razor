@@ -1,4 +1,4 @@
-﻿@page "/mis-vehiculos"
+@page "/mis-vehiculos"
 @using System.Globalization
 @using System.Net.Http.Json
 @inject HttpClient Http
@@ -1106,12 +1106,24 @@ else if (modal == "eliminar" && sel is not null)
                 docTipo = tiposDoc.First().IdTipoDocumento;
 
             var usuarioGuardado = await JS.InvokeAsync<string?>(
-                "localStorage.getItem", "flexicar_usuario");
+                "sessionStorage.getItem", "flexicar_id_usuario");
+
+            if (string.IsNullOrWhiteSpace(usuarioGuardado))
+            {
+                usuarioGuardado = await JS.InvokeAsync<string?>(
+                    "localStorage.getItem", "flexicar_id_usuario");
+            }
 
             if (string.IsNullOrWhiteSpace(usuarioGuardado))
             {
                 usuarioGuardado = await JS.InvokeAsync<string?>(
                     "sessionStorage.getItem", "flexicar_usuario");
+            }
+
+            if (string.IsNullOrWhiteSpace(usuarioGuardado))
+            {
+                usuarioGuardado = await JS.InvokeAsync<string?>(
+                    "localStorage.getItem", "flexicar_usuario");
             }
 
             if (!long.TryParse(usuarioGuardado, out idUsuario))
@@ -1282,7 +1294,7 @@ private async Task CargarHistorial(Vehiculo v)
     try
     {
         var citas = await Http.GetFromJsonAsync<List<CitaHistorialDTO>>(
-            $"api/Citas/cliente/{idUsuario}") ?? new();
+            $"api/Citas/cliente/{idUsuario}/historial") ?? new();
 
         v.Historial = citas
             .Where(c =>
@@ -1575,4 +1587,3 @@ private async Task CargarHistorial(Vehiculo v)
         StateHasChanged();
     }
 }
-

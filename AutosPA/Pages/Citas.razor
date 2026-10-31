@@ -1,4 +1,4 @@
-﻿@page "/citas"
+@page "/citas"
 @page "/citas/nueva"
 
 @using System.Globalization
@@ -1326,6 +1326,13 @@
                 "sessionStorage.getItem",
                 "flexicar_id_usuario");
 
+            if (string.IsNullOrWhiteSpace(idGuardado))
+                idGuardado = await JS.InvokeAsync<string?>("localStorage.getItem", "flexicar_id_usuario");
+            if (string.IsNullOrWhiteSpace(idGuardado))
+                idGuardado = await JS.InvokeAsync<string?>("sessionStorage.getItem", "flexicar_usuario");
+            if (string.IsNullOrWhiteSpace(idGuardado))
+                idGuardado = await JS.InvokeAsync<string?>("localStorage.getItem", "flexicar_usuario");
+
             if (long.TryParse(idGuardado, out var id) && id > 0)
             {
                 idCliente = id;
@@ -1455,15 +1462,40 @@
 
             await InvokeAsync(StateHasChanged);
 
-            var resultado = await Http.GetFromJsonAsync<List<CitaClienteDto>>(
+            using var respuesta = await Http.GetAsync(
                 $"api/Citas/cliente/{idCliente}");
 
-            citas = resultado ?? new List<CitaClienteDto>();
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                errorCarga = respuesta.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.Unauthorized => "Tu sesión venció. Inicia sesión nuevamente.",
+                    System.Net.HttpStatusCode.Forbidden => "No tienes permiso para consultar estas citas.",
+                    System.Net.HttpStatusCode.NotFound => "No se encontró el historial de citas.",
+                    var estado when (int)estado >= 500 => "El backend tuvo un error al consultar tus citas. Intenta nuevamente.",
+                    _ => $"El backend respondió con el código {(int)respuesta.StatusCode}."
+                };
+                Console.Error.WriteLine($"Error al cargar citas: HTTP {(int)respuesta.StatusCode}");
+                return;
+            }
+
+            citas = await respuesta.Content.ReadFromJsonAsync<List<CitaClienteDto>>()
+                ?? new List<CitaClienteDto>();
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            errorCarga = "No fue posible cargar tus citas. Verifica la conexión con el backend.";
-            Console.Error.WriteLine($"Error al cargar citas: {ex.Message}");
+            errorCarga = "No se pudo conectar con el backend. Verifica que la API esté ejecutándose.";
+            Console.Error.WriteLine($"Error de conexión al cargar citas: {ex.Message}");
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            errorCarga = "El backend devolvió datos de citas con un formato no válido.";
+            Console.Error.WriteLine($"Error al interpretar citas: {ex.Message}");
+        }
+        catch (TaskCanceledException ex)
+        {
+            errorCarga = "La consulta de citas tardó demasiado. Intenta nuevamente.";
+            Console.Error.WriteLine($"Tiempo de espera al cargar citas: {ex.Message}");
         }
         finally
         {

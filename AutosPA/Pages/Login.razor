@@ -1,4 +1,4 @@
-﻿@page "/login"
+@page "/login"
 @layout AuthLayout
 
 @using System.Net
@@ -10,6 +10,7 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject AutosPA.Services.SessionAuthenticationStateProvider SesionAuth
+@inject Supabase.Client Supabase
 
 <PageTitle>FlexiCar — Iniciar sesión</PageTitle>
 
@@ -278,6 +279,13 @@
                 return;
             }
 
+            // El panel del agente consulta Supabase directamente, así que
+            // también se establece la sesión del SDK para ese rol.
+            if (string.Equals(resultado.Rol.Trim(), "AGENTE", StringComparison.OrdinalIgnoreCase))
+            {
+                await Supabase.Auth.SignIn(correo.Trim(), password);
+            }
+
             // 7. Guardar el token de acceso.
             await JS.InvokeVoidAsync(
                 "sessionStorage.setItem",
@@ -336,6 +344,11 @@
                 "flexicar_rol",
                 resultado.Rol.Trim()
             );
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_token");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_id_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_rol");
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_usuario");
             await SesionAuth.ActualizarEstadoAsync();
 
             // 11. Limpiar la contraseña y redirigir.
@@ -353,6 +366,10 @@
         catch (System.Text.Json.JsonException)
         {
             error = "La API devolvió una respuesta que no se pudo interpretar.";
+        }
+        catch (Exception)
+        {
+            error = "No se pudo completar el inicio de sesión. Intenta nuevamente.";
         }
         finally
         {

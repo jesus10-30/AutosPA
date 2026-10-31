@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 @using Microsoft.JSInterop
 
@@ -763,6 +763,14 @@
             await JS.InvokeVoidAsync(
                 "sessionStorage.removeItem",
                 "flexicar_apellidos");
+
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_id_usuario");
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_email");
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_token");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_id_usuario");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_rol");
 
             await JS.InvokeVoidAsync(
                 "sessionStorage.removeItem",

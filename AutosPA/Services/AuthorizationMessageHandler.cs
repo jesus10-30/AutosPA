@@ -17,16 +17,16 @@ public class AuthorizationMessageHandler : DelegatingHandler
         CancellationToken cancellationToken)
     {
         var token = await _js.InvokeAsync<string?>(
-            "localStorage.getItem",
+            "sessionStorage.getItem",
             cancellationToken,
-            "flexicar_token");
+            "flexicar_access_token");
 
         if (string.IsNullOrWhiteSpace(token))
         {
             token = await _js.InvokeAsync<string?>(
-                "sessionStorage.getItem",
+                "localStorage.getItem",
                 cancellationToken,
-                "flexicar_access_token");
+                "flexicar_token");
         }
 
         if (!string.IsNullOrWhiteSpace(token))
@@ -38,4 +38,3 @@ public class AuthorizationMessageHandler : DelegatingHandler
         return await base.SendAsync(request, cancellationToken);
     }
 }
-
