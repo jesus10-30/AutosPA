@@ -21,6 +21,14 @@ public class AuthorizationMessageHandler : DelegatingHandler
             cancellationToken,
             "flexicar_token");
 
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            token = await _js.InvokeAsync<string?>(
+                "sessionStorage.getItem",
+                cancellationToken,
+                "flexicar_access_token");
+        }
+
         if (!string.IsNullOrWhiteSpace(token))
         {
             request.Headers.Authorization =
@@ -30,3 +38,4 @@ public class AuthorizationMessageHandler : DelegatingHandler
         return await base.SendAsync(request, cancellationToken);
     }
 }
+

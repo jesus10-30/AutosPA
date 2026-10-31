@@ -1,151 +1,200 @@
-using System.Net.Http.Json;
-using System.Text.Json;
-using AutosPAService.Data;
+﻿using AutosPALibrary.Dtos;
 using AutosPAService.Services;
-using AutosPALibrary.DTOs;
-using Microsoft.AspNetCore.Authorization;
+using AutosPAService.Services.Registro;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace AutosPAService.Controllers
+namespace AutosPAService.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+
+    private readonly AuthService _authService;
+    private readonly IRegistroService _registroService;
+
+    public AuthController(
+        AuthService authService,
+        IRegistroService registroService)
     {
-        private readonly ApplicationDbContext _context;
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
-        private readonly AutenticacionService _autenticacionService;
+        _authService = authService;
+        _registroService = registroService;
+    }
 
-        public AuthController(
-            ApplicationDbContext context,
-            HttpClient httpClient,
-            IConfiguration configuration,
-            AutenticacionService autenticacionService)
+
+    [HttpPost("login")]
+    public async Task<ActionResult<LoginResponse>> Login(
+        [FromBody] LoginRequest request)
+    {
+        var resultado =
+            await _authService.IniciarSesionAsync(request);
+
+        if (resultado is null)
         {
-            _context = context;
-            _httpClient = httpClient;
-            _configuration = configuration;
-            _autenticacionService = autenticacionService;
-        }
-
-        [Authorize]
-        [HttpPut("password")]
-        public async Task<IActionResult> CambiarPassword(
-            [FromBody] CambiarPasswordDTO solicitud)
-        {
-            if (!Guid.TryParse(
-                    User.FindFirst("supabase_user_id")?.Value,
-                    out var authUserId))
-                return Unauthorized(new { mensaje = "La sesión no es válida." });
-
-            if (string.IsNullOrEmpty(solicitud.PasswordActual) ||
-                string.IsNullOrEmpty(solicitud.PasswordNueva) ||
-                solicitud.PasswordNueva.Length < 8)
-                return BadRequest(new { mensaje = "La nueva contraseña debe tener al menos 8 caracteres." });
-
-            if (string.Equals(solicitud.PasswordActual, solicitud.PasswordNueva, StringComparison.Ordinal))
-                return BadRequest(new { mensaje = "La contraseña nueva debe ser diferente a la actual." });
-
-            var token = Request.Headers.Authorization.ToString();
-            if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                token = token["Bearer ".Length..].Trim();
-
-            var resultado = await _autenticacionService.CambiarPasswordAsync(
-                authUserId,
-                token,
-                solicitud);
-
-            return resultado switch
+            return Unauthorized(new
             {
-                ResultadoCambioPassword.Exito => NoContent(),
-                ResultadoCambioPassword.SesionInvalida =>
-                    Unauthorized(new { mensaje = "La sesión venció. Inicia sesión nuevamente." }),
-                ResultadoCambioPassword.PasswordActualIncorrecta =>
-                    BadRequest(new { mensaje = "La contraseña actual no es correcta." }),
-                ResultadoCambioPassword.PasswordNuevaInvalida =>
-                    BadRequest(new { mensaje = "Supabase Auth rechazó la nueva contraseña. Revisa los requisitos configurados." }),
-                ResultadoCambioPassword.ReautenticacionAdicionalRequerida =>
-                    Conflict(new { mensaje = "Supabase Auth requiere un código adicional para confirmar el cambio. Este flujo todavía no está configurado." }),
-                _ => StatusCode(StatusCodes.Status502BadGateway,
-                    new { mensaje = "No se pudo completar el cambio de contraseña con Supabase Auth." })
-            };
-        }
-
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
-        {
-            var supabaseUrl = _configuration["Supabase:Url"];
-            var supabaseKey = _configuration["Supabase:PublishableKey"];
-
-            if (string.IsNullOrWhiteSpace(supabaseUrl) ||
-                string.IsNullOrWhiteSpace(supabaseKey))
-            {
-                return StatusCode(500, new
-                {
-                    mensaje = "La configuración de Supabase está incompleta."
-                });
-            }
-
-            var url = $"{supabaseUrl.TrimEnd('/')}/auth/v1/token?grant_type=password";
-
-            using var mensaje = new HttpRequestMessage(HttpMethod.Post, url);
-
-            mensaje.Headers.Add("apikey", supabaseKey);
-
-            mensaje.Content = JsonContent.Create(new
-            {
-                email = request.Correo,
-                password = request.Password
+                mensaje = "Credenciales incorrectas o cuenta no habilitada."
             });
+        }
 
-            using var respuesta = await _httpClient.SendAsync(mensaje);
+        return Ok(resultado);
+    }
 
-            if (!respuesta.IsSuccessStatusCode)
+    [HttpGet("perfil/{idUsuario:long}")]
+    public async Task<ActionResult<PerfilUsuarioDto>> ObtenerPerfil(long idUsuario)
+    {
+        if (idUsuario <= 0)
+        {
+            return BadRequest(new
             {
-                return Unauthorized(new
-                {
-                    mensaje = "Correo o contraseña incorrectos."
-                });
-            }
+                mensaje = "El ID del usuario no es válido."
+            });
+        }
 
-            using var contenido = await JsonDocument.ParseAsync(
-                await respuesta.Content.ReadAsStreamAsync()
-            );
+        var perfil = await _authService.ObtenerPerfilAsync(idUsuario);
 
-            var token = contenido.RootElement
-                .GetProperty("access_token")
-                .GetString();
-
-            var authUserId = contenido.RootElement
-                .GetProperty("user")
-                .GetProperty("id")
-                .GetGuid();
-
-            var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.AuthUserId == authUserId);
-
-            if (usuario == null)
+        if (perfil is null)
+        {
+            return NotFound(new
             {
-                return StatusCode(403, new
+                mensaje = "No se encontró el usuario."
+            });
+        }
+
+        return Ok(perfil);
+    }
+
+
+    [HttpPut("perfil/{idUsuario:long}")]
+    public async Task<IActionResult> ActualizarPerfil(
+        long idUsuario,
+        [FromBody] ActualizarPerfilRequest request)
+    {
+        if (idUsuario <= 0)
+        {
+            return BadRequest(new
+            {
+                mensaje = "El ID del usuario no es válido."
+            });
+        }
+
+        try
+        {
+            var actualizado = await _authService.ActualizarPerfilAsync(
+                idUsuario,
+                request);
+
+            if (!actualizado)
+            {
+                return NotFound(new
                 {
-                    mensaje = "La cuenta existe en Supabase, pero no está vinculada a un usuario de AutosPA."
+                    mensaje = "No se encontró el usuario."
                 });
             }
 
             return Ok(new
             {
-                token = token,
-                idUsuario = usuario.IdUsuario,
-                idRol = usuario.IdRol
+                mensaje = "El perfil se actualizó correctamente."
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                mensaje = ex.Message
             });
         }
     }
 
-    public class LoginRequest
+
+
+    [HttpPost("registro")]
+    public async Task<IActionResult> Registrar(
+        [FromBody] RegistroRequest request)
     {
-        public string Correo { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
+        try
+        {
+            var registrado = await _registroService.RegistrarAsync(request);
+
+            if (!registrado)
+            {
+                return Conflict(new
+                {
+                    mensaje = "No se pudo completar el registro. Verifica si el correo ya está registrado."
+                });
+            }
+
+            return Ok(new
+            {
+                mensaje = "Tu cuenta de FlexiCar se creó correctamente."
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
     }
+
+    [HttpPut("cambiar-password")]
+    public async Task<IActionResult> CambiarPassword(
+        [FromBody] CambiarPasswordRequest request)
+    {
+        try
+        {
+            var cambiado = await _authService.CambiarPasswordAsync(request);
+
+            if (!cambiado)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "No se pudo cambiar la contraseña. Verifica tu contraseña actual."
+                });
+            }
+
+            return Ok(new
+            {
+                mensaje = "La contraseña se actualizó correctamente."
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+    }
+
+
+    [HttpGet("estadisticas/{idUsuario:long}")]
+    public async Task<ActionResult<EstadisticasCuentaDto>> ObtenerEstadisticasCuenta(
+        long idUsuario)
+    {
+        if (idUsuario <= 0)
+        {
+            return BadRequest(new
+            {
+                mensaje = "El ID del usuario no es válido."
+            });
+        }
+
+        var estadisticas =
+            await _authService.ObtenerEstadisticasCuentaAsync(idUsuario);
+
+        if (estadisticas is null)
+        {
+            return NotFound(new
+            {
+                mensaje = "No se encontró el usuario."
+            });
+        }
+
+        return Ok(estadisticas);
+    }
+
+
+
 }
