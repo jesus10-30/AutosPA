@@ -1,4 +1,7 @@
-﻿@page "/"
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@page "/"
 @page "/inicio"
 
 <PageTitle>FlexiCar — Inicio</PageTitle>
@@ -321,8 +324,38 @@
     <h1>Agenda el <span class="fx-accent">mantenimiento</span> de tu vehículo en minutos</h1>
     <p>Elige fecha, hora y agente. Nosotros calculamos el costo y el tiempo estimado por ti.</p>
     <div class="fx-hero-cta">
-        <a class="fx-btn fx-btn-light" href="citas/nueva">Agendar una cita</a>
-        <a class="fx-btn fx-btn-ghost" href="mis-vehiculos">Ver mis vehículos</a>
+
+        @if (!sesionIniciada)
+        {
+            <a class="fx-btn fx-btn-light" href="login">
+                Iniciar sesión
+            </a>
+
+            <a class="fx-btn fx-btn-ghost" href="registro">
+                Crear cuenta
+            </a>
+        }
+        else
+        {
+            <span class="fx-btn fx-btn-light">
+                Sesión iniciada
+            </span>
+
+            <button type="button"
+                    class="fx-btn fx-btn-ghost"
+                    @onclick="CerrarSesion">
+                Cerrar sesión
+            </button>
+        }
+
+        <a class="fx-btn fx-btn-light" href="citas/nueva">
+            Agendar una cita
+        </a>
+
+        <a class="fx-btn fx-btn-ghost" href="mis-vehiculos">
+            Ver mis vehículos
+        </a>
+
     </div>
 </section>
 
@@ -433,6 +466,55 @@
 
 @code {
     private record Agente(string Nombre, string Especialidad, string Iniciales, int Anios, bool Disponible, string Bio);
+    private bool sesionIniciada;
+    private bool comprobandoSesion = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string?>(
+                "sessionStorage.getItem",
+                "flexicar_access_token");
+
+            sesionIniciada = !string.IsNullOrWhiteSpace(token);
+        }
+        catch (JSException)
+        {
+            sesionIniciada = false;
+        }
+        finally
+        {
+            comprobandoSesion = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CerrarSesion()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_access_token");
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.removeItem",
+                "flexicar_refresh_token");
+
+            sesionIniciada = false;
+
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        catch (JSException)
+        {
+            // No indicar que se cerró sesión si no se pudieron
+            // eliminar los tokens del navegador.
+        }
+    }
 
     // TODO: reemplazar por los agentes reales cuando exista el servicio de agentes
     private List<Agente> agentes = new()

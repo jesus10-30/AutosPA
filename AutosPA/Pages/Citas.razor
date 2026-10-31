@@ -1,6 +1,14 @@
 ﻿@page "/citas"
 @page "/citas/nueva"
+
 @using System.Globalization
+@using System.Net.Http.Json
+@using AutosPALibrary.Dtos
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+
+@inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>FlexiCar — Citas</PageTitle>
 
@@ -26,7 +34,7 @@
 
     .ct-head h1 {
         margin: 0 0 8px;
-        font-size: clamp(32px, 4vw, 44px);
+        font-size: clamp(32px,4vw,44px);
         font-weight: 700;
         color: #0f2a4a;
     }
@@ -39,7 +47,6 @@
         color: #6b7a90;
     }
 
-    /* Aviso de inicio de sesión */
     .ct-gate {
         display: flex;
         align-items: center;
@@ -63,23 +70,23 @@
             font-weight: 600;
             text-decoration: none;
             background: #14406f;
-            color: #ffffff;
+            color: #fff;
             margin-left: 8px;
         }
 
     .ct-layout {
         display: grid;
-        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0,1.3fr) minmax(0,1fr);
         gap: 28px;
         align-items: start;
     }
 
     .ct-card {
-        background: #ffffff;
+        background: #fff;
         border: 1px solid #e6ebf2;
         border-radius: 20px;
         padding: 28px;
-        box-shadow: 0 4px 16px rgba(15, 42, 74, .06);
+        box-shadow: 0 4px 16px rgba(15,42,74,.06);
     }
 
     .ct-card-title {
@@ -117,7 +124,7 @@
         height: 26px;
         border-radius: 50%;
         background: #14406f;
-        color: #ffffff;
+        color: #fff;
         font-size: 12px;
         font-weight: 700;
     }
@@ -143,8 +150,7 @@
 
         .ct-input:focus {
             outline: 2px solid #1f5fa8;
-            outline-offset: 0;
-            background: #ffffff;
+            background: #fff;
         }
 
     .ct-hint {
@@ -206,14 +212,13 @@
         border: 0;
         border-radius: 9px;
         background: #14406f;
-        color: #ffffff;
+        color: #fff;
         font-family: inherit;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
     }
 
-    /* Documentos */
     .ct-drop {
         display: flex;
         flex-direction: column;
@@ -227,7 +232,6 @@
         font-size: 13px;
         color: #4a5a70;
         cursor: pointer;
-        transition: background .2s, border-color .2s;
     }
 
         .ct-drop:hover {
@@ -291,7 +295,6 @@
             cursor: pointer;
         }
 
-    /* Servicios */
     .ct-services {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -305,11 +308,10 @@
         padding: 12px 14px;
         border: 1.5px solid #e1e9f3;
         border-radius: 12px;
-        background: #ffffff;
+        background: #fff;
         text-align: left;
         font-family: inherit;
         cursor: pointer;
-        transition: border-color .15s, background .15s;
     }
 
         .ct-service:hover {
@@ -332,7 +334,6 @@
         color: #6b7a90;
     }
 
-    /* Agentes */
     .ct-agents {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -347,11 +348,10 @@
         padding: 12px 14px;
         border: 1.5px solid #e1e9f3;
         border-radius: 12px;
-        background: #ffffff;
+        background: #fff;
         text-align: left;
         font-family: inherit;
         cursor: pointer;
-        transition: border-color .15s, background .15s;
     }
 
         .ct-agent:hover:not(:disabled) {
@@ -376,8 +376,8 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #14406f, #1f8a5b);
-        color: #ffffff;
+        background: linear-gradient(135deg,#14406f,#1f8a5b);
+        color: #fff;
         font-size: 13px;
         font-weight: 700;
     }
@@ -418,7 +418,6 @@
         font-weight: 700;
     }
 
-    /* Horarios */
     .ct-slots {
         display: flex;
         flex-wrap: wrap;
@@ -430,13 +429,12 @@
         padding: 9px 14px;
         border: 1.5px solid #dbe3ee;
         border-radius: 10px;
-        background: #ffffff;
+        background: #fff;
         font-family: inherit;
         font-size: 13px;
         font-weight: 600;
         color: #0f2a4a;
         cursor: pointer;
-        transition: border-color .15s, background .15s;
     }
 
         .ct-slot:hover:not(:disabled) {
@@ -446,7 +444,7 @@
         .ct-slot.sel {
             background: #14406f;
             border-color: #14406f;
-            color: #ffffff;
+            color: #fff;
         }
 
         .ct-slot:disabled {
@@ -456,12 +454,11 @@
             cursor: not-allowed;
         }
 
-    /* Estimación */
     .ct-est {
         margin-top: 24px;
         padding: 20px;
         border-radius: 16px;
-        background: linear-gradient(135deg, #eef4fb, #f1f9f5);
+        background: linear-gradient(135deg,#eef4fb,#f1f9f5);
         border: 1px solid #dbe7f3;
     }
 
@@ -513,18 +510,17 @@
         padding: 15px;
         border: 0;
         border-radius: 12px;
-        background: linear-gradient(90deg, #14406f, #1f5fa8);
-        color: #ffffff;
+        background: linear-gradient(90deg,#14406f,#1f5fa8);
+        color: #fff;
         font-family: inherit;
         font-size: 15px;
         font-weight: 700;
         cursor: pointer;
-        transition: transform .15s, box-shadow .15s;
     }
 
         .ct-confirm:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: 0 10px 24px rgba(20, 64, 111, .3);
+            box-shadow: 0 10px 24px rgba(20,64,111,.3);
         }
 
         .ct-confirm:disabled {
@@ -532,7 +528,6 @@
             cursor: not-allowed;
         }
 
-    /* Lista de citas */
     .ct-side {
         position: sticky;
         top: 92px;
@@ -558,7 +553,7 @@
 
         .ct-tab.active {
             background: #14406f;
-            color: #ffffff;
+            color: #fff;
         }
 
         .ct-tab span {
@@ -572,10 +567,10 @@
         gap: 14px;
         margin-bottom: 12px;
         padding: 16px;
-        background: #ffffff;
+        background: #fff;
         border: 1px solid #e6ebf2;
         border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(15, 42, 74, .05);
+        box-shadow: 0 2px 8px rgba(15,42,74,.05);
     }
 
     .ct-date {
@@ -618,6 +613,7 @@
         font-size: 12px;
         line-height: 1.5;
         color: #6b7a90;
+        overflow-wrap: anywhere;
     }
 
     .ct-right {
@@ -688,7 +684,6 @@
         color: #4a5a70;
     }
 
-    /* Confirmación */
     .ct-modal-bg {
         position: fixed;
         inset: 0;
@@ -697,7 +692,7 @@
         align-items: center;
         justify-content: center;
         padding: 20px;
-        background: rgba(10, 30, 60, .55);
+        background: rgba(10,30,60,.55);
     }
 
     .ct-modal {
@@ -705,9 +700,9 @@
         max-width: 440px;
         padding: 32px 30px 28px;
         border-radius: 22px;
-        background: #ffffff;
+        background: #fff;
         text-align: center;
-        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+        box-shadow: 0 24px 60px rgba(0,0,0,.35);
     }
 
     .ct-check {
@@ -768,9 +763,10 @@
         .ct-resumen b {
             text-align: right;
             color: #0f2a4a;
+            overflow-wrap: anywhere;
         }
 
-    @@media (max-width: 1000px) {
+    @@media (max-width:1000px) {
         .ct-layout {
             grid-template-columns: 1fr;
         }
@@ -780,7 +776,7 @@
         }
     }
 
-    @@media (max-width: 600px) {
+    @@media (max-width:600px) {
         .ct-page {
             padding: 28px 14px 0;
         }
@@ -792,11 +788,18 @@
         .ct-services, .ct-agents, .ct-grid2 {
             grid-template-columns: 1fr;
         }
+
+        .ct-cita {
+            flex-wrap: wrap;
+        }
+
+        .ct-right {
+            margin-left: auto;
+        }
     }
 </style>
 
 <div class="ct-page">
-
     <header class="ct-head">
         <div class="ct-eyebrow">Agenda tu mantenimiento</div>
         <h1>Citas</h1>
@@ -815,14 +818,14 @@
     }
 
     <div class="ct-layout">
-
-        <!-- ================= FORMULARIO ================= -->
         <section class="ct-card">
             <h2 class="ct-card-title">Nueva cita</h2>
 
-            <!-- 1. Vehículo y conductor -->
             <div class="ct-step" style="border-top:0; margin-top:10px;">
-                <div class="ct-step-head"><span class="ct-num">1</span><h3>Vehículo y conductor</h3></div>
+                <div class="ct-step-head">
+                    <span class="ct-num">1</span>
+                    <h3>Vehículo</h3>
+                </div>
 
                 @if (!sesionIniciada)
                 {
@@ -831,16 +834,37 @@
                 else
                 {
                     <label class="ct-label">Vehículo</label>
-                    <select class="ct-input" @bind="vehiculoId">
-                        @foreach (var v in vehiculos)
-                        {
-                            <option value="@v.Id">@v.Etiqueta</option>
-                        }
-                    </select>
 
-                    @if (VehiculoActual is not null)
+                    @if (cargandoVehiculos)
                     {
-                        <div class="ct-hint">Conductor: @VehiculoActual.Conductor · Licencia: @VehiculoActual.Licencia</div>
+                        <div class="ct-lock">Cargando tus vehículos...</div>
+                    }
+                    else if (errorCargaVehiculos is not null)
+                    {
+                        <div class="ct-error">
+                            @errorCargaVehiculos
+                            <button type="button" class="ct-link" @onclick="CargarVehiculosAsync">Reintentar</button>
+                        </div>
+                    }
+                    else if (!vehiculos.Any())
+                    {
+                        <div class="ct-lock">No tienes vehículos registrados todavía.</div>
+                    }
+                    else
+                    {
+                        <select class="ct-input" @bind="vehiculoId">
+                            @foreach (var v in vehiculos)
+                            {
+                                <option value="@v.IdVehiculo">@($"{v.Marca} {v.Modelo} ({v.Anio}) — {v.Placa}")</option>
+                            }
+                        </select>
+
+                        @if (VehiculoActual is not null)
+                        {
+                            <div class="ct-hint">
+                                Marca: @VehiculoActual.Marca · Modelo: @VehiculoActual.Modelo · Año: @VehiculoActual.Anio · Placa: @VehiculoActual.Placa
+                            </div>
+                        }
                     }
 
                     <button type="button" class="ct-link" @onclick="() => mostrarNuevoVehiculo = !mostrarNuevoVehiculo">
@@ -851,25 +875,70 @@
                     {
                         <div class="ct-newveh">
                             <div class="ct-grid2">
-                                <div><label class="ct-label">Marca</label><input class="ct-input" @bind="nvMarca" placeholder="Toyota" /></div>
-                                <div><label class="ct-label">Modelo</label><input class="ct-input" @bind="nvModelo" placeholder="Corolla" /></div>
-                                <div><label class="ct-label">Año</label><input class="ct-input" @bind="nvAnio" placeholder="2020" /></div>
-                                <div><label class="ct-label">Placa</label><input class="ct-input" @bind="nvPlaca" placeholder="P 000 ABC" /></div>
-                                <div><label class="ct-label">Conductor</label><input class="ct-input" @bind="nvConductor" placeholder="Nombre completo" /></div>
-                                <div><label class="ct-label">Licencia</label><input class="ct-input" @bind="nvLicencia" placeholder="No. de licencia" /></div>
+                                <div>
+                                    <label class="ct-label">Marca</label>
+                                    <select class="ct-input" @bind="nvIdMarca" disabled="@cargandoCatalogos">
+                                        <option value="0">Selecciona una marca</option>
+                                        @foreach (var marca in marcasVehiculo)
+                                        {
+                                            <option value="@marca.Id">@marca.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="ct-label">Tipo de vehículo</label>
+                                    <select class="ct-input" @bind="nvIdTipoVehiculo" disabled="@cargandoCatalogos">
+                                        <option value="0">Selecciona un tipo</option>
+                                        @foreach (var tipo in tiposVehiculo)
+                                        {
+                                            <option value="@tipo.Id">@tipo.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="ct-label">Modelo</label>
+                                    <input class="ct-input" @bind="nvModelo" maxlength="100" placeholder="Corolla" />
+                                </div>
+                                <div>
+                                    <label class="ct-label">Año</label>
+                                    <input class="ct-input" type="number" @bind="nvAnio" placeholder="2020" />
+                                </div>
+                                <div>
+                                    <label class="ct-label">Placa</label>
+                                    <input class="ct-input" @bind="nvPlaca" maxlength="20" placeholder="P 000 ABC" />
+                                </div>
+                                <div>
+                                    <label class="ct-label">Color (opcional)</label>
+                                    <input class="ct-input" @bind="nvColor" maxlength="50" placeholder="Blanco" />
+                                </div>
+                                <div>
+                                    <label class="ct-label">Kilometraje</label>
+                                    <input class="ct-input" type="number" min="0" @bind="nvKilometraje" />
+                                </div>
                             </div>
+
                             @if (errorVehiculo is not null)
                             {
                                 <div class="ct-hint warn">@errorVehiculo</div>
                             }
-                            <button type="button" class="ct-btn-sm" @onclick="GuardarVehiculo">Guardar vehículo</button>
+                            @if (cargandoCatalogos)
+                            {
+                                <div class="ct-hint">Cargando marcas y tipos de vehículo...</div>
+                            }
+
+                            <button type="button" class="ct-btn-sm" disabled="@guardandoVehiculo" @onclick="GuardarVehiculoAsync">
+                                @(guardandoVehiculo ? "Guardando..." : "Guardar vehículo")
+                            </button>
                         </div>
                     }
 
                     <label class="ct-label">Documentos del vehículo</label>
                     <label class="ct-drop">
                         <InputFile OnChange="OnArchivos" multiple accept=".pdf,.jpg,.jpeg,.png" class="ct-file" />
-                        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg>
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4M7 9l5-5 5 5" />
+                            <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+                        </svg>
                         <span><b>Cargar documentos</b> — seguro, inspección o tarjeta de circulación</span>
                         <small>PDF, JPG o PNG · máx. 5 MB por archivo</small>
                     </label>
@@ -885,7 +954,7 @@
                             @foreach (var a in archivos)
                             {
                                 <div class="ct-file-row">
-                                    <span>@a.Nombre<small>@a.Tamano</small></span>
+                                    <span>@a.Nombre <small>@a.Tamano</small></span>
                                     <button type="button" @onclick="() => archivos.Remove(a)">Quitar</button>
                                 </div>
                             }
@@ -894,55 +963,109 @@
                 }
             </div>
 
-            <!-- 2. Servicio -->
             <div class="ct-step">
-                <div class="ct-step-head"><span class="ct-num">2</span><h3>Tipo de mantenimiento</h3></div>
-                <div class="ct-services">
-                    @foreach (var s in servicios)
-                    {
-                        <button type="button" class="ct-service @(s.Id == servicioId ? "sel" : "")" @onclick="() => servicioId = s.Id">
-                            <span class="ct-service-name">@s.Nombre</span>
-                            <span class="ct-service-meta">@TextoCosto(s.CostoMin, s.CostoMax, 1.0) · @TextoTiempo(s.TiempoMin, s.TiempoMax, 1.0)</span>
-                        </button>
-                    }
+                <div class="ct-step-head">
+                    <span class="ct-num">2</span>
+                    <h3>Tipo de mantenimiento</h3>
                 </div>
+
+                @if (cargandoServicios)
+                {
+                    <div class="ct-lock">Cargando tipos de servicio...</div>
+                }
+                else if (errorServicios is not null)
+                {
+                    <div class="ct-error">
+                        @errorServicios
+                        <button type="button"
+                                class="ct-link"
+                                @onclick="CargarServiciosAsync">
+                            Reintentar
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="ct-services">
+                        @foreach (var s in servicios)
+                        {
+                            <button type="button"
+                                    class="ct-service @(s.IdTipoServicio == servicioId ? "sel" : "")"
+                                    @onclick="() => CambiarServicioAsync(s.IdTipoServicio)">
+
+                                <span class="ct-service-name">@s.Nombre</span>
+
+                                <span class="ct-service-meta">
+                                    @($"Q{s.CostoBase.ToString("N2", CultureInfo.GetCultureInfo("es-GT"))}")
+                                    · @FormatoMin(s.TiempoEstimadoMinutos)
+                                </span>
+
+                                @if (!string.IsNullOrWhiteSpace(s.Descripcion))
+                                {
+                                    <span class="ct-service-meta">@s.Descripcion</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                }
             </div>
 
-            <!-- 3. Fecha, agente y hora -->
             <div class="ct-step">
-                <div class="ct-step-head"><span class="ct-num">3</span><h3>Fecha, agente y hora</h3></div>
+                <div class="ct-step-head">
+                    <span class="ct-num">3</span>
+                    <h3>Fecha, agente y hora</h3>
+                </div>
 
                 <label class="ct-label" style="margin-top:0;">Fecha</label>
                 <input type="date" class="ct-input" min="@HoyIso" value="@FechaIso" @onchange="OnFecha" />
 
                 <label class="ct-label">Agente (según disponibilidad ese día)</label>
-                <div class="ct-agents">
-                    <button type="button" class="ct-agent @(agenteSel is null ? "sel" : "")" @onclick="() => SeleccionarAgente(null)">
-                        <span class="ct-avatar">★</span>
-                        <span>
-                            <span class="ct-ag-name">Cualquiera disponible</span>
-                            <span class="ct-ag-role">Asignamos al mejor agente libre</span>
-                        </span>
-                    </button>
-
-                    @foreach (var a in agentes)
-                    {
-                        var libres = HorariosLibres(a);
-                        <button type="button" class="ct-agent @(agenteSel == a ? "sel" : "")" disabled="@(libres == 0)" @onclick="() => SeleccionarAgente(a)">
-                            <span class="ct-avatar">@a.Iniciales</span>
+                @if (cargandoAgentes)
+                {
+                    <div class="ct-lock">Consultando agentes y horarios disponibles...</div>
+                }
+                else if (errorAgentes is not null)
+                {
+                    <div class="ct-error">
+                        @errorAgentes
+                        <button type="button" class="ct-link" @onclick="CargarDisponibilidadAsync">Reintentar</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="ct-agents">
+                        <button type="button"
+                                class="ct-agent @(agenteSelId is null ? "sel" : "")"
+                                disabled="@(disponibilidadPorHora.Values.All(ids => ids.Count == 0))"
+                                @onclick="() => SeleccionarAgente(null)">
+                            <span class="ct-avatar">★</span>
                             <span>
-                                <span class="ct-ag-name">@a.Nombre @if (EsEspecialista(a)) {
-                                <span class="ct-tag-esp">Especialista</span>
-                            }
-</span>
-                            <span class="ct-ag-role">@a.Especialidad</span>
-                            <span class="ct-ag-free @(libres == 0 ? "none" : "")">@(libres == 0 ? "Sin horarios ese día" : $"{libres} horarios libres")</span>
-                        </span>
-                    </button>
-                                        }
-                </div>
+                                <span class="ct-ag-name">Cualquiera disponible</span>
+                                <span class="ct-ag-role">Asignación automática entre agentes libres</span>
+                            </span>
+                        </button>
+
+                        @foreach (var a in agentes)
+                        {
+                            var libres = HorariosLibres(a);
+                            <button type="button"
+                                    class="ct-agent @(agenteSelId == a.IdAgente ? "sel" : "")"
+                                    disabled="@(libres == 0)"
+                                    @onclick="() => SeleccionarAgente(a.IdAgente)">
+                                <span class="ct-avatar">@a.Iniciales</span>
+                                <span>
+                                    <span class="ct-ag-name">@a.Nombre</span>
+                                    <span class="ct-ag-free @(libres == 0 ? "none" : "")">
+                                        @(libres == 0 ? "Sin horarios ese día" : $"{libres} horarios libres")
+                                    </span>
+                                </span>
+                            </button>
+                        }
+                    </div>
+                }
 
                 <label class="ct-label">Hora</label>
+
                 @if (fecha.DayOfWeek == DayOfWeek.Sunday)
                 {
                     <div class="ct-hint warn">El taller no atiende los domingos. Elige otra fecha.</div>
@@ -953,17 +1076,23 @@
                         @foreach (var h in HorasTaller(fecha))
                         {
                             var libre = HoraDisponible(h);
-                            <button type="button" class="ct-slot @(hora == h ? "sel" : "")" disabled="@(!libre)" @onclick="() => hora = h">@FormatoHora(h)</button>
+
+                            <button type="button"
+                                    class="ct-slot @(hora == h ? "sel" : "")"
+                                    disabled="@(!libre || cargandoAgentes)"
+                                    @onclick="() => SeleccionarHora(h)">
+                                @FormatoHora(h)
+                            </button>
                         }
                     </div>
-                    <div class="ct-hint">Los horarios tachados ya están ocupados o el agente no atiende en ese momento.</div>
+                    <div class="ct-hint">Los horarios tachados no tienen agentes disponibles para el tiempo estimado del servicio.</div>
                 }
             </div>
 
-            <!-- Estimación en tiempo real -->
             @{
                 var est = Estimacion;
             }
+
             <div class="ct-est">
                 <div class="ct-est-title">Estimación en tiempo real</div>
                 <div class="ct-est-grid">
@@ -979,44 +1108,87 @@
                 <div class="ct-error">@error</div>
             }
 
-            <button type="button" class="ct-confirm" disabled="@(!sesionIniciada)" @onclick="ConfirmarCita">Confirmar cita</button>
+            <button type="button"
+                    class="ct-confirm"
+                    disabled="@(!sesionIniciada || guardandoCita)"
+                    @onclick="ConfirmarCita">
+                @(guardandoCita ? "Registrando cita..." : "Confirmar cita")
+            </button>
         </section>
 
-        <!-- ================= LISTA DE CITAS ================= -->
         <aside class="ct-side">
-            <div class="ct-tabs">
-                <button type="button" class="ct-tab @(mostrarProximas ? "active" : "")" @onclick="() => mostrarProximas = true">Próximas<span>@Proximas.Count()</span></button>
-                <button type="button" class="ct-tab @(!mostrarProximas ? "active" : "")" @onclick="() => mostrarProximas = false">Historial<span>@Historial.Count()</span></button>
-            </div>
-
-            @foreach (var c in CitasVisibles)
+            @if (cargandoCitas)
             {
-                <div class="ct-cita">
-                    <div class="ct-date"><b>@c.Fecha.Day</b><span>@Mes(c.Fecha)</span></div>
-                    <div class="ct-info">
-                        <h4>@c.Servicio</h4>
-                        <div class="ct-sub">@c.Vehiculo</div>
-                        <div class="ct-sub">@FormatoHora(c.Hora) · Agente: @c.Agente</div>
-                        <div class="ct-sub">@c.Costo · @c.Tiempo</div>
-                    </div>
-                    <div class="ct-right">
-                        <span class="ct-status @ClaseEstado(c.Estado)">@c.Estado</span>
-                        @if (c.Estado == "En espera")
-                        {
-                            <button type="button" class="ct-cancel" @onclick="() => Cancelar(c)">Cancelar</button>
-                        }
-                    </div>
+                <div class="ct-empty">Cargando tus citas...</div>
+            }
+            else if (errorCarga is not null)
+            {
+                <div class="ct-error">
+                    @errorCarga
+                    <button type="button" class="ct-link" @onclick="CargarCitasAsync">Reintentar</button>
                 </div>
             }
-
-            @if (!CitasVisibles.Any())
+            else if (!sesionIniciada)
             {
-                <div class="ct-empty">No tienes citas @(mostrarProximas ? "próximas" : "en el historial") todavía.</div>
+                <div class="ct-empty">Inicia sesión para consultar tus citas.</div>
+            }
+            else
+            {
+                <div class="ct-tabs">
+                    <button type="button"
+                            class="ct-tab @(mostrarProximas ? "active" : "")"
+                            @onclick="() => mostrarProximas = true">
+                        Próximas<span>@Proximas.Count()</span>
+                    </button>
+                    <button type="button"
+                            class="ct-tab @(!mostrarProximas ? "active" : "")"
+                            @onclick="() => mostrarProximas = false">
+                        Historial<span>@Historial.Count()</span>
+                    </button>
+                </div>
+
+                @foreach (var c in CitasVisibles)
+                {
+                    <div class="ct-cita">
+                        <div class="ct-date">
+                            <b>@c.FechaCita.Day</b>
+                            <span>@Mes(c.FechaCita.ToDateTime(TimeOnly.MinValue))</span>
+                        </div>
+
+                        <div class="ct-info">
+                            <h4>@c.Servicio</h4>
+                            <div class="ct-sub">@c.Marca @c.Modelo — @c.Placa</div>
+                            <div class="ct-sub">@FormatoHora(c.HoraInicio) </div>
+                            <div class="ct-sub">
+                                @($"Q{c.Costo.ToString("N2", CultureInfo.GetCultureInfo("es-GT"))}") · @FormatoMin(c.TiempoEstimadoMinutos)
+                            </div>
+                        </div>
+
+                        <div class="ct-right">
+                            <span class="ct-status @ClaseEstado(c.Estado)">@c.Estado</span>
+
+                            @if (c.Estado == "En espera")
+                            {
+                                <button type="button" class="ct-cancel" @onclick="() => Cancelar(c)">
+                                    Cancelar
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (!CitasVisibles.Any())
+                {
+                    <div class="ct-empty">
+                        No tienes citas @(mostrarProximas ? "próximas" : "en el historial") todavía.
+                    </div>
+                }
             }
 
             <div class="ct-note">
                 <b>¿Cómo funciona?</b><br />
-                Al confirmar, la cita queda <b>En espera</b> y notificamos al agente. Cuando la apruebe pasará a <b>Aprobada</b>, y te avisaremos de nuevo al finalizar el trabajo.
+                Al confirmar, la cita queda <b>En espera</b> y notificamos al agente.
+                Cuando la apruebe pasará a <b>Aprobada</b>, y te avisaremos de nuevo al finalizar el trabajo.
             </div>
         </aside>
     </div>
@@ -1024,114 +1196,105 @@
 
 @if (confirmada is not null)
 {
-    <div class="ct-modal-bg" @onclick="() => confirmada = null">
+    <div class="ct-modal-bg" @onclick="CerrarConfirmacion">
         <div class="ct-modal" @onclick:stopPropagation="true">
             <div class="ct-check">
                 <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
             </div>
+
             <h3>¡Cita registrada!</h3>
-            <p>Tu solicitud fue aprobada para agendarse y ya aparece en tu lista como <b>En espera</b>. El agente fue notificado y la confirmará a la brevedad.</p>
+            <p>
+                Tu solicitud se registró correctamente y aparece en tus citas.
+                El agente seleccionado es <b>@(agenteConfirmadoNombre ?? "Por asignar")</b>.
+            </p>
 
             <div class="ct-resumen">
                 <div><span>Servicio</span><b>@confirmada.Servicio</b></div>
-                <div><span>Vehículo</span><b>@confirmada.Vehiculo</b></div>
-                <div><span>Fecha</span><b>@FechaLarga(confirmada.Fecha)</b></div>
-                <div><span>Hora</span><b>@FormatoHora(confirmada.Hora)</b></div>
-                <div><span>Agente</span><b>@confirmada.Agente</b></div>
-                <div><span>Costo aprox.</span><b>@confirmada.Costo</b></div>
-                <div><span>Tiempo aprox.</span><b>@confirmada.Tiempo</b></div>
+                <div>
+                    <span>Vehículo</span>
+                    <b>@confirmada.Marca @confirmada.Modelo — @confirmada.Placa</b>
+                </div>
+                <div>
+                    <span>Fecha</span>
+                    <b>@FechaLarga(confirmada.FechaCita.ToDateTime(TimeOnly.MinValue))</b>
+                </div>
+                <div><span>Hora</span><b>@FormatoHora(confirmada.HoraInicio)</b></div>
+                <div><span>Agente</span><b>@(agenteConfirmadoNombre ?? "Por asignar")</b></div>
+                <div>
+                    <span>Costo aprox.</span>
+                    <b>@($"Q{confirmada.Costo.ToString("N2", CultureInfo.GetCultureInfo("es-GT"))}")</b>
+                </div>
+                <div><span>Tiempo aprox.</span><b>@FormatoMin(confirmada.TiempoEstimadoMinutos)</b></div>
             </div>
 
-            <button type="button" class="ct-confirm" style="margin-top:0;" @onclick="() => confirmada = null">Entendido</button>
+            <button type="button" class="ct-confirm" style="margin-top:0;" @onclick="CerrarConfirmacion">
+                Entendido
+            </button>
         </div>
     </div>
 }
 
 @code {
-    // Cambia a false para ver cómo se bloquea el registro de vehículo cuando no hay sesión.
-    // TODO: conectar con el inicio de sesión real.
-    private bool sesionIniciada = true;
+    private bool sesionIniciada;
+    private long idCliente;
+    private bool cargandoCitas;
+    private string? errorCarga;
 
     [SupplyParameterFromQuery(Name = "servicio")]
-    public int? ServicioQuery { get; set; }
+    public long? ServicioQuery { get; set; }
 
-    // ---------- Modelos ----------
-    private record Servicio(int Id, string Nombre, string Categoria, int CostoMin, int? CostoMax, int? TiempoMin, int? TiempoMax);
-
-    private record Agente(string Nombre, string Iniciales, string Especialidad, string[] Categorias, double Tarifa, DayOfWeek[] DiasLibres, int[] HorasBloqueadas);
+    // Modelos auxiliares del formulario
+    private record Servicio(
+    long IdTipoServicio,
+    string Nombre,
+    string? Descripcion,
+    decimal CostoBase,
+    int TiempoEstimadoMinutos);
 
     private record Estim(string Costo, string Tiempo, string Recomendacion);
-
     private record ArchivoDto(string Nombre, string Tamano);
 
-    private class VehiculoDto
-    {
-        public int Id { get; set; }
-        public string Marca { get; set; } = "";
-        public string Modelo { get; set; } = "";
-        public string Anio { get; set; } = "";
-        public string Placa { get; set; } = "";
-        public string Conductor { get; set; } = "";
-        public string Licencia { get; set; } = "";
-        public string Etiqueta => $"{Marca} {Modelo} — {Placa}";
-    }
 
-    private class CitaDto
-    {
-        public DateTime Fecha { get; set; }
-        public TimeOnly Hora { get; set; }
-        public string Vehiculo { get; set; } = "";
-        public string Servicio { get; set; } = "";
-        public string Agente { get; set; } = "";
-        public string Estado { get; set; } = "";   // En espera | Aprobada | Finalizada | Cancelada
-        public string Costo { get; set; } = "";
-        public string Tiempo { get; set; } = "";
-    }
+    private List<Servicio> servicios = new();
 
-    // ---------- Datos de ejemplo (TODO: reemplazar por el servicio real) ----------
-    private List<Servicio> servicios = new()
-    {
-        new(1, "Mantenimiento preventivo", "Mantenimiento", 150, 300, 45, 60),
-        new(2, "Diagnóstico general", "Diagnóstico", 100, 200, 30, 30),
-        new(3, "Reemplazo de componentes", "Componentes", 80, null, null, null),
-        new(4, "Sistema de frenos", "Reparación", 200, 450, 60, 120),
-        new(5, "Batería y sistema eléctrico", "Reparación", 120, 250, 40, 40),
-        new(6, "Llantas y alineación", "Mantenimiento", 60, 180, 50, 50),
-    };
+    private bool cargandoServicios;
+    private string? errorServicios;
 
-    private List<Agente> agentes = new()
-    {
-        new("Carlos Ruiz", "CR", "Mecánica general", new[] { "Mantenimiento", "Componentes" }, 1.00, Array.Empty<DayOfWeek>(), Array.Empty<int>()),
-        new("Ana López", "AL", "Diagnóstico electrónico", new[] { "Diagnóstico" }, 1.10, Array.Empty<DayOfWeek>(), new[] { 8 }),
-        new("Mario Gómez", "MG", "Frenos y suspensión", new[] { "Reparación" }, 1.15, new[] { DayOfWeek.Wednesday }, new[] { 14, 15 }),
-        new("Diana Pérez", "DP", "Aire acondicionado", new[] { "Componentes" }, 1.05, new[] { DayOfWeek.Friday }, Array.Empty<int>()),
-    };
+    private List<AgenteDisponibleDto> agentes = new();
+    private long? agenteSelId;
+    private bool cargandoAgentes;
+    private string? errorAgentes;
+    private Dictionary<TimeOnly, HashSet<long>> disponibilidadPorHora = new();
 
-    private List<VehiculoDto> vehiculos = new()
-    {
-        new VehiculoDto { Id = 1, Marca = "Toyota", Modelo = "Corolla", Anio = "2019", Placa = "P 428 DKL", Conductor = "Est. Jiménez", Licencia = "L-100234" },
-        new VehiculoDto { Id = 2, Marca = "Honda", Modelo = "CR-V", Anio = "2021", Placa = "P 019 CTM", Conductor = "Est. Jiménez", Licencia = "L-100234" },
-    };
+    private List<VehiculoClienteDto> vehiculos = new();
+    private bool cargandoVehiculos;
+    private string? errorCargaVehiculos;
 
-    private List<CitaDto> citas = new()
-    {
-        new CitaDto { Fecha = new DateTime(2026, 10, 2), Hora = new TimeOnly(10, 0), Vehiculo = "Toyota Corolla — P 428 DKL", Servicio = "Mantenimiento preventivo", Agente = "Carlos Ruiz", Estado = "Aprobada", Costo = "Q150–Q300", Tiempo = "40–50 min" },
-        new CitaDto { Fecha = new DateTime(2026, 10, 6), Hora = new TimeOnly(14, 0), Vehiculo = "Honda CR-V — P 019 CTM", Servicio = "Diagnóstico general", Agente = "Ana López", Estado = "En espera", Costo = "Q110–Q220", Tiempo = "25–30 min" },
-        new CitaDto { Fecha = new DateTime(2026, 9, 2), Hora = new TimeOnly(9, 0), Vehiculo = "Toyota Corolla — P 428 DKL", Servicio = "Batería y sistema eléctrico", Agente = "Carlos Ruiz", Estado = "Finalizada", Costo = "Q120–Q250", Tiempo = "40 min" },
-    };
+    // Se utiliza directamente el DTO compartido, sin una clase CitaDto adicional.
+    private List<CitaClienteDto> citas = new();
 
-    // ---------- Estado del formulario ----------
-    private int vehiculoId;
-    private int servicioId = 1;
+    // Estado del formulario
+    private long vehiculoId;
+    private long servicioId = 1;
     private DateTime fecha = DateTime.Today.AddDays(1);
-    private Agente? agenteSel;
     private TimeOnly? hora;
     private string? error;
-    private CitaDto? confirmada;
+    private CitaClienteDto? confirmada;
+    private string? agenteConfirmadoNombre;
     private bool mostrarProximas = true;
 
     private bool mostrarNuevoVehiculo;
-    private string nvMarca = "", nvModelo = "", nvAnio = "", nvPlaca = "", nvConductor = "", nvLicencia = "";
+    private List<OpcionCatalogoDto> marcasVehiculo = new();
+    private List<OpcionCatalogoDto> tiposVehiculo = new();
+    private bool cargandoCatalogos;
+    private bool guardandoVehiculo;
+    private long nvIdMarca;
+    private long nvIdTipoVehiculo;
+    private string nvModelo = "";
+    private string nvAnio = "";
+    private string nvPlaca = "";
+    private string nvColor = "";
+    private string nvKilometraje = "0";
     private string? errorVehiculo;
 
     private List<ArchivoDto> archivos = new();
@@ -1139,107 +1302,492 @@
 
     protected override void OnInitialized()
     {
-        vehiculoId = vehiculos.First().Id;
-        if (fecha.DayOfWeek == DayOfWeek.Sunday) fecha = fecha.AddDays(1);
+        if (fecha.DayOfWeek == DayOfWeek.Sunday)
+            fecha = fecha.AddDays(1);
     }
 
     protected override void OnParametersSet()
     {
-        // Viene de Servicios: /citas/nueva?servicio=2
-        if (ServicioQuery is int id && servicios.Any(s => s.Id == id))
+        if (ServicioQuery is long id &&
+            servicios.Any(s => s.IdTipoServicio == id))
         {
             servicioId = id;
         }
     }
 
-    // ---------- Propiedades calculadas ----------
-    private VehiculoDto? VehiculoActual => vehiculos.FirstOrDefault(v => v.Id == vehiculoId);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
 
-    private Servicio ServicioActual => servicios.First(s => s.Id == servicioId);
+        try
+        {
+            var idGuardado = await JS.InvokeAsync<string?>(
+                "sessionStorage.getItem",
+                "flexicar_id_usuario");
+
+            if (long.TryParse(idGuardado, out var id) && id > 0)
+            {
+                idCliente = id;
+                sesionIniciada = true;
+                await CargarCatalogosVehiculoAsync();
+                await CargarVehiculosAsync();
+                await CargarCitasAsync();
+                await CargarServiciosAsync();
+                await CargarAgentesAsync();
+                await CargarDisponibilidadAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                sesionIniciada = false;
+                citas.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            sesionIniciada = false;
+            errorCarga = "No fue posible verificar la sesión.";
+            Console.Error.WriteLine($"Error al leer la sesión: {ex.Message}");
+        }
+
+        await CargarAgentesAsync();
+        await CargarDisponibilidadAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task CargarServiciosAsync()
+    {
+        cargandoServicios = true;
+        errorServicios = null;
+
+        try
+        {
+            var resultado =
+                await Http.GetFromJsonAsync<List<TipoServicioDto>>(
+                    "api/Citas/tipos-servicio");
+
+            servicios = (resultado ?? new List<TipoServicioDto>())
+                .Select(s => new Servicio(
+                    s.IdTipoServicio,
+                    s.Nombre,
+                    s.Descripcion,
+                    s.CostoBase,
+                    s.TiempoEstimadoMinutos))
+                .ToList();
+
+            if (servicios.Count == 0)
+            {
+                servicioId = 0;
+                errorServicios = "No hay tipos de servicio activos registrados.";
+                return;
+            }
+
+            if (!servicios.Any(s => s.IdTipoServicio == servicioId))
+            {
+                servicioId = servicios[0].IdTipoServicio;
+            }
+        }
+        catch (Exception ex)
+        {
+            servicios.Clear();
+            servicioId = 0;
+            errorServicios = "No fue posible cargar los servicios desde la API.";
+
+            Console.Error.WriteLine(
+                $"Error al cargar los tipos de servicio: {ex}");
+        }
+        finally
+        {
+            cargandoServicios = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    // Carga el DTO específico de vehículos directamente desde la API.
+    private async Task CargarVehiculosAsync()
+    {
+        if (idCliente <= 0)
+        {
+            vehiculos.Clear();
+            vehiculoId = 0;
+            return;
+        }
+
+        cargandoVehiculos = true;
+        errorCargaVehiculos = null;
+
+        try
+        {
+            var resultado = await Http.GetFromJsonAsync<List<VehiculoClienteDto>>(
+                $"api/Citas/cliente/{idCliente}/vehiculos");
+
+            vehiculos = resultado ?? new List<VehiculoClienteDto>();
+
+            if (!vehiculos.Any(v => v.IdVehiculo == vehiculoId))
+                vehiculoId = vehiculos.FirstOrDefault()?.IdVehiculo ?? 0;
+        }
+        catch (Exception ex)
+        {
+            vehiculos.Clear();
+            vehiculoId = 0;
+            errorCargaVehiculos = "No fue posible cargar tus vehículos. Verifica la conexión con la API.";
+            Console.Error.WriteLine($"Error al cargar vehículos: {ex.Message}");
+        }
+        finally
+        {
+            cargandoVehiculos = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // Carga directamente CitaClienteDto desde la API.
+    private async Task CargarCitasAsync()
+    {
+        if (idCliente <= 0)
+        {
+            citas.Clear();
+            return;
+        }
+
+        try
+        {
+            cargandoCitas = true;
+            errorCarga = null;
+
+            await InvokeAsync(StateHasChanged);
+
+            var resultado = await Http.GetFromJsonAsync<List<CitaClienteDto>>(
+                $"api/Citas/cliente/{idCliente}");
+
+            citas = resultado ?? new List<CitaClienteDto>();
+        }
+        catch (Exception ex)
+        {
+            errorCarga = "No fue posible cargar tus citas. Verifica la conexión con el backend.";
+            Console.Error.WriteLine($"Error al cargar citas: {ex.Message}");
+        }
+        finally
+        {
+            cargandoCitas = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // Propiedades calculadas
+    private VehiculoClienteDto? VehiculoActual =>
+        vehiculos.FirstOrDefault(v => v.IdVehiculo == vehiculoId);
+
+    private Servicio? ServicioActual =>
+    servicios.FirstOrDefault(s => s.IdTipoServicio == servicioId);
+
+    private Estim Estimacion =>
+        ServicioActual is { } s
+            ? Calcular(s)
+            : new Estim("—", "—", "Selecciona un servicio disponible.");
 
     private string HoyIso => DateTime.Today.ToString("yyyy-MM-dd");
-
     private string FechaIso => fecha.ToString("yyyy-MM-dd");
 
-    private Estim Estimacion => Calcular(ServicioActual, agenteSel);
+    private static bool EstadoEs(string? estado, params string[] estados) =>
+    estados.Any(e =>
+        string.Equals(
+            estado?.Trim(),
+            e,
+            StringComparison.OrdinalIgnoreCase));
 
-    private IEnumerable<CitaDto> Proximas => citas.Where(c => c.Estado == "Aprobada" || c.Estado == "En espera").OrderBy(c => c.Fecha).ThenBy(c => c.Hora);
+    
+    private IEnumerable<CitaClienteDto> Proximas =>
+        citas.Where(c => EstadoEs(
+                c.Estado,
+                "PENDIENTE",
+                "APROBADA",
+                "EN ESPERA",
+                "Aprobada",
+                "En espera"))
+             .OrderBy(c => c.FechaCita)
+             .ThenBy(c => c.HoraInicio);
 
-    private IEnumerable<CitaDto> Historial => citas.Where(c => c.Estado == "Finalizada" || c.Estado == "Cancelada").OrderByDescending(c => c.Fecha);
+    private IEnumerable<CitaClienteDto> Historial =>
+        citas.Where(c => EstadoEs(
+                c.Estado,
+                "FINALIZADA",
+                "CANCELADA",
+                "Finalizada",
+                "Cancelada"))
+             .OrderByDescending(c => c.FechaCita)
+             .ThenByDescending(c => c.HoraInicio);
 
-    private IEnumerable<CitaDto> CitasVisibles => mostrarProximas ? Proximas : Historial;
 
-    // ---------- Disponibilidad ----------
+    private IEnumerable<CitaClienteDto> CitasVisibles =>
+        mostrarProximas ? Proximas : Historial;
+
+    // Horarios permitidos por el taller; la disponibilidad de agentes viene de la API.
     private static readonly int[] HorasBase = { 8, 9, 10, 11, 14, 15, 16, 17 };
 
     private IEnumerable<TimeOnly> HorasTaller(DateTime f)
     {
-        if (f.DayOfWeek == DayOfWeek.Sunday) return Enumerable.Empty<TimeOnly>();
-        var horas = f.DayOfWeek == DayOfWeek.Saturday ? HorasBase.Where(h => h < 13) : HorasBase;
+        if (f.DayOfWeek == DayOfWeek.Sunday)
+            return Enumerable.Empty<TimeOnly>();
+
+        var horas = f.DayOfWeek == DayOfWeek.Saturday
+            ? HorasBase.Where(h => h < 13)
+            : HorasBase;
+
         return horas.Select(h => new TimeOnly(h, 0));
     }
 
-    private bool AgenteLibreEn(Agente a, DateTime f, TimeOnly h) =>
-        !a.DiasLibres.Contains(f.DayOfWeek)
-        && !a.HorasBloqueadas.Contains(h.Hour)
-        && !citas.Any(c => c.Agente == a.Nombre && c.Fecha.Date == f.Date && c.Hora == h
-                           && (c.Estado == "Aprobada" || c.Estado == "En espera"));
+    private int HorariosLibres(AgenteDisponibleDto agente) =>
+        disponibilidadPorHora.Values.Count(ids => ids.Contains(agente.IdAgente));
 
-    private int HorariosLibres(Agente a) => HorasTaller(fecha).Count(h => AgenteLibreEn(a, fecha, h));
-
-    private bool HoraDisponible(TimeOnly h) =>
-        agenteSel is not null
-            ? AgenteLibreEn(agenteSel, fecha, h)
-            : agentes.Any(a => AgenteLibreEn(a, fecha, h));
-
-    private bool EsEspecialista(Agente a) => a.Categorias.Contains(ServicioActual.Categoria);
-
-    // ---------- Acciones ----------
-    private void OnFecha(ChangeEventArgs e)
+    private bool HoraDisponible(TimeOnly h)
     {
-        if (DateTime.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var d))
+        if (!disponibilidadPorHora.TryGetValue(h, out var ids))
+            return false;
+
+        return agenteSelId.HasValue
+            ? ids.Contains(agenteSelId.Value)
+            : ids.Count > 0;
+    }
+
+    private void SeleccionarAgente(long? idAgente)
+    {
+        agenteSelId = idAgente;
+        if (hora.HasValue && !HoraDisponible(hora.Value))
+            hora = null;
+    }
+
+    private void SeleccionarHora(TimeOnly h)
+    {
+        if (HoraDisponible(h))
+            hora = h;
+    }
+
+    private async Task OnFecha(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var d))
         {
             fecha = d.Date;
-            if (hora is not null && !HoraDisponible(hora.Value)) hora = null;
-            if (agenteSel is not null && HorariosLibres(agenteSel) == 0) agenteSel = null;
+            hora = null;
+            agenteSelId = null;
+            await CargarDisponibilidadAsync();
         }
     }
 
-    private void SeleccionarAgente(Agente? a)
+    private async Task CambiarServicioAsync(long idServicio)
     {
-        agenteSel = a;
-        if (hora is not null && !HoraDisponible(hora.Value)) hora = null;
+        if (servicioId == idServicio)
+            return;
+
+        servicioId = idServicio;
+        hora = null;
+        agenteSelId = null;
+
+        await CargarDisponibilidadAsync();
     }
 
-    private void GuardarVehiculo()
+    private async Task CargarAgentesAsync()
     {
-        if (string.IsNullOrWhiteSpace(nvMarca) || string.IsNullOrWhiteSpace(nvModelo) || string.IsNullOrWhiteSpace(nvPlaca))
+        try
         {
-            errorVehiculo = "Marca, modelo y placa son obligatorios.";
+            errorAgentes = null;
+            agentes = await Http.GetFromJsonAsync<List<AgenteDisponibleDto>>("api/Citas/agentes")
+                ?? new List<AgenteDisponibleDto>();
+        }
+        catch (Exception ex)
+        {
+            errorAgentes = "No fue posible cargar los agentes activos.";
+            Console.Error.WriteLine($"Error al cargar agentes: {ex.Message}");
+        }
+    }
+
+    private async Task CargarDisponibilidadAsync()
+    {
+        disponibilidadPorHora.Clear();
+        hora = null;
+        errorAgentes = null;
+
+        if (fecha.Date < DateTime.Today || fecha.DayOfWeek == DayOfWeek.Sunday || servicioId <= 0)
+        {
+            await InvokeAsync(StateHasChanged);
             return;
         }
 
-        var nuevo = new VehiculoDto
+        cargandoAgentes = true;
+        await InvokeAsync(StateHasChanged);
+        try
         {
-            Id = vehiculos.Max(v => v.Id) + 1,
-            Marca = nvMarca.Trim(),
-            Modelo = nvModelo.Trim(),
-            Anio = nvAnio.Trim(),
-            Placa = nvPlaca.Trim().ToUpper(),
-            Conductor = string.IsNullOrWhiteSpace(nvConductor) ? "Sin registrar" : nvConductor.Trim(),
-            Licencia = string.IsNullOrWhiteSpace(nvLicencia) ? "—" : nvLicencia.Trim()
-        };
+            if (agentes.Count == 0)
+                await CargarAgentesAsync();
 
-        vehiculos.Add(nuevo);
-        vehiculoId = nuevo.Id;
-        nvMarca = nvModelo = nvAnio = nvPlaca = nvConductor = nvLicencia = "";
+            foreach (var h in HorasTaller(fecha))
+            {
+                var fechaQuery = fecha.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var horaQuery = h.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+                var url = $"api/Citas/agentes/disponibles?fecha={fechaQuery}&horaInicio={horaQuery}&idTipoServicio={servicioId}";
+                var disponibles = await Http.GetFromJsonAsync<List<AgenteDisponibleDto>>(url)
+                    ?? new List<AgenteDisponibleDto>();
+                disponibilidadPorHora[h] = disponibles.Select(a => a.IdAgente).ToHashSet();
+            }
+
+            if (agenteSelId.HasValue && !disponibilidadPorHora.Values.Any(ids => ids.Contains(agenteSelId.Value)))
+                agenteSelId = null;
+        }
+        catch (Exception ex)
+        {
+            errorAgentes = "No fue posible consultar la disponibilidad. Verifica la conexión con la API.";
+            Console.Error.WriteLine($"Error al consultar disponibilidad: {ex.Message}");
+        }
+        finally
+        {
+            cargandoAgentes = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task CargarCatalogosVehiculoAsync()
+    {
+        cargandoCatalogos = true;
         errorVehiculo = null;
-        mostrarNuevoVehiculo = false;
+
+        try
+        {
+            var marcasTask = Http.GetFromJsonAsync<List<OpcionCatalogoDto>>("api/Citas/marcas");
+            var tiposTask = Http.GetFromJsonAsync<List<OpcionCatalogoDto>>("api/Citas/tipos-vehiculo");
+            await Task.WhenAll(marcasTask, tiposTask);
+
+            marcasVehiculo = await marcasTask ?? new List<OpcionCatalogoDto>();
+            tiposVehiculo = await tiposTask ?? new List<OpcionCatalogoDto>();
+        }
+        catch (Exception ex)
+        {
+            errorVehiculo = "No fue posible cargar las marcas y tipos de vehículo. Verifica la conexión con la API.";
+            Console.Error.WriteLine($"Error al cargar catálogos de vehículos: {ex.Message}");
+        }
+        finally
+        {
+            cargandoCatalogos = false;
+        }
+    }
+
+    private async Task GuardarVehiculoAsync()
+    {
+        errorVehiculo = null;
+
+        if (!sesionIniciada || idCliente <= 0)
+        {
+            errorVehiculo = "Inicia sesión nuevamente para registrar un vehículo.";
+            return;
+        }
+
+        if (nvIdMarca <= 0 || nvIdTipoVehiculo <= 0)
+        {
+            errorVehiculo = "Selecciona una marca y un tipo de vehículo.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nvModelo) || nvModelo.Trim().Length > 100)
+        {
+            errorVehiculo = "Ingresa un modelo válido de hasta 100 caracteres.";
+            return;
+        }
+
+        if (!int.TryParse(nvAnio, out var anio) || anio < 1886 || anio > DateTime.UtcNow.Year + 1)
+        {
+            errorVehiculo = $"Ingresa un año válido entre 1886 y {DateTime.UtcNow.Year + 1}.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nvPlaca) || nvPlaca.Trim().Length > 20)
+        {
+            errorVehiculo = "Ingresa una placa válida de hasta 20 caracteres.";
+            return;
+        }
+
+        if (!int.TryParse(nvKilometraje, out var kilometraje) || kilometraje < 0)
+        {
+            errorVehiculo = "El kilometraje no puede ser negativo y debe ser un número válido.";
+            return;
+        }
+
+        guardandoVehiculo = true;
+        try
+        {
+            var dto = new RegistrarVehiculoDto
+            {
+                IdCliente = idCliente,
+                IdMarca = nvIdMarca,
+                IdTipoVehiculo = nvIdTipoVehiculo,
+                Modelo = nvModelo.Trim(),
+                Anio = anio,
+                Placa = nvPlaca.Trim(),
+                Color = string.IsNullOrWhiteSpace(nvColor) ? null : nvColor.Trim(),
+                Kilometraje = kilometraje
+            };
+
+            using var response = await Http.PostAsJsonAsync("api/Citas/vehiculos", dto);
+            if (!response.IsSuccessStatusCode)
+            {
+                var cuerpo = await response.Content.ReadAsStringAsync();
+                var mensaje = "No fue posible registrar el vehículo.";
+                try
+                {
+                    using var json = System.Text.Json.JsonDocument.Parse(cuerpo);
+                    if (json.RootElement.TryGetProperty("mensaje", out var mensajeJson))
+                        mensaje = mensajeJson.GetString() ?? mensaje;
+                    else if (json.RootElement.TryGetProperty("title", out var titleJson))
+                        mensaje = titleJson.GetString() ?? mensaje;
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    if (!string.IsNullOrWhiteSpace(cuerpo))
+                        mensaje = cuerpo;
+                }
+
+                errorVehiculo = mensaje;
+                return;
+            }
+
+            var vehiculoCreado = await response.Content.ReadFromJsonAsync<VehiculoClienteDto>();
+            await CargarVehiculosAsync();
+
+            if (vehiculoCreado is not null && vehiculoCreado.IdVehiculo > 0 &&
+                vehiculos.Any(v => v.IdVehiculo == vehiculoCreado.IdVehiculo))
+            {
+                vehiculoId = (int)vehiculoCreado.IdVehiculo;
+            }
+            else
+            {
+                var porPlaca = vehiculos.FirstOrDefault(v =>
+                    string.Equals(v.Placa, nvPlaca.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (porPlaca is not null)
+                    vehiculoId = (int)porPlaca.IdVehiculo;
+            }
+
+            nvIdMarca = 0;
+            nvIdTipoVehiculo = 0;
+            nvModelo = string.Empty;
+            nvAnio = string.Empty;
+            nvPlaca = string.Empty;
+            nvColor = string.Empty;
+            nvKilometraje = "0";
+            mostrarNuevoVehiculo = false;
+            errorVehiculo = null;
+        }
+        catch (Exception ex)
+        {
+            errorVehiculo = "Ocurrió un error al registrar el vehículo. Verifica la conexión con la API e inténtalo de nuevo.";
+            Console.Error.WriteLine($"Error al registrar vehículo: {ex.Message}");
+        }
+        finally
+        {
+            guardandoVehiculo = false;
+        }
     }
 
     private void OnArchivos(InputFileChangeEventArgs e)
     {
         errorArchivo = null;
+
         foreach (var f in e.GetMultipleFiles(10))
         {
             if (f.Size > 5 * 1024 * 1024)
@@ -1247,129 +1795,259 @@
                 errorArchivo = $"\"{f.Name}\" supera los 5 MB.";
                 continue;
             }
-            // TODO: enviar el archivo al servidor (AutosPAService) cuando exista el endpoint de documentos
+
+            // Pendiente: enviar el archivo al endpoint de documentos.
             archivos.Add(new ArchivoDto(f.Name, FormatoTamano(f.Size)));
         }
     }
 
-    private void ConfirmarCita()
+    private bool guardandoCita;
+
+    private async Task ConfirmarCita()
     {
         error = null;
 
-        if (!sesionIniciada) { error = "Inicia sesión para agendar tu cita."; return; }
-
-        var vehiculo = VehiculoActual;
-        if (vehiculo is null) { error = "Selecciona o registra un vehículo."; return; }
-
-        if (fecha.DayOfWeek == DayOfWeek.Sunday) { error = "El taller no atiende los domingos."; return; }
-
-        if (hora is null) { error = "Elige un horario disponible."; return; }
-
-        var h = hora.Value;
-        var agente = agenteSel ?? agentes
-            .Where(a => AgenteLibreEn(a, fecha, h))
-            .OrderByDescending(a => EsEspecialista(a))
-            .FirstOrDefault();
-
-        if (agente is null || !AgenteLibreEn(agente, fecha, h))
+        if (!sesionIniciada || idCliente <= 0)
         {
-            error = "Ese horario ya no está disponible. Elige otro.";
-            hora = null;
+            error = "Inicia sesión para agendar tu cita.";
             return;
         }
 
-        var servicio = ServicioActual;
-        var est = Calcular(servicio, agente);
+        var vehiculo = VehiculoActual;
 
-        var nueva = new CitaDto
+        if (vehiculo is null)
         {
-            Fecha = fecha,
-            Hora = h,
-            Vehiculo = vehiculo.Etiqueta,
-            Servicio = servicio.Nombre,
-            Agente = agente.Nombre,
-            Estado = "En espera",
-            Costo = est.Costo,
-            Tiempo = est.Tiempo
-        };
+            error = "Selecciona o registra un vehículo.";
+            return;
+        }
 
-        // TODO: guardar en el servicio y notificar al agente (correo, WhatsApp o notificación interna)
-        citas.Add(nueva);
-        confirmada = nueva;
-        mostrarProximas = true;
-        hora = null;
-        archivos.Clear();
+        if (fecha.Date < DateTime.Today)
+        {
+            error = "La fecha de la cita no puede ser anterior a hoy.";
+            return;
+        }
+
+        if (fecha.DayOfWeek == DayOfWeek.Sunday)
+        {
+            error = "El taller no atiende los domingos.";
+            return;
+        }
+
+        if (hora is null)
+        {
+            error = "Elige un horario disponible.";
+            return;
+        }
+
+        if (servicioId <= 0)
+        {
+            error = "Selecciona un servicio válido.";
+            return;
+        }
+
+        var h = hora.Value;
+
+        if (!HoraDisponible(h))
+        {
+            error = "Ese horario ya no está disponible. Elige otro.";
+            hora = null;
+            await CargarDisponibilidadAsync();
+            return;
+        }
+
+        var agente = agenteSelId.HasValue
+            ? agentes.FirstOrDefault(a =>
+                a.IdAgente == agenteSelId.Value)
+            : agentes.FirstOrDefault(a =>
+                disponibilidadPorHora.TryGetValue(h, out var ids)
+                && ids.Contains(a.IdAgente));
+
+        if (agente is null || !HoraDisponible(h))
+        {
+            error = "No hay un agente disponible para ese horario.";
+            return;
+        }
+
+        if (guardandoCita)
+            return;
+
+        guardandoCita = true;
+
+        try
+        {
+            var dto = new RegistrarCitaDto
+            {
+                IdCliente = idCliente,
+                IdVehiculo = vehiculo.IdVehiculo,
+                IdTipoServicio = servicioId,
+                IdAgenteSeleccionado = agente.IdAgente,
+                FechaCita = DateOnly.FromDateTime(fecha),
+                HoraInicio = h,
+                Observaciones = null
+            };
+
+            using var response =
+                await Http.PostAsJsonAsync("api/Citas", dto);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var cuerpo = await response.Content.ReadAsStringAsync();
+                var mensaje = "No fue posible registrar la cita.";
+
+                try
+                {
+                    using var json =
+                        System.Text.Json.JsonDocument.Parse(cuerpo);
+
+                    if (json.RootElement.TryGetProperty(
+                        "mensaje", out var mensajeJson))
+                    {
+                        mensaje = mensajeJson.GetString() ?? mensaje;
+                    }
+                    else if (json.RootElement.TryGetProperty(
+                        "title", out var titleJson))
+                    {
+                        mensaje = titleJson.GetString() ?? mensaje;
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    if (!string.IsNullOrWhiteSpace(cuerpo))
+                        mensaje = cuerpo;
+                }
+
+                error = mensaje;
+
+                // Actualiza los horarios por si alguien reservó
+                // el espacio mientras el usuario completaba el formulario.
+                await CargarDisponibilidadAsync();
+                return;
+            }
+
+            var citaCreada =
+                await response.Content.ReadFromJsonAsync<CitaClienteDto>();
+
+            if (citaCreada is null)
+            {
+                error = "La API aceptó la solicitud, pero no devolvió los datos de la cita.";
+                await CargarCitasAsync();
+                return;
+            }
+
+            // La cita ya se registró en el backend.
+            agenteConfirmadoNombre = agente.Nombre;
+            confirmada = citaCreada;
+            mostrarProximas = true;
+
+            await CargarCitasAsync();
+            await CargarDisponibilidadAsync();
+
+            hora = null;
+            agenteSelId = null;
+            archivos.Clear();
+        }
+        catch (Exception ex)
+        {
+            error = "Ocurrió un error al registrar la cita. Verifica la conexión con la API.";
+            Console.Error.WriteLine(
+                $"Error al registrar cita: {ex}");
+        }
+        finally
+        {
+            guardandoCita = false;
+        }
     }
 
-    private void Cancelar(CitaDto c) => c.Estado = "Cancelada";
-
-    // ---------- Cálculo de costo y tiempo ----------
-    private Estim Calcular(Servicio s, Agente? a)
+    private void CerrarConfirmacion()
     {
-        var factorCosto = a?.Tarifa ?? 1.0;
-        var factorTiempo = (a is not null && a.Categorias.Contains(s.Categoria)) ? 0.85 : 1.0;
+        confirmada = null;
+        agenteConfirmadoNombre = null;
+    }
 
-        var costo = TextoCosto(s.CostoMin, s.CostoMax, factorCosto);
-        var tiempo = TextoTiempo(s.TiempoMin, s.TiempoMax, factorTiempo);
+    // Esta cancelación solo modifica la lista en memoria.
+    private void Cancelar(CitaClienteDto c)
+    {
+        c.Estado = "Cancelada";
+    }
 
-        string recomendacion;
-        if (s.TiempoMax is null)
-        {
-            recomendacion = "El tiempo depende de la pieza. Te confirmamos al recibir tu vehículo.";
-        }
-        else if (Redondear5(s.TiempoMax.Value * factorTiempo) <= 60)
-        {
-            recomendacion = "Es un trabajo corto: puedes esperar tu vehículo en el taller.";
-        }
-        else
-        {
-            recomendacion = "Te recomendamos dejar tu vehículo y recogerlo después.";
-        }
+    // Cálculo de costo y tiempo basado en el servicio seleccionado.
+    private Estim Calcular(Servicio s)
+    {
+        var costo = $"Q{s.CostoBase.ToString("N2", CultureInfo.GetCultureInfo("es-GT"))}";
+        var tiempo = FormatoMin(s.TiempoEstimadoMinutos);
+
+        var recomendacion = s.TiempoEstimadoMinutos <= 60
+            ? "Es un trabajo corto: puedes esperar tu vehículo en el taller."
+            : "Te recomendamos dejar tu vehículo y recogerlo después.";
 
         return new Estim(costo, tiempo, recomendacion);
     }
 
     private string NotaAgente()
     {
-        if (agenteSel is null) return "El valor se ajusta al elegir un agente.";
-        var esp = EsEspecialista(agenteSel) ? " · especialista en este servicio (más rápido)" : "";
-        return $"Calculado para {agenteSel.Nombre}{esp}.";
+        if (agenteSelId is null)
+            return "Se asignará uno de los agentes disponibles para el horario elegido.";
+
+        var agente = agentes.FirstOrDefault(a => a.IdAgente == agenteSelId.Value);
+        return agente is null ? "Selecciona un agente disponible." : $"Agente seleccionado: {agente.Nombre}.";
     }
 
-    private static int Redondear5(double x) => (int)(Math.Round(x / 5.0, MidpointRounding.AwayFromZero) * 5);
+    private static int Redondear5(double x) =>
+        (int)(Math.Round(x / 5.0, MidpointRounding.AwayFromZero) * 5);
 
     private static string TextoCosto(int min, int? max, double factor)
     {
         var a = Redondear5(min * factor);
-        if (max is null) return $"Desde Q{a}";
+
+        if (max is null)
+            return $"Desde Q{a}";
+
         var b = Redondear5(max.Value * factor);
+
         return a == b ? $"Q{a}" : $"Q{a}–Q{b}";
     }
 
     private static string FormatoMin(int m)
     {
-        if (m < 60) return $"{m} min";
-        return m % 60 == 0 ? $"{m / 60} h" : $"{m / 60} h {m % 60} min";
+        if (m < 60)
+            return $"{m} min";
+
+        return m % 60 == 0
+            ? $"{m / 60} h"
+            : $"{m / 60} h {m % 60} min";
     }
 
     private static string TextoTiempo(int? min, int? max, double factor)
     {
-        if (min is null || max is null) return "Según la pieza";
+        if (min is null || max is null)
+            return "Según la pieza";
+
         var a = Redondear5(min.Value * factor);
         var b = Redondear5(max.Value * factor);
-        if (a == b) return FormatoMin(a);
-        if (b < 60) return $"{a}–{b} min";
+
+        if (a == b)
+            return FormatoMin(a);
+
+        if (b < 60)
+            return $"{a}–{b} min";
+
         return $"{FormatoMin(a)} – {FormatoMin(b)}";
     }
 
-    // ---------- Formatos ----------
-    private static readonly string[] MesesCortos = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
-    private static readonly string[] MesesLargos = { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" };
-    private static readonly string[] DiasSemana = { "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado" };
+    // Formatos de fecha, hora y archivos
+    private static readonly string[] MesesCortos =
+        { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+
+    private static readonly string[] MesesLargos =
+        { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" };
+
+    private static readonly string[] DiasSemana =
+        { "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado" };
 
     private static string Mes(DateTime f) => MesesCortos[f.Month - 1];
 
-    private static string FechaLarga(DateTime f) => $"{DiasSemana[(int)f.DayOfWeek]} {f.Day} de {MesesLargos[f.Month - 1]}";
+    private static string FechaLarga(DateTime f) =>
+        $"{DiasSemana[(int)f.DayOfWeek]} {f.Day} de {MesesLargos[f.Month - 1]}";
 
     private static string FormatoHora(TimeOnly h)
     {
@@ -1378,7 +2056,9 @@
     }
 
     private static string FormatoTamano(long bytes) =>
-        bytes >= 1024 * 1024 ? $"{bytes / 1024.0 / 1024.0:0.0} MB" : $"{Math.Max(1, bytes / 1024)} KB";
+        bytes >= 1024 * 1024
+            ? $"{bytes / 1024.0 / 1024.0:0.0} MB"
+            : $"{Math.Max(1, bytes / 1024)} KB";
 
     private static string ClaseEstado(string estado) => estado switch
     {

@@ -21,8 +21,10 @@
 
   <ItemGroup>
     <Folder Include="Data\" />
-    <Folder Include="Services\" />
-    <Folder Include="Repositories\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutosPALibrary\AutosPALibrary.csproj" />
   </ItemGroup>
 
 </Project>

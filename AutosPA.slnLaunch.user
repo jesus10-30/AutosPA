@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Nuevo perfil",
+    "Projects": [
+      {
+        "Path": "AutosPA\\AutosPA.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "AutosPAService\\AutosPAService.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

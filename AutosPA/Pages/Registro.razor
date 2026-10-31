@@ -1,6 +1,9 @@
-﻿@page "/registro"
+﻿@using System.Net.Http.Json
+@using AutosPALibrary.Dtos
+@page "/registro"
 @layout AuthLayout
 @inject NavigationManager Nav
+@inject HttpClient Http
 
 <PageTitle>FlexiCar — Crear cuenta</PageTitle>
 
@@ -294,6 +297,12 @@
                     <h1>@Titulos[paso - 1]</h1>
                     <p>@Subtitulos[paso - 1]</p>
                 </div>
+                @if (!string.IsNullOrWhiteSpace(mensajeError))
+                {
+                    <div class="au-err" role="alert">
+                        @mensajeError
+                    </div>
+                }
 
                 <form @onsubmit="Avanzar" @onsubmit:preventDefault>
 
@@ -338,10 +347,6 @@
                                 {
                                     <small class="au-err">@Err("telefono")</small>
                                 }
-                            </div>
-                            <div class="au-field">
-                                <label class="au-label">NIT <small>(opcional)</small></label>
-                                <input class="au-input" placeholder="CF" @bind="nit" />
                             </div>
                         </div>
                     }
@@ -406,14 +411,23 @@
                         @if (!omitirVehiculo)
                         {
                             <div class="au-grid2">
+
                                 <div class="au-field">
                                     <label class="au-label">Marca</label>
-                                    <input class="au-input @(Err("marca") is not null ? "invalid" : "")" placeholder="Toyota" @bind="marca" />
+                                    <select class="au-input @(Err("marca") is not null ? "invalid" : "")"
+                                            @bind="marcaId">
+                                        <option value="0">Selecciona una marca</option>
+                                        @foreach (var m in marcas)
+                                        {
+                                            <option value="@m.Id">@m.Nombre</option>
+                                        }
+                                    </select>
                                     @if (Err("marca") is not null)
                                     {
                                         <small class="au-err">@Err("marca")</small>
                                     }
                                 </div>
+
                                 <div class="au-field">
                                     <label class="au-label">Modelo</label>
                                     <input class="au-input @(Err("modelo") is not null ? "invalid" : "")" placeholder="Corolla" @bind="modelo" />
@@ -423,7 +437,7 @@
                                     }
                                 </div>
                                 <div class="au-field">
-                                    <label class="au-label">Año <small>(opcional)</small></label>
+                                    <label class="au-label">Año</label>
                                     <input class="au-input @(Err("anio") is not null ? "invalid" : "")" placeholder="2020" inputmode="numeric" @bind="anio" />
                                     @if (Err("anio") is not null)
                                     {
@@ -438,15 +452,23 @@
                                         <small class="au-err">@Err("placa")</small>
                                     }
                                 </div>
+
                                 <div class="au-field">
                                     <label class="au-label">Tipo</label>
-                                    <select class="au-input" @bind="tipo">
-                                        @foreach (var t in tipos)
+                                    <select class="au-input @(Err("tipo") is not null ? "invalid" : "")"
+                                            @bind="tipoVehiculoId">
+                                        <option value="0">Selecciona un tipo</option>
+                                        @foreach (var t in tiposVehiculo)
                                         {
-                                            <option value="@t">@t</option>
+                                            <option value="@t.Id">@t.Nombre</option>
                                         }
                                     </select>
+                                    @if (Err("tipo") is not null)
+                                    {
+                                        <small class="au-err">@Err("tipo")</small>
+                                    }
                                 </div>
+
                                 <div class="au-field">
                                     <label class="au-label">Color</label>
                                     <select class="au-input" @bind="color">
@@ -458,34 +480,22 @@
                                 </div>
                             </div>
 
-                            <div class="au-sub">Conductor habitual</div>
+                            
+                            <div class="au-sub">Datos del conductor</div>
 
-                            <label class="au-check" style="margin-bottom:14px;">
-                                <input type="checkbox" @bind="esConductor" />
-                                <span>Yo soy el conductor de este vehículo.</span>
-                            </label>
+                            <div class="au-field">
+                                <label class="au-label">Número de licencia</label>
+                                <input class="au-input @(Err("licencia") is not null ? "invalid" : "")"
+                                       placeholder="Número de licencia"
+                                       autocomplete="off"
+                                       @bind="conductorLicencia" />
 
-                            @if (!esConductor)
-                            {
-                                <div class="au-grid2">
-                                    <div class="au-field">
-                                        <label class="au-label">Nombre del conductor</label>
-                                        <input class="au-input @(Err("conductor") is not null ? "invalid" : "")" placeholder="Nombre completo" @bind="conductorNombre" />
-                                        @if (Err("conductor") is not null)
-                                        {
-                                            <small class="au-err">@Err("conductor")</small>
-                                        }
-                                    </div>
-                                    <div class="au-field">
-                                        <label class="au-label">No. de licencia</label>
-                                        <input class="au-input @(Err("licencia") is not null ? "invalid" : "")" placeholder="L-000000" @bind="conductorLicencia" />
-                                        @if (Err("licencia") is not null)
-                                        {
-                                            <small class="au-err">@Err("licencia")</small>
-                                        }
-                                    </div>
-                                </div>
-                            }
+                                @if (Err("licencia") is not null)
+                                {
+                                    <small class="au-err">@Err("licencia")</small>
+                                }
+                            </div>
+
                         }
 
                         <label class="au-check" style="margin-top:6px;">
@@ -522,14 +532,7 @@
 </div>
 
 @code {
-    /*
-     * Datos que recoge este formulario (para diseñar la base de datos):
-     *   Usuario  : Nombres, Apellidos, Correo (único), Telefono, Nit, PasswordHash, Rol = "Cliente", FechaRegistro
-     *   Vehiculo : UsuarioId, Marca, Modelo, Anio, Placa (única), Tipo, Color
-     *   Conductor: VehiculoId, Nombre, Licencia (si el cliente no es el conductor)
-     * La contraseña nunca se guarda en texto plano: el servidor guarda solo el hash.
-     */
-
+    
     private static readonly string[] Pasos = { "Datos personales", "Seguridad", "Tu vehículo" };
     private static readonly string[] Detalles = { "Nombre y contacto", "Contraseña de acceso", "Vehículo y conductor" };
     private static readonly string[] Titulos = { "Cuéntanos quién eres", "Protege tu cuenta", "Registra tu vehículo" };
@@ -545,9 +548,10 @@
     private bool cargando;
     private bool verPassword;
     private Dictionary<string, string> errores = new();
+    private string? mensajeError;
 
     // Paso 1
-    private string nombres = "", apellidos = "", correo = "", telefono = "", nit = "";
+    private string nombres = "", apellidos = "", correo = "", telefono = "";
 
     // Paso 2
     private string pass = "", pass2 = "";
@@ -560,8 +564,19 @@
     private string conductorNombre = "", conductorLicencia = "";
     private bool acepto;
 
-    private List<string> tipos = new() { "Sedán", "Hatchback", "SUV", "Pickup", "Camión ligero", "Moto" };
-    private List<string> colores = new() { "Blanco", "Negro", "Gris", "Plata", "Azul", "Rojo", "Verde" };
+    
+    private List<CatalogoOpcionDto> marcas = new();
+    private List<CatalogoOpcionDto> tiposVehiculo = new();
+
+    private long marcaId;
+    private long tipoVehiculoId;
+
+    private List<string> colores = new()
+    {
+        "Blanco", "Negro", "Gris", "Plata",
+        "Azul", "Rojo", "Verde"
+    };
+
 
     private string PrimerNombre => nombres.Trim().Split(' ')[0];
 
@@ -630,24 +645,34 @@
         }
         else
         {
+
             if (!omitirVehiculo)
             {
-                if (string.IsNullOrWhiteSpace(marca)) errores["marca"] = "Indica la marca.";
-                if (string.IsNullOrWhiteSpace(modelo)) errores["modelo"] = "Indica el modelo.";
-                if (string.IsNullOrWhiteSpace(placa)) errores["placa"] = "Indica la placa.";
-                // TODO: confirmar con el servidor que la placa no esté registrada
+                if (marcaId <= 0 || !marcas.Any(m => m.Id == marcaId))
+                    errores["marca"] = "Selecciona una marca válida.";
 
-                if (!string.IsNullOrWhiteSpace(anio))
+                if (string.IsNullOrWhiteSpace(modelo))
+                    errores["modelo"] = "Indica el modelo.";
+
+                if (string.IsNullOrWhiteSpace(placa))
+                    errores["placa"] = "Indica la placa.";
+
+                if (!int.TryParse(anio.Trim(), out var a) ||
+                    a < 1980 ||
+                    a > DateTime.Today.Year + 1)
                 {
-                    if (!int.TryParse(anio.Trim(), out var a) || 1980 > a || a > DateTime.Today.Year + 1) errores["anio"] = "Escribe un año válido.";
+                    errores["anio"] = "Indica un año válido.";
                 }
 
-                if (!esConductor)
+                if (string.IsNullOrWhiteSpace(conductorLicencia))
+                    errores["licencia"] = "Indica tu número de licencia.";
+                if (tipoVehiculoId <= 0 ||
+                    !tiposVehiculo.Any(t => t.Id == tipoVehiculoId))
                 {
-                    if (string.IsNullOrWhiteSpace(conductorNombre)) errores["conductor"] = "Indica el nombre del conductor.";
-                    if (string.IsNullOrWhiteSpace(conductorLicencia)) errores["licencia"] = "Indica el número de licencia.";
+                    errores["tipo"] = "Selecciona un tipo de vehículo válido.";
                 }
             }
+
 
             if (!acepto) errores["acepto"] = "Debes aceptar los términos para crear tu cuenta.";
         }
@@ -655,9 +680,13 @@
         return !errores.Any();
     }
 
+    
     private async Task Avanzar()
     {
-        if (!ValidarPaso(paso)) return;
+        mensajeError = null;
+
+        if (!ValidarPaso(paso))
+            return;
 
         if (paso != 3)
         {
@@ -666,18 +695,121 @@
         }
 
         cargando = true;
-        StateHasChanged();
+
+        try
+        {
+
+            var solicitud = new RegistroRequest
+            {
+                Nombres = nombres.Trim(),
+                Apellidos = apellidos.Trim(),
+                Email = correo.Trim(),
+                Telefono = SoloDigitos(telefono),
+                Password = pass,
+
+                OmitirVehiculo = omitirVehiculo,
+
+                IdMarca = omitirVehiculo ? null : marcaId,
+                IdTipoVehiculo = omitirVehiculo ? null : tipoVehiculoId,
+
+                Modelo = omitirVehiculo ? null : modelo.Trim(),
+
+                Anio = omitirVehiculo
+                    ? null
+                    : int.Parse(anio.Trim()),
+
+                Placa = omitirVehiculo
+                    ? null
+                    : placa.Trim().ToUpperInvariant(),
+
+                Color = omitirVehiculo ? null : color,
+
+                NumeroLicencia = omitirVehiculo
+                    ? string.Empty
+                    : conductorLicencia.Trim()
+            };
 
 
-        await Task.Delay(1200);
+            using var respuesta = await Http.PostAsJsonAsync(
+                "https://localhost:7201/api/auth/registro",
+                solicitud);
 
-        cargando = false;
-        creada = true;
+            if (respuesta.IsSuccessStatusCode)
+            {
+                creada = true;
+            }
+            else
+            {
+                var cuerpo =
+                    await respuesta.Content.ReadFromJsonAsync<
+                        Dictionary<string, string>>();
+
+                mensajeError = cuerpo is not null &&
+                               cuerpo.TryGetValue("mensaje", out var mensaje)
+                    ? mensaje
+                    : $"No se pudo completar el registro. Código HTTP: {(int)respuesta.StatusCode}.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            mensajeError =
+                "No se pudo conectar con la API. Verifica que AutosPAService esté ejecutándose y que su dirección HTTPS sea correcta.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            mensajeError =
+                "La API devolvió una respuesta que no pudimos interpretar.";
+        }
+        catch (Exception)
+        {
+            mensajeError =
+                "Ocurrió un error al procesar el registro. Inténtalo nuevamente.";
+        }
+        finally
+        {
+            cargando = false;
+        }
     }
+
 
     private void Atras()
     {
         errores.Clear();
-        if (paso != 1) paso--;
+        mensajeError = null;
+
+        if (paso > 1)
+            paso--;
     }
+
+    private async Task CargarCatalogosAsync()
+    {
+        try
+        {
+            marcas = await Http.GetFromJsonAsync<List<CatalogoOpcionDto>>(
+                "https://localhost:7201/api/catalogos/marcas"
+            ) ?? new();
+
+            tiposVehiculo = await Http.GetFromJsonAsync<List<CatalogoOpcionDto>>(
+                "https://localhost:7201/api/catalogos/tipos-vehiculo"
+            ) ?? new();
+
+            if (marcas.Count == 0 || tiposVehiculo.Count == 0)
+            {
+                mensajeError = "No hay marcas o tipos de vehículo disponibles.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            mensajeError = "No se pudieron cargar las marcas y los tipos de vehículo. Verifica que la API esté ejecutándose.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            mensajeError = "La API devolvió datos inválidos para los catálogos.";
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCatalogosAsync();
+    }
+
 }

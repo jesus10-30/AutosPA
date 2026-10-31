@@ -1,7 +1,8 @@
 ﻿@page "/panel-agente"
 @implements IDisposable
 @inject NavigationManager Nav
-
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "AGENTE")]
 <PageTitle>FlexiCar — Panel del agente</PageTitle>
 
 <style>
