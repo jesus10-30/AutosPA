@@ -1,4 +1,4 @@
-﻿using AutosPAService.DTOs;
+using AutosPAService.DTOs;
 using AutosPAService.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +15,7 @@ public class CitasController : ControllerBase
         _citasService = citasService;
     }
 
-    [HttpGet("cliente/{idCliente:long}")]
+    [HttpGet("cliente/{idCliente:long}/historial")]
     public async Task<IActionResult> ObtenerPorCliente(long idCliente)
     {
         var citas = await _citasService.ObtenerPorClienteAsync(idCliente);

@@ -281,7 +281,7 @@
 
             // El panel del agente consulta Supabase directamente, así que
             // también se establece la sesión del SDK para ese rol.
-            if (string.Equals(resultado.Rol, "AGENTE", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(resultado.Rol.Trim(), "AGENTE", StringComparison.OrdinalIgnoreCase))
             {
                 await Supabase.Auth.SignIn(correo.Trim(), password);
             }

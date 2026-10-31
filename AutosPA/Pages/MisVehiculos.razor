@@ -1294,7 +1294,7 @@ private async Task CargarHistorial(Vehiculo v)
     try
     {
         var citas = await Http.GetFromJsonAsync<List<CitaHistorialDTO>>(
-            $"api/Citas/cliente/{idUsuario}") ?? new();
+            $"api/Citas/cliente/{idUsuario}/historial") ?? new();
 
         v.Historial = citas
             .Where(c =>

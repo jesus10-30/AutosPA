@@ -29,8 +29,9 @@ public class AgenteRepository : IAgenteRepository
             .FirstOrDefaultAsync(u => u.IdUsuario == idUsuario);
 
         return usuario != null &&
-               usuario.IdRolNavigation.Nombre.Equals(
-                   "agente",
+               string.Equals(
+                   usuario.IdRolNavigation.Nombre?.Trim(),
+                   "AGENTE",
                    StringComparison.OrdinalIgnoreCase);
     }
 
