@@ -97,7 +97,7 @@ namespace AutosPA.Services
                 .Filter("id_agente", Op.Equals, a.IdUsuario.ToString())
                 .Filter("id_estado_cita", Op.In, new List<long>
                 {
-                    EstConfirmada, EstEnProceso, EstFinalizada
+                    EstPendiente, EstConfirmada, EstEnProceso, EstFinalizada
                 })
                 .Filter("fecha_cita", Op.GreaterThanOrEqual, desde.ToString("yyyy-MM-dd"))
                 .Filter("fecha_cita", Op.LessThanOrEqual, hasta.ToString("yyyy-MM-dd"))
@@ -517,6 +517,9 @@ namespace AutosPA.Services
             return new Trabajo
             {
                 Id = (int)c.IdCita,
+                // Las citas nuevas se muestran en la agenda como pendientes,
+                // pero se aceptan desde Solicitudes antes de poder iniciarlas.
+                SolicitudId = c.IdEstadoCita == EstPendiente ? (int)c.IdCita : null,
                 Cliente = NombreCliente(c, r),
                 Vehiculo = NombreVehiculo(c, r),
                 Placa = veh?.Placa ?? "",
