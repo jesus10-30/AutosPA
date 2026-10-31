@@ -94,6 +94,7 @@ public class SupabaseAuthenticationHandler
 
             var usuario = await _context.Usuarios
                 .AsNoTracking()
+                .Include(u => u.IdRolNavigation)
                 .FirstOrDefaultAsync(u => u.AuthUserId == authUserId);
 
             if (usuario == null)
@@ -103,6 +104,15 @@ public class SupabaseAuthenticationHandler
 
                 return AuthenticateResult.Fail(
                     "Usuario no vinculado a AutosPA.");
+            }
+
+            if (!usuario.IdRolNavigation.Activo)
+            {
+                Logger.LogWarning(
+                    "Se rechazó el acceso porque el rol del usuario AutosPA {IdUsuario} está inactivo.",
+                    usuario.IdUsuario);
+
+                return AuthenticateResult.Fail("El rol de usuario está inactivo.");
             }
 
             var claims = new[]

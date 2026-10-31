@@ -14,6 +14,15 @@ public class ClienteRepository : IClienteRepository
         _context = context;
     }
 
+    public Task<bool> EsClienteAsync(long idUsuario)
+    {
+        return _context.Usuarios
+            .AsNoTracking()
+            .AnyAsync(u => u.IdUsuario == idUsuario &&
+                           u.IdRolNavigation.Nombre.ToLower() == "cliente" &&
+                           u.IdRolNavigation.Activo);
+    }
+
     public async Task<PerfilClienteDTO?> ObtenerPerfilAsync(long idUsuario)
     {
         var usuario = await _context.Usuarios
@@ -63,7 +72,6 @@ public class ClienteRepository : IClienteRepository
 
         usuario.Nombres = perfil.Nombres.Trim();
         usuario.Apellidos = perfil.Apellidos.Trim();
-        usuario.Email = perfil.Email.Trim();
         usuario.Telefono = string.IsNullOrWhiteSpace(perfil.Telefono)
             ? null
             : perfil.Telefono.Trim();
@@ -73,5 +81,14 @@ public class ClienteRepository : IClienteRepository
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    public Task<bool> CorreoEnUsoAsync(long idUsuario, string email)
+    {
+        var correoNormalizado = email.Trim().ToLowerInvariant();
+        return _context.Usuarios
+            .AsNoTracking()
+            .AnyAsync(u => u.IdUsuario != idUsuario &&
+                           u.Email.ToLower() == correoNormalizado);
     }
 }

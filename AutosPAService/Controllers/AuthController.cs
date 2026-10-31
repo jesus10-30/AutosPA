@@ -1,6 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using AutosPAService.Data;
+using AutosPAService.Services;
+using AutosPALibrary.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,15 +16,61 @@ namespace AutosPAService.Controllers
         private readonly ApplicationDbContext _context;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly AutenticacionService _autenticacionService;
 
         public AuthController(
             ApplicationDbContext context,
             HttpClient httpClient,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            AutenticacionService autenticacionService)
         {
             _context = context;
             _httpClient = httpClient;
             _configuration = configuration;
+            _autenticacionService = autenticacionService;
+        }
+
+        [Authorize]
+        [HttpPut("password")]
+        public async Task<IActionResult> CambiarPassword(
+            [FromBody] CambiarPasswordDTO solicitud)
+        {
+            if (!Guid.TryParse(
+                    User.FindFirst("supabase_user_id")?.Value,
+                    out var authUserId))
+                return Unauthorized(new { mensaje = "La sesión no es válida." });
+
+            if (string.IsNullOrEmpty(solicitud.PasswordActual) ||
+                string.IsNullOrEmpty(solicitud.PasswordNueva) ||
+                solicitud.PasswordNueva.Length < 8)
+                return BadRequest(new { mensaje = "La nueva contraseña debe tener al menos 8 caracteres." });
+
+            if (string.Equals(solicitud.PasswordActual, solicitud.PasswordNueva, StringComparison.Ordinal))
+                return BadRequest(new { mensaje = "La contraseña nueva debe ser diferente a la actual." });
+
+            var token = Request.Headers.Authorization.ToString();
+            if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                token = token["Bearer ".Length..].Trim();
+
+            var resultado = await _autenticacionService.CambiarPasswordAsync(
+                authUserId,
+                token,
+                solicitud);
+
+            return resultado switch
+            {
+                ResultadoCambioPassword.Exito => NoContent(),
+                ResultadoCambioPassword.SesionInvalida =>
+                    Unauthorized(new { mensaje = "La sesión venció. Inicia sesión nuevamente." }),
+                ResultadoCambioPassword.PasswordActualIncorrecta =>
+                    BadRequest(new { mensaje = "La contraseña actual no es correcta." }),
+                ResultadoCambioPassword.PasswordNuevaInvalida =>
+                    BadRequest(new { mensaje = "Supabase Auth rechazó la nueva contraseña. Revisa los requisitos configurados." }),
+                ResultadoCambioPassword.ReautenticacionAdicionalRequerida =>
+                    Conflict(new { mensaje = "Supabase Auth requiere un código adicional para confirmar el cambio. Este flujo todavía no está configurado." }),
+                _ => StatusCode(StatusCodes.Status502BadGateway,
+                    new { mensaje = "No se pudo completar el cambio de contraseña con Supabase Auth." })
+            };
         }
 
         [HttpPost("login")]

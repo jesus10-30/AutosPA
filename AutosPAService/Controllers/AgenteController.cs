@@ -31,7 +31,9 @@ public class AgenteController : ControllerBase
     }
 
     [HttpGet("trabajos")]
-    public async Task<IActionResult> ObtenerTrabajos()
+    public async Task<IActionResult> ObtenerTrabajos(
+        [FromQuery] DateOnly? desde,
+        [FromQuery] DateOnly? hasta)
     {
         var idAgente = await ObtenerIdAgenteAsync();
 
@@ -45,9 +47,89 @@ public class AgenteController : ControllerBase
             return Forbid();
         }
 
-        var trabajos = await _service.ObtenerTrabajosAsync(idAgente.Value);
+        if (desde.HasValue != hasta.HasValue)
+            return BadRequest("Debe proporcionar ambas fechas: desde y hasta.");
+
+        if (desde.HasValue && hasta.HasValue && desde.Value > hasta.Value)
+            return BadRequest("La fecha desde no puede ser posterior a la fecha hasta.");
+
+        var trabajos = desde.HasValue && hasta.HasValue
+            ? await _service.ObtenerTrabajosAsync(idAgente.Value, desde.Value, hasta.Value)
+            : await _service.ObtenerTrabajosAsync(idAgente.Value);
 
         return Ok(trabajos);
+    }
+
+    [HttpGet("solicitudes")]
+    public async Task<IActionResult> ObtenerSolicitudes()
+    {
+        var idAgente = await ObtenerIdAgenteAsync();
+
+        if (idAgente == null)
+            return Forbid();
+
+        var solicitudes = await _service.ObtenerSolicitudesAsync(idAgente.Value);
+        return Ok(solicitudes);
+    }
+
+    [HttpPut("solicitudes/{idCita:long}/aceptar")]
+    public async Task<IActionResult> AceptarSolicitud(long idCita)
+    {
+        var idAgente = await ObtenerIdAgenteAsync();
+
+        if (idAgente == null)
+            return Forbid();
+
+        var resultado = await _service.AceptarSolicitudAsync(idCita, idAgente.Value);
+        return ResponderOperacionSolicitud(resultado, "Solicitud aceptada correctamente.");
+    }
+
+    [HttpPut("solicitudes/{idCita:long}/rechazar")]
+    public async Task<IActionResult> RechazarSolicitud(
+        long idCita,
+        [FromBody] RechazarSolicitudDTO solicitud)
+    {
+        var idAgente = await ObtenerIdAgenteAsync();
+
+        if (idAgente == null)
+            return Forbid();
+
+        var resultado = await _service.RechazarSolicitudAsync(
+            idCita,
+            idAgente.Value,
+            solicitud);
+
+        return ResponderOperacionSolicitud(resultado, "Solicitud rechazada correctamente.");
+    }
+
+    [HttpPut("solicitudes/{idCita:long}/deshacer")]
+    public async Task<IActionResult> DeshacerSolicitud(long idCita)
+    {
+        var idAgente = await ObtenerIdAgenteAsync();
+
+        if (idAgente == null)
+            return Forbid();
+
+        var resultado = await _service.DeshacerSolicitudAsync(idCita, idAgente.Value);
+        return ResponderOperacionSolicitud(resultado, "Se deshizo la acción correctamente.");
+    }
+
+    private IActionResult ResponderOperacionSolicitud(
+        ResultadoSolicitudService resultado,
+        string mensajeExito)
+    {
+        return resultado switch
+        {
+            ResultadoSolicitudService.Exito => Ok(new { mensaje = mensajeExito }),
+            ResultadoSolicitudService.SolicitudInexistente => NotFound(),
+            ResultadoSolicitudService.SolicitudNoAsignada => Forbid(),
+            ResultadoSolicitudService.EstadoInvalido => Conflict("El estado actual de la solicitud no permite esta operación."),
+            ResultadoSolicitudService.MotivoInvalido => BadRequest("El motivo de rechazo es obligatorio."),
+            ResultadoSolicitudService.DuracionInvalida => Conflict("La solicitud o un trabajo existente tiene una duración inválida. No se puede validar la agenda."),
+            ResultadoSolicitudService.ConflictoHorario => Conflict("La solicitud tiene un conflicto de horario."),
+            ResultadoSolicitudService.ConflictoConcurrencia => Conflict("La solicitud cambió mientras se procesaba. Vuelve a cargarla e inténtalo de nuevo."),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
     }
 
     [HttpPut("trabajos/{idCita}/iniciar")]
@@ -116,12 +198,19 @@ public class AgenteController : ControllerBase
             return BadRequest("Nombres, apellidos y correo son obligatorios.");
         }
 
-        var actualizado = await _service.ActualizarPerfilAsync(
+        var resultado = await _service.ActualizarPerfilAsync(
             idAgente.Value, perfil);
 
-        if (!actualizado)
-            return NotFound();
-
-        return Ok(new { mensaje = "Perfil actualizado correctamente." });
+        return resultado switch
+        {
+            ResultadoActualizacionPerfil.Exito =>
+                Ok(new { mensaje = "Perfil actualizado correctamente." }),
+            ResultadoActualizacionPerfil.UsuarioNoEncontrado => NotFound(),
+            ResultadoActualizacionPerfil.CorreoDuplicado =>
+                Conflict("Ese correo ya está registrado."),
+            ResultadoActualizacionPerfil.CambioCorreoRequiereSincronizacionAuth =>
+                Conflict("El cambio de correo requiere sincronizar Supabase Auth y no está disponible todavía."),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
     }
 }

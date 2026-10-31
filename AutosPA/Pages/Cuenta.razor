@@ -453,6 +453,29 @@
         box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
     }
 
+    .ac-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: 180px;
+        color: #6b7a90;
+        font-size: 15px;
+    }
+
+    .ac-loading-spinner {
+        width: 22px;
+        height: 22px;
+        border: 3px solid #e6ebf2;
+        border-top-color: #1f8a5b;
+        border-radius: 50%;
+        animation: ac-spin .8s linear infinite;
+    }
+
+    @@keyframes ac-spin {
+        to { transform: rotate(360deg); }
+    }
+
     @@media (max-width: 800px) {
         .ac-page {
             padding: 28px 14px 0;
@@ -485,6 +508,16 @@
         <h1>Cuenta</h1>
         <p>Administra tus datos y la seguridad de tu cuenta.</p>
     </header>
+
+    @if (cargando)
+    {
+        <div class="ac-loading" role="status" aria-live="polite">
+            <span class="ac-loading-spinner" aria-hidden="true"></span>
+            <span>Cargando los datos de tu cuenta...</span>
+        </div>
+    }
+    else
+    {
 
     <!-- Perfil -->
     <section class="ac-profile">
@@ -532,7 +565,8 @@
                 }
                 else
                 {
-                    <input class="ac-input" @bind="eCorreo" placeholder="Correo electrónico" />
+                    <input class="ac-input" @bind="eCorreo" placeholder="Correo electrónico" readonly />
+                    <small>El cambio del correo de acceso estará disponible cuando se pueda sincronizar con Supabase Auth.</small>
                 }
             </div>
 
@@ -654,6 +688,7 @@
         </div>
         <button type="button" class="ac-btn ac-btn-danger-outline" @onclick="@(() => AbrirModal("eliminar"))">Eliminar</button>
     </section>
+    }
 </div>
 
 @if (modal is not null)
@@ -677,7 +712,7 @@
                 }
                 <div class="ac-modal-actions">
                     <button type="button" class="ac-btn ac-btn-outline" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="ac-btn ac-btn-solid" @onclick="CambiarPassword">Guardar</button>
+                    <button type="button" class="ac-btn ac-btn-solid" disabled="@cambiandoPassword" @onclick="CambiarPassword">@(cambiandoPassword ? "Actualizando..." : "Guardar")</button>
                 </div>
             }
             else if (modal == "facturacion")
@@ -732,6 +767,7 @@
     private bool editando;
     private bool cargando = true;
     private bool guardando = false;
+    private bool cambiandoPassword;
 
     private string eNombre = "";
     private string eCorreo = "";
@@ -766,44 +802,60 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarPerfil();
+        var error = await CargarPerfil();
+        if (error is not null)
+            await Aviso(error);
     }
 
-    private async Task CargarPerfil()
+    private async Task<string?> CargarPerfil(bool mostrarIndicador = true)
     {
         try
         {
-            cargando = true;
+            if (mostrarIndicador)
+                cargando = true;
 
-            var perfil = await Http.GetFromJsonAsync<
-                AutosPALibrary.DTOs.PerfilClienteDTO>(
-                    "api/Cliente/perfil"
-                );
+            using var respuesta = await Http.GetAsync("api/Cliente/perfil");
+            if (!respuesta.IsSuccessStatusCode)
+                return await ObtenerMensajeErrorAsync(respuesta, "No se pudieron cargar los datos de tu cuenta.");
 
-            if (perfil != null)
-            {
-                nombre = $"{perfil.Nombres} {perfil.Apellidos}".Trim();
-                correo = perfil.Email;
-                telefono = perfil.Telefono ?? "";
+            var perfil = await respuesta.Content.ReadFromJsonAsync<
+                AutosPALibrary.DTOs.PerfilClienteDTO>();
 
-                nombreFactura = nombre;
+            if (perfil is null)
+                return "El servidor no devolvió los datos del perfil.";
 
-                totalVehiculos = perfil.TotalVehiculos;
-                citasProximas = perfil.CitasProximas;
-                serviciosCompletados = perfil.ServiciosCompletados;
-            }
+            nombre = $"{perfil.Nombres} {perfil.Apellidos}".Trim();
+            correo = perfil.Email;
+            telefono = perfil.Telefono ?? "";
+
+            nombreFactura = nombre;
+
+            totalVehiculos = perfil.TotalVehiculos;
+            citasProximas = perfil.CitasProximas;
+            serviciosCompletados = perfil.ServiciosCompletados;
+
+            return null;
+        }
+        catch (TaskCanceledException)
+        {
+            return "La consulta del perfil tardó demasiado. Inténtalo de nuevo.";
         }
         catch (HttpRequestException)
         {
-            await Aviso("No se pudieron cargar los datos de tu cuenta.");
+            return "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return "El servidor devolvió una respuesta inválida al cargar el perfil.";
         }
         catch (Exception)
         {
-            await Aviso("Ocurrió un problema al cargar tu perfil.");
+            return "Ocurrió un problema al cargar tu perfil.";
         }
         finally
         {
-            cargando = false;
+            if (mostrarIndicador)
+                cargando = false;
         }
     }
 
@@ -817,33 +869,36 @@
 
     private async Task GuardarPerfil()
     {
-        if (string.IsNullOrWhiteSpace(eNombre) ||
-            string.IsNullOrWhiteSpace(eCorreo))
-        {
-            await Aviso("El nombre y el correo son obligatorios.");
+        if (guardando)
             return;
-        }
 
-        var partesNombre = eNombre.Trim()
-            .Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-
-        if (partesNombre.Length < 2)
-        {
-            await Aviso("Ingresa tus nombres y apellidos.");
-            return;
-        }
-
-        if (!System.Text.RegularExpressions.Regex.IsMatch(
-            eCorreo.Trim(),
-            @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-        {
-            await Aviso("Ingresa un correo electrónico válido.");
-            return;
-        }
+        guardando = true;
 
         try
         {
-            guardando = true;
+            if (string.IsNullOrWhiteSpace(eNombre) ||
+                string.IsNullOrWhiteSpace(eCorreo))
+            {
+                await Aviso("El nombre y el correo son obligatorios.");
+                return;
+            }
+
+            var partesNombre = eNombre.Trim()
+                .Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+
+            if (partesNombre.Length < 2)
+            {
+                await Aviso("Ingresa tus nombres y apellidos.");
+                return;
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(
+                eCorreo.Trim(),
+                @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                await Aviso("Ingresa un correo electrónico válido.");
+                return;
+            }
 
             var datos = new AutosPALibrary.DTOs.ActualizarPerfilClienteDTO
             {
@@ -853,38 +908,92 @@
                 Telefono = eTelefono
             };
 
-            var respuesta = await Http.PutAsJsonAsync(
+            using var respuesta = await Http.PutAsJsonAsync(
                 "api/Cliente/perfil",
                 datos
             );
 
             if (respuesta.IsSuccessStatusCode)
             {
-                nombre = eNombre.Trim();
-                correo = eCorreo.Trim();
-                telefono = eTelefono.Trim();
-
                 editando = false;
 
-                await Aviso("Perfil actualizado correctamente.");
-            }
-            else if ((int)respuesta.StatusCode == 409)
-            {
-                await Aviso("Ese correo ya está registrado.");
+                var errorRecarga = await CargarPerfil(mostrarIndicador: false);
+                if (errorRecarga is null)
+                    await Aviso("Perfil actualizado correctamente.");
+                else
+                    await Aviso($"Los cambios se guardaron, pero no se pudieron confirmar al recargar el perfil. {errorRecarga}");
             }
             else
             {
-                await Aviso("No se pudieron guardar los cambios.");
+                await Aviso(await ObtenerMensajeErrorAsync(respuesta, "No se pudieron guardar los cambios."));
             }
+        }
+        catch (TaskCanceledException)
+        {
+            await Aviso("La solicitud tardó demasiado. Inténtalo de nuevo.");
+        }
+        catch (HttpRequestException)
+        {
+            await Aviso("No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.");
         }
         catch (Exception)
         {
-            await Aviso("No fue posible conectar con el servidor.");
+            await Aviso("Ocurrió un problema al guardar los cambios.");
         }
         finally
         {
             guardando = false;
         }
+    }
+
+    private static async Task<string> ObtenerMensajeErrorAsync(
+        HttpResponseMessage respuesta,
+        string mensajePredeterminado)
+    {
+        var cuerpo = await respuesta.Content.ReadAsStringAsync();
+        var mensajeServidor = ExtraerMensajeServidor(cuerpo);
+
+        return (int)respuesta.StatusCode switch
+        {
+            400 => mensajeServidor ?? "Revisa los datos ingresados e inténtalo de nuevo.",
+            401 => "Tu sesión no es válida o venció. Inicia sesión nuevamente.",
+            403 => "No tienes autorización para acceder a este perfil.",
+            404 => "No se encontró el perfil de tu cuenta.",
+            409 => mensajeServidor ?? "No se pudo guardar porque existe un conflicto con los datos actuales.",
+            500 => "Ocurrió un error interno del servidor. Inténtalo más tarde.",
+            >= 500 => "El servidor tuvo un problema. Inténtalo más tarde.",
+            _ => mensajeServidor ?? mensajePredeterminado
+        };
+    }
+
+    private static string? ExtraerMensajeServidor(string cuerpo)
+    {
+        if (string.IsNullOrWhiteSpace(cuerpo))
+            return null;
+
+        try
+        {
+            using var documento = System.Text.Json.JsonDocument.Parse(cuerpo);
+            if (documento.RootElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                return documento.RootElement.GetString();
+
+            if (documento.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                foreach (var propiedad in new[] { "mensaje", "message", "detail", "title" })
+                {
+                    if (documento.RootElement.TryGetProperty(propiedad, out var valor) &&
+                        valor.ValueKind == System.Text.Json.JsonValueKind.String)
+                        return valor.GetString();
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // Algunos errores del servidor pueden devolver texto plano.
+            return cuerpo.Length <= 300 ? cuerpo : null;
+        }
+
+        return null;
     }
 
     private void AbrirModal(string nombreModal)
@@ -902,6 +1011,9 @@
 
     private async Task CambiarPassword()
     {
+        if (cambiandoPassword)
+            return;
+
         if (string.IsNullOrWhiteSpace(pwActual))
         {
             errorModal = "Escribe tu contraseña actual.";
@@ -920,7 +1032,51 @@
             return;
         }
 
-        errorModal = "El cambio de contraseña todavía no está conectado al servidor.";
+        cambiandoPassword = true;
+        errorModal = null;
+
+        try
+        {
+            using var respuesta = await Http.PutAsJsonAsync(
+                "api/Auth/password",
+                new AutosPALibrary.DTOs.CambiarPasswordDTO
+                {
+                    PasswordActual = pwActual,
+                    PasswordNueva = pwNueva
+                });
+
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                errorModal = await ObtenerMensajeErrorAsync(
+                    respuesta,
+                    "No se pudo cambiar la contraseña.");
+                return;
+            }
+
+            modal = null;
+            pwActual = pwNueva = pwConfirma = "";
+            await LimpiarSesionAsync();
+            toast = "La contraseña se actualizó correctamente. Inicia sesión de nuevo.";
+            StateHasChanged();
+            await Task.Delay(1500);
+            Nav.NavigateTo("/login", forceLoad: true);
+        }
+        catch (TaskCanceledException)
+        {
+            errorModal = "La solicitud tardó demasiado. Inicia sesión para comprobar el estado antes de volver a intentarlo.";
+        }
+        catch (HttpRequestException)
+        {
+            errorModal = "No se pudo conectar con el servidor.";
+        }
+        catch (Exception)
+        {
+            errorModal = "Ocurrió un problema al cambiar la contraseña.";
+        }
+        finally
+        {
+            cambiandoPassword = false;
+        }
     }
 
     private async Task GuardarFacturacion()
@@ -933,13 +1089,7 @@
     {
         try
         {
-            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_token");
-            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_usuario");
-            await JS.InvokeVoidAsync("localStorage.removeItem", "flexicar_rol");
-
-            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_token");
-            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_usuario");
-            await JS.InvokeVoidAsync("sessionStorage.removeItem", "flexicar_rol");
+            await LimpiarSesionAsync();
 
             modal = null;
 
@@ -948,6 +1098,15 @@
         catch (Exception ex)
         {
             errorModal = $"No se pudo cerrar la sesión: {ex.Message}";
+        }
+    }
+
+    private async Task LimpiarSesionAsync()
+    {
+        foreach (var key in new[] { "flexicar_token", "flexicar_usuario", "flexicar_rol" })
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", key);
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", key);
         }
     }
 

@@ -1,5 +1,6 @@
 
 using System.Security.Claims;
+using AutosPAService.Interfaces;
 using AutosPAService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,10 @@ namespace AutosPAService.Controllers;
 [Route("api/[controller]")]
 public class NotificacionesController : ControllerBase
 {
-    private readonly NotificacionesService _notificacionesService;
+    private readonly INotificacionesService _notificacionesService;
 
     public NotificacionesController(
-        NotificacionesService notificacionesService)
+        INotificacionesService notificacionesService)
     {
         _notificacionesService = notificacionesService;
     }

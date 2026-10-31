@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AutosPAService.DTOs;
 using AutosPAService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -69,32 +70,33 @@ public class DocumentosVehiculoController : ControllerBase
     }
 
     [HttpPost("vehiculo/{idVehiculo:long}")]
-[Consumes("multipart/form-data")]
-[RequestSizeLimit(6 * 1024 * 1024)]
-public async Task<IActionResult> Subir(
-    long idVehiculo,
-    [FromForm] long idTipoDocumento,
-    [FromForm] DateTime? fechaVencimiento,
-    IFormFile archivo)
-{
-    if (!ObtenerUsuario(out var idUsuario) ||
-        !ObtenerIdentidadSupabase(out var authUserId))
-        return Unauthorized();
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Subir(
+        long idVehiculo,
+        [FromForm] SubirDocumentoVehiculoFormDTO formulario)
+    {
+        if (!ObtenerUsuario(out var idUsuario) ||
+            !ObtenerIdentidadSupabase(out var authUserId))
+            return Unauthorized();
 
-    var resultado = await _service.SubirAsync(
-        idVehiculo,
-        idUsuario,
-        authUserId,
-        idTipoDocumento,
-        fechaVencimiento,
-        archivo,
-        ObtenerToken());
+        var resultado = await _service.SubirAsync(
+            idVehiculo,
+            idUsuario,
+            authUserId,
+            formulario.IdTipoDocumento,
+            formulario.FechaVencimiento,
+            formulario.Archivo,
+            ObtenerToken());
 
-    if (!resultado.Exito)
-        return BadRequest(new { mensaje = resultado.Mensaje });
+        if (!resultado.Exito)
+            return BadRequest(new { mensaje = resultado.Mensaje });
 
-    return Ok(new { mensaje = resultado.Mensaje });
-}
+        return Ok(new { mensaje = resultado.Mensaje });
+    }
 
     [HttpDelete("{idDocumento:long}")]
     public async Task<IActionResult> Eliminar(long idDocumento)

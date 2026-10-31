@@ -11,6 +11,8 @@ public partial class Cita
 
     public long? IdAgente { get; set; }
 
+    public long? IdAgenteDestino { get; set; }
+
     public long IdVehiculo { get; set; }
 
     public long IdTipoServicio { get; set; }

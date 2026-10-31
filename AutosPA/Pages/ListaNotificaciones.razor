@@ -264,7 +264,7 @@
             <h1>Notificaciones</h1>
             <p>Confirmaciones de cita, servicios finalizados, recordatorios y promociones.</p>
         </div>
-        <button type="button" class="nt-markall" disabled="@(NoLeidas == 0)" @onclick="MarcarTodas">Marcar todas como leídas</button>
+        <button type="button" class="nt-markall" disabled="@(NoLeidas == 0 || ProcesandoAccion)" @onclick="MarcarTodas">@(ProcesandoAccion ? "Actualizando..." : "Marcar todas como leídas")</button>
     </header>
 
     <div class="nt-tabs">
@@ -275,70 +275,73 @@
         <button type="button" class="nt-tab @(filtro == "promociones" ? "active" : "")" @onclick='() => filtro = "promociones"'>Promociones</button>
     </div>
     
-    @if (!string.IsNullOrEmpty(ErrorAccion))
-{
-    <p class="text-danger text-center">@ErrorAccion</p>
-}
-
-@if (Cargando)
-{
-    <p class="text-center">Cargando notificaciones...</p>
-}
-else if (!string.IsNullOrEmpty(ErrorCarga))
-{
-    <p class="text-center">@ErrorCarga</p>
-}
-else if (!Filtradas.Any())
-{
-    <p class="text-center">No hay notificaciones para mostrar.</p>
-}
-
-
-    @foreach (var n in Filtradas)
+    @if (Cargando)
     {
-        <article class="nt-item @n.Tipo @(n.Leida ? "read" : "unread")" @onclick="() => Leer(n)">
-            <div class="nt-ico">
-                <svg viewBox="0 0 24 24">
-                    @switch (n.Tipo)
-                    {
-                        case "cita":
-                            <rect x="3" y="5" width="18" height="16" rx="2" />
-                            <path d="M16 3v4M8 3v4M3 11h18" />
-                            break;
-                        case "servicio":
-                            <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z" />
-                            break;
-                        case "recordatorio":
-                            <circle cx="12" cy="12" r="9" />
-                            <path d="M12 7v5l3 3" />
-                            break;
-                        default:
-                            <path d="M20 12l-8 8-9-9V3h8z" />
-                            <circle cx="7.5" cy="7.5" r="1.3" />
-                            break;
-                    }
-                </svg>
-            </div>
-
-            <div class="nt-body">
-                <h4>@n.Titulo</h4>
-                <p>@n.Mensaje</p>
-            </div>
-
-            <div class="nt-meta">
-                <span>@n.Hace</span>
-                @if (!n.Leida)
-                {
-                    <span class="nt-dot" title="No leída"></span>
-                }
-                <button type="button" class="nt-del" title="Eliminar" @onclick="() => Eliminar(n)" @onclick:stopPropagation="true">×</button>
-            </div>
-        </article>
+        <p class="text-center">Cargando notificaciones...</p>
     }
-
-    @if (!Filtradas.Any())
+    else if (!string.IsNullOrEmpty(ErrorCarga))
     {
-        <div class="nt-empty">No tienes notificaciones en esta sección.</div>
+        <p class="text-center">@ErrorCarga</p>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(ErrorAccion))
+        {
+            <p class="text-danger text-center">@ErrorAccion</p>
+        }
+
+        @if (!Filtradas.Any())
+        {
+            <div class="nt-empty">No tienes notificaciones en esta sección.</div>
+        }
+        else
+        {
+            @foreach (var n in Filtradas)
+            {
+                <article class="nt-item @ClaseTipoCss(n.Tipo) @(n.Leida ? "read" : "unread")" @onclick="() => Leer(n)">
+                    <div class="nt-ico">
+                        <svg viewBox="0 0 24 24">
+                            @switch (NormalizarTipo(n.Tipo))
+                            {
+                                case "cita":
+                                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                                    <path d="M16 3v4M8 3v4M3 11h18" />
+                                    break;
+                                case "servicio":
+                                    <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z" />
+                                    break;
+                                case "recordatorio":
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 7v5l3 3" />
+                                    break;
+                                case "promocion":
+                                    <path d="M20 12l-8 8-9-9V3h8z" />
+                                    <circle cx="7.5" cy="7.5" r="1.3" />
+                                    break;
+                                default:
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 11v5M12 8h.01" />
+                                    break;
+                            }
+                        </svg>
+                    </div>
+
+                    <div class="nt-body">
+                        <h4>@n.Titulo</h4>
+                        <p>@n.Mensaje</p>
+                    </div>
+
+                    <div class="nt-meta">
+                        <span>@n.Hace</span>
+                        @if (!n.Leida)
+                        {
+                            <span class="nt-dot" title="No leída"></span>
+                        }
+                        <button type="button" class="nt-del" title="Eliminar" disabled="@ProcesandoAccion" @onclick="() => Eliminar(n)" @onclick:stopPropagation="true">×</button>
+                    </div>
+                </article>
+            }
+        }
     }
 </div>
 
@@ -348,7 +351,7 @@ else if (!Filtradas.Any())
     private class Notif
     {
         public long Id { get; set; }
-        public string Tipo { get; set; } = "servicio";
+        public string Tipo { get; set; } = string.Empty;
         public string Titulo { get; set; } = "";
         public string Mensaje { get; set; } = "";
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
@@ -393,11 +396,24 @@ else if (!Filtradas.Any())
     private IEnumerable<Notif> Filtradas => filtro switch
     {
         "noleidas" => notificaciones.Where(n => !n.Leida),
-        "citas" => notificaciones.Where(
-            n => n.Tipo == "cita" || n.Tipo == "recordatorio"),
-        "servicios" => notificaciones.Where(n => n.Tipo == "servicio"),
-        "promociones" => notificaciones.Where(n => n.Tipo == "promocion"),
+        "citas" => notificaciones.Where(n => EsTipo(n.Tipo, "cita") || EsTipo(n.Tipo, "recordatorio")),
+        "servicios" => notificaciones.Where(n => EsTipo(n.Tipo, "servicio")),
+        "promociones" => notificaciones.Where(n => EsTipo(n.Tipo, "promocion")),
         _ => notificaciones
+    };
+
+    private static string NormalizarTipo(string? tipo) => tipo?.Trim().ToLowerInvariant() ?? string.Empty;
+
+    private static bool EsTipo(string? tipo, string tipoEsperado) =>
+        string.Equals(NormalizarTipo(tipo), tipoEsperado, StringComparison.OrdinalIgnoreCase);
+
+    private static string ClaseTipoCss(string? tipo) => NormalizarTipo(tipo) switch
+    {
+        "cita" => "cita",
+        "servicio" => "servicio",
+        "recordatorio" => "recordatorio",
+        "promocion" => "promocion",
+        _ => string.Empty
     };
 
     protected override async Task OnInitializedAsync()
@@ -439,6 +455,10 @@ else if (!Filtradas.Any())
             ErrorCarga =
                 "La respuesta del servidor no tiene el formato esperado.";
         }
+        catch (TaskCanceledException)
+        {
+            ErrorCarga = "La carga de notificaciones tardó demasiado. Intenta nuevamente.";
+        }
         finally
 {
     Cargando = false;
@@ -461,15 +481,23 @@ else if (!Filtradas.Any())
 
             if (!respuesta.IsSuccessStatusCode)
             {
-                ErrorAccion = "No se pudo marcar la notificación como leída.";
+                ErrorAccion = await MensajeErrorAccionAsync(
+                    respuesta,
+                    "No se pudo marcar la notificación como leída.");
                 return;
             }
 
             await CargarNotificaciones();
         }
+        catch (TaskCanceledException)
+        {
+            ErrorAccion = "La solicitud tardó demasiado. Se volverá a consultar el estado de las notificaciones.";
+            await CargarNotificaciones();
+        }
         catch (HttpRequestException)
         {
-            ErrorAccion = "No se pudo conectar con el servidor.";
+            ErrorAccion = "No se pudo confirmar la respuesta del servidor. Se volverá a consultar el estado de las notificaciones.";
+            await CargarNotificaciones();
         }
         finally
         {
@@ -492,15 +520,23 @@ else if (!Filtradas.Any())
 
             if (!respuesta.IsSuccessStatusCode)
             {
-                ErrorAccion = "No se pudieron marcar todas como leídas.";
+                ErrorAccion = await MensajeErrorAccionAsync(
+                    respuesta,
+                    "No se pudieron marcar todas como leídas.");
                 return;
             }
 
             await CargarNotificaciones();
         }
+        catch (TaskCanceledException)
+        {
+            ErrorAccion = "La solicitud tardó demasiado. Se volverá a consultar el estado de las notificaciones.";
+            await CargarNotificaciones();
+        }
         catch (HttpRequestException)
         {
-            ErrorAccion = "No se pudo conectar con el servidor.";
+            ErrorAccion = "No se pudo confirmar la respuesta del servidor. Se volverá a consultar el estado de las notificaciones.";
+            await CargarNotificaciones();
         }
         finally
         {
@@ -523,20 +559,76 @@ else if (!Filtradas.Any())
 
             if (!respuesta.IsSuccessStatusCode)
             {
-                ErrorAccion = "No se pudo eliminar la notificación.";
+                ErrorAccion = await MensajeErrorAccionAsync(
+                    respuesta,
+                    "No se pudo eliminar la notificación.");
                 return;
             }
 
             await CargarNotificaciones();
         }
+        catch (TaskCanceledException)
+        {
+            ErrorAccion = "La solicitud tardó demasiado. Se volverá a consultar el estado de las notificaciones.";
+            await CargarNotificaciones();
+        }
         catch (HttpRequestException)
         {
-            ErrorAccion = "No se pudo conectar con el servidor.";
+            ErrorAccion = "No se pudo confirmar la respuesta del servidor. Se volverá a consultar el estado de las notificaciones.";
+            await CargarNotificaciones();
         }
         finally
         {
             ProcesandoAccion = false;
         }
+    }
+
+    private static async Task<string> MensajeErrorAccionAsync(
+        HttpResponseMessage respuesta,
+        string mensajePredeterminado)
+    {
+        var cuerpo = await respuesta.Content.ReadAsStringAsync();
+
+        var detalle = cuerpo;
+        if (!string.IsNullOrWhiteSpace(cuerpo))
+        {
+            try
+            {
+                using var documento = System.Text.Json.JsonDocument.Parse(cuerpo);
+                var raiz = documento.RootElement;
+                if (raiz.ValueKind == System.Text.Json.JsonValueKind.String)
+                    detalle = raiz.GetString() ?? "";
+                else if (raiz.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    foreach (var nombre in new[] { "mensaje", "message", "detail", "title" })
+                    {
+                        if (raiz.TryGetProperty(nombre, out var valor) &&
+                            valor.ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            detalle = valor.GetString() ?? "";
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Algunos errores pueden llegar como texto plano.
+            }
+        }
+
+        return respuesta.StatusCode switch
+        {
+            System.Net.HttpStatusCode.Unauthorized => "Tu sesión no es válida o venció. Inicia sesión nuevamente.",
+            System.Net.HttpStatusCode.Forbidden => "No tienes permiso para modificar estas notificaciones.",
+            System.Net.HttpStatusCode.NotFound => "La notificación ya no existe o no te pertenece.",
+            System.Net.HttpStatusCode.Conflict => string.IsNullOrWhiteSpace(detalle)
+                ? "La notificación cambió. Actualiza la lista e inténtalo de nuevo."
+                : detalle,
+            _ when (int)respuesta.StatusCode >= 500 => "El servidor tuvo un problema. Inténtalo más tarde.",
+            _ when !string.IsNullOrWhiteSpace(detalle) && detalle.Length <= 300 => detalle,
+            _ => mensajePredeterminado
+        };
     }
 }
 
